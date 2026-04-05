@@ -105,9 +105,7 @@ Authorization: Bearer <your_jwt_token>
 | **Customer** | E-commerce features (cart, orders, reviews, wishlist, prescriptions, RMA) |
 | **SuperAdmin** | Full system access |
 | **QuanLyKho** | Warehouse & inventory management |
-| **NhanVienBanHang** | Sales & POS, order management, prescription review and approval, voucher management, blog, category management, RMA/refund processing |
-| **DuocSi** | Prescription review & approval |
-| **KeToan** | RMA/refund processing |
+| **NhanVienBanHang** | Sales, order management, prescription approval, voucher management, blogs, categories, and RMA/refund processing |
 
 ### Rate Limiting
 
@@ -597,7 +595,7 @@ Initialize the first SuperAdmin account (first-time deployment only).
 
 ### 13. 📋 Admin — Order Management
 
-> **Auth Required:** JWT with `SuperAdmin`, `BanHang`, or `QuanLyKho` role.
+> **Auth Required:** JWT with `SuperAdmin`, `NhanVienBanHang`, or `QuanLyKho` role.
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -620,7 +618,7 @@ Initialize the first SuperAdmin account (first-time deployment only).
 
 ### 14. 💊 Admin — Prescription Management
 
-> **Auth Required:** JWT with `SuperAdmin`, `DuocSi`, or `BanHang` role.
+> **Auth Required:** JWT with `SuperAdmin` or `NhanVienBanHang` role.
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -656,17 +654,17 @@ Initialize the first SuperAdmin account (first-time deployment only).
   "ho_ten": "Trần Thị B",
   "email": "ttb@pharmachain.vn",
   "password": "SecurePassword123!",
-  "vai_tro": "BanHang"
+  "vai_tro": "NhanVienBanHang"
 }
 ```
 
-Available roles: `SuperAdmin`, `QuanLyKho`, `BanHang`, `KeToan`, `DuocSi`
+Available roles: `SuperAdmin`, `QuanLyKho`, `NhanVienBanHang`
 
 ---
 
 ### 16. 🎟️ Admin — Voucher Management
 
-> **Auth Required:** JWT with `SuperAdmin` or `BanHang` role.
+> **Auth Required:** JWT with `SuperAdmin` or `NhanVienBanHang` role.
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -692,7 +690,7 @@ Available roles: `SuperAdmin`, `QuanLyKho`, `BanHang`, `KeToan`, `DuocSi`
 
 ### 17. 📂 Admin — Category Management
 
-> **Auth Required:** JWT with `SuperAdmin` or `BanHang` role (except public endpoint).
+> **Auth Required:** JWT with `SuperAdmin` or `NhanVienBanHang` role (except public endpoint).
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
@@ -706,7 +704,7 @@ Available roles: `SuperAdmin`, `QuanLyKho`, `BanHang`, `KeToan`, `DuocSi`
 
 ### 18. 📝 Admin — Blog Management
 
-> **Auth Required:** JWT with `SuperAdmin` or `BanHang` role (except public endpoints).
+> **Auth Required:** JWT with `SuperAdmin` or `NhanVienBanHang` role (except public endpoints).
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
@@ -720,7 +718,7 @@ Available roles: `SuperAdmin`, `QuanLyKho`, `BanHang`, `KeToan`, `DuocSi`
 
 ### 19. 🔄 Admin — RMA Management
 
-> **Auth Required:** JWT with `SuperAdmin`, `BanHang`, or `KeToan` role.
+> **Auth Required:** JWT with `SuperAdmin` or `NhanVienBanHang` role.
 
 | Method | Endpoint | Description |
 |---|---|---|
