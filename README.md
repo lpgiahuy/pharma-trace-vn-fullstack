@@ -105,7 +105,7 @@ Authorization: Bearer <your_jwt_token>
 | **Customer** | E-commerce features (cart, orders, reviews, wishlist, prescriptions, RMA) |
 | **SuperAdmin** | Full system access |
 | **QuanLyKho** | Warehouse & inventory management |
-| **BanHang** | Sales, orders, vouchers, blogs, categories |
+| **NhanVienBanHang** | Sales & POS, order management, prescription review and approval, voucher management, blog, category management, RMA/refund processing |
 | **DuocSi** | Prescription review & approval |
 | **KeToan** | RMA/refund processing |
 
