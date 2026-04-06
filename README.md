@@ -129,17 +129,6 @@ Register a new customer account.
 
 - **Auth Required:** No
 
-**Request Body:**
-
-```json
-{
-  "ho_ten": "Nguyễn Văn A",
-  "so_dien_thoai": "0901234567",
-  "email": "nguyenvana@gmail.com",
-  "mat_khau": "Password123",
-  "dia_chi": "123 ABC Street, District 1, Ho Chi Minh City"
-}
-```
 
 | Field | Type | Required | Description |
 |---|---|---|---|
@@ -149,46 +138,12 @@ Register a new customer account.
 | `mat_khau` | string | ✅ | Password |
 | `dia_chi` | string | ❌ | Delivery address |
 
-**Responses:**
-
-| Status | Description |
-|---|---|
-| `201` | Account registered successfully |
-| `400` | Phone number or email already exists |
-
----
 
 #### `POST /auth/login`
 
 Customer login — returns a JWT token.
 
 - **Auth Required:** No
-
-**Request Body:**
-
-```json
-{
-  "so_dien_thoai": "0901234567",
-  "mat_khau": "Password123"
-}
-```
-
-**Example Response (200):**
-
-```json
-{
-  "success": true,
-  "message": "Login successful!",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-      "id": 1,
-      "ho_ten": "Nguyễn Văn A",
-      "so_dien_thoai": "0901234567"
-    }
-  }
-}
-```
 
 ---
 
@@ -246,24 +201,6 @@ Get detailed product information by ID or slug.
 
 Get the current customer's cart details.
 
-**Example Response (200):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "items": [
-      {
-        "duoc_pham_id": 15,
-        "ten_thuoc": "Paracetamol 500mg",
-        "quy_cach_id": 3,
-        "so_luong": 2,
-        "gia_ban": 5000
-      }
-    ]
-  }
-}
-```
 
 ---
 
@@ -271,15 +208,6 @@ Get the current customer's cart details.
 
 Add a product to the shopping cart.
 
-**Request Body:**
-
-```json
-{
-  "duoc_pham_id": 15,
-  "quy_cach_id": 3,
-  "so_luong": 2
-}
-```
 
 | Field | Type | Required | Description |
 |---|---|---|---|
@@ -299,14 +227,6 @@ Place an order from the current cart.
 
 **Request Body:**
 
-```json
-{
-  "dia_chi_giao_hang": "123 Nguyen Hue Street, District 1, HCMC",
-  "phuong_thuc_thanh_toan": "COD",
-  "ghi_chu": "Please deliver during business hours",
-  "voucher_id": 5
-}
-```
 
 | Field | Type | Required | Description |
 |---|---|---|---|
@@ -325,23 +245,7 @@ Get reviews for a specific product.
 
 - **Auth Required:** No
 
-**Example Response (200):**
 
-```json
-{
-  "success": true,
-  "total_reviews": 2,
-  "data": [
-    {
-      "id": 1,
-      "so_sao": 5,
-      "noi_dung": "Great product, fast delivery!",
-      "ngay_danh_gia": "2024-03-24T10:00:00.000Z",
-      "ten_khach_hang": "Nguyễn Văn A"
-    }
-  ]
-}
-```
 
 ---
 
@@ -351,15 +255,6 @@ Submit a product review (one review per product per customer).
 
 - **Auth Required:** Customer JWT
 
-**Request Body:**
-
-```json
-{
-  "duoc_pham_id": 15,
-  "so_sao": 5,
-  "noi_dung": "Genuine medicine, well-packaged."
-}
-```
 
 ---
 
@@ -373,13 +268,6 @@ Submit a product review (one review per product per customer).
 | `POST` | `/wishlist/add` | Add product to wishlist |
 | `DELETE` | `/wishlist/remove/:productId` | Remove product from wishlist |
 
-**Add to Wishlist — Request Body:**
-
-```json
-{
-  "duoc_pham_id": 15
-}
-```
 
 ---
 
@@ -391,28 +279,6 @@ Apply a voucher code to the order.
 
 - **Auth Required:** Customer JWT
 
-**Request Body:**
-
-```json
-{
-  "ma_code": "WELCOME2024",
-  "tong_tien_don_hang": 250000
-}
-```
-
-**Example Response (200):**
-
-```json
-{
-  "success": true,
-  "message": "Voucher applied successfully!",
-  "data": {
-    "ma_code": "WELCOME2024",
-    "loai_giam_gia": "PhanTram",
-    "so_tien_giam": 25000
-  }
-}
-```
 
 ---
 
@@ -432,19 +298,6 @@ Upload a prescription image for pharmacist review.
 | `ten_benh_vien` | string | ❌ | Hospital name |
 | `chuan_doan` | string | ❌ | Diagnosis |
 
-**Example Response (201):**
-
-```json
-{
-  "success": true,
-  "message": "Prescription uploaded successfully! Please wait for pharmacist review.",
-  "data": {
-    "id": 1,
-    "hinh_anh_toa": "/uploads/1711440000000-prescription.jpg",
-    "trang_thai_duyet": "ChoDuyet"
-  }
-}
-```
 
 ---
 
@@ -456,14 +309,6 @@ Submit a return/refund request (order must be in "Delivered" status).
 
 - **Auth Required:** Customer JWT
 
-**Request Body:**
-
-```json
-{
-  "don_hang_id": 101,
-  "ly_do_tra": "Product was damaged during shipping."
-}
-```
 
 **Responses:**
 
@@ -484,13 +329,6 @@ Scan a QR code to trace a medicine box's full journey.
 
 - **Auth Required:** JWT (any role)
 
-**Request Body:**
-
-```json
-{
-  "uid": "550e8400-e29b-41d4-a716-446655440000"
-}
-```
 
 **Returns:** Batch info, manufacturer, expiry date, and full warehouse movement history.
 
@@ -504,32 +342,6 @@ Admin/Staff login.
 
 - **Auth Required:** No
 
-**Request Body:**
-
-```json
-{
-  "email": "admin@pharmachain.vn",
-  "password": "123456"
-}
-```
-
-**Example Response (200):**
-
-```json
-{
-  "success": true,
-  "message": "Admin login successful!",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1...",
-    "user": {
-      "id": 1,
-      "ho_ten": "Admin",
-      "vai_tro": "SuperAdmin"
-    }
-  }
-}
-```
-
 ---
 
 #### `POST /admin/auth/setup`
@@ -537,17 +349,6 @@ Admin/Staff login.
 Initialize the first SuperAdmin account (first-time deployment only).
 
 - **Auth Required:** No
-
-**Request Body:**
-
-```json
-{
-  "ho_ten": "Admin",
-  "email": "admin@pharmachain.vn",
-  "password": "123456",
-  "don_vi_id": 1
-}
-```
 
 ---
 
@@ -563,33 +364,6 @@ Initialize the first SuperAdmin account (first-time deployment only).
 | `PUT` | `/admin/products/:id` | Update product & packaging units |
 | `DELETE` | `/admin/products/:id` | Soft delete (set inactive) |
 
-**Create Product — Request Body:**
-
-```json
-{
-  "thong_tin_thuoc": {
-    "ten_thuoc": "Paracetamol 500mg",
-    "so_dang_ky": "VD-12345-22",
-    "danh_muc_id": 1,
-    "don_vi_san_xuat_id": 5,
-    "hinh_anh_url": "https://image.com/pax.jpg",
-    "la_thuoc_ke_don": false,
-    "mo_ta_ngan": "Pain relief, fever reduction",
-    "chi_tiet_thuoc": {
-      "thanh_phan": "Paracetamol",
-      "chong_chi_dinh": "Do not use if allergic..."
-    }
-  },
-  "quy_cach_dong_goi": [
-    {
-      "ten_don_vi": "Tablet",
-      "he_so_quy_doi": 1,
-      "gia_ban": 1000,
-      "la_don_vi_co_ban": true
-    }
-  ]
-}
-```
 
 ---
 
@@ -603,16 +377,6 @@ Initialize the first SuperAdmin account (first-time deployment only).
 | `GET` | `/admin/orders/:id` | Get order detail with line items |
 | `POST` | `/admin/orders/:id/fulfill` | Fulfill order by assigning scanned UIDs |
 
-**Fulfill Order — Request Body:**
-
-```json
-{
-  "mang_uid": [
-    "550e8400-e29b-41d4-a716-446655440000",
-    "660e8400-e29b-41d4-a716-446655440001"
-  ]
-}
-```
 
 ---
 
@@ -625,13 +389,6 @@ Initialize the first SuperAdmin account (first-time deployment only).
 | `GET` | `/admin/prescriptions` | List prescriptions (filter by `?status=ChoDuyet\|HopLe\|TuChoi`) |
 | `PUT` | `/admin/prescriptions/:id/status` | Approve or reject a prescription |
 
-**Update Status — Request Body:**
-
-```json
-{
-  "trang_thai_duyet": "HopLe"
-}
-```
 
 ---
 
@@ -646,17 +403,6 @@ Initialize the first SuperAdmin account (first-time deployment only).
 | `PUT` | `/admin/staff/:id` | Update staff info/role |
 | `DELETE` | `/admin/staff/:id` | Disable staff account (soft delete) |
 
-**Create Staff — Request Body:**
-
-```json
-{
-  "don_vi_id": 2,
-  "ho_ten": "Trần Thị B",
-  "email": "ttb@pharmachain.vn",
-  "password": "SecurePassword123!",
-  "vai_tro": "NhanVienBanHang"
-}
-```
 
 Available roles: `SuperAdmin`, `QuanLyKho`, `NhanVienBanHang`
 
@@ -672,19 +418,6 @@ Available roles: `SuperAdmin`, `QuanLyKho`, `NhanVienBanHang`
 | `POST` | `/admin/vouchers/add` | Create a new voucher |
 | `DELETE` | `/admin/vouchers/:id` | Delete a voucher (hard delete) |
 
-**Create Voucher — Request Body:**
-
-```json
-{
-  "ma_code": "SUMMER50K",
-  "loai_giam_gia": "TienMat",
-  "gia_tri": 50000,
-  "don_hang_toi_thieu": 300000,
-  "ngay_bat_dau": "2025-06-01T00:00:00Z",
-  "ngay_ket_thuc": "2030-06-30T23:59:59Z",
-  "so_luong_gioi_han": 100
-}
-```
 
 ---
 
@@ -735,18 +468,6 @@ Import a new medicine batch from supplier into warehouse inventory.
 
 - **Auth Required:** JWT with `SuperAdmin` or `QuanLyKho` role
 
-**Request Body:**
-
-```json
-{
-  "duoc_pham_id": 1,
-  "don_vi_id": 1,
-  "so_lo": "BATCH-2026-VIP",
-  "ngay_sx": "2026-03-01",
-  "hsd": "2030-03-01",
-  "so_luong_hop": 100
-}
-```
 
 ---
 
@@ -758,27 +479,6 @@ Get comprehensive admin dashboard data.
 
 - **Auth Required:** JWT with `SuperAdmin` role only
 
-**Example Response (200):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "heatmap_diem_nong": [
-      { "toa_do_lat": 10.762622, "toa_do_lng": 106.660172, "so_luong_quet": 5 }
-    ],
-    "thuoc_can_date": [
-      { "ten_thuoc": "Vitamin C 1000mg", "han_su_dung": "2024-05-20" }
-    ],
-    "bieu_do_doanh_thu": [
-      { "ngay": "2024-03-24", "tong_doanh_thu": 15000000 }
-    ],
-    "tong_quan_kho": [
-      { "ten_don_vi": "Southern Main Warehouse", "tong_san_pham": 15200 }
-    ]
-  }
-}
-```
 
 ---
 
@@ -793,35 +493,6 @@ Get comprehensive admin dashboard data.
 | `POST` | `/logistics/return` | Process customer return to warehouse |
 | `POST` | `/logistics/recall/:loThuocId` | Emergency batch recall |
 
-**Transfer — Request Body:**
-
-```json
-{
-  "tu_don_vi_id": 1,
-  "den_don_vi_id": 2,
-  "mang_uid": ["uid-1", "uid-2"]
-}
-```
-
-**Dispose — Request Body:**
-
-```json
-{
-  "don_vi_id": 1,
-  "mang_uid": ["uid-3"],
-  "ly_do": "Box damaged during transportation"
-}
-```
-
-**Return — Request Body:**
-
-```json
-{
-  "don_hang_id": 105,
-  "don_vi_nhan_id": 1,
-  "mang_uid": ["uid-1"]
-}
-```
 
 ---
 
