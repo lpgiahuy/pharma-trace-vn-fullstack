@@ -1,5 +1,6 @@
 import express from 'express';
 import { getCategories, getProducts, getProductDetail } from '../../controllers/ecom/productController.js';
+import { optionalProtect } from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -19,7 +20,32 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: Successfully retrieved list of categories
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       ten_danh_muc:
+ *                         type: string
+ *                         example: "Thuốc kê đơn"
+ *                       hinh_anh_icon:
+ *                         type: string
+ *                         example: "https://example.com/icon.png"
+ *       500:
+ *         description: Internal server error
  */
+
 router.get('/categories', getCategories);
 
 /**
@@ -55,13 +81,40 @@ router.get('/categories', getCategories);
  *         name: sort
  *         schema:
  *           type: string
- *           enum: [price_asc, price_desc, newest]
- *         description: Sort products (price ascending, price descending, or newest)
+ *           enum: [newest, price_asc, price_desc, best_selling]
+ *           default: newest
+ *         description: |
+ *           Sort products criteria:
+ *           * `newest` - Newest products (Default)
+ *           * `price_asc` - Price ascending
+ *           * `price_desc` - Price descending
+ *           * `best_selling` - Best selling products
  *     responses:
  *       200:
  *         description: Successfully retrieved list of products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     current_page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit_per_page:
+ *                       type: integer
+ *                       example: 20
+ *                     items:
+ *                       type: array
+ *                       description: Array of product objects
  */
-router.get('/', getProducts);
+
+router.get('/', optionalProtect, getProducts);
 
 /**
  * @swagger
@@ -75,13 +128,36 @@ router.get('/', getProducts);
  *         required: true
  *         schema:
  *           type: string
- *         description: Product ID or Slug
+ *         description: Product ID (e.g., 1) or Slug (e.g., thuoc-panadol)
  *     responses:
  *       200:
  *         description: Successfully retrieved product details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   description: Product details including packaging variants and HTML descriptions
  *       404:
  *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Product not found"
  */
-router.get('/:id', getProductDetail);
+
+router.get('/:id', optionalProtect, getProductDetail);
 
 export default router;

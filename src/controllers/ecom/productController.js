@@ -11,7 +11,8 @@ const getCategories = async (req, res, next) => {
 
 const getProducts = async (req, res, next) => {
     try {
-        const data = await productService.fetchProducts(req.query);
+        const userId = req.user?.id || null;
+        const data = await productService.fetchProducts(req.query, userId);
         res.status(200).json({ success: true, data });
     } catch (error) {
         next(error);
@@ -20,7 +21,8 @@ const getProducts = async (req, res, next) => {
 
 const getProductDetail = async (req, res, next) => {
     try {
-        const data = await productService.fetchProductDetail(req.params.id);
+        const userId = req.user?.id || null;
+        const data = await productService.fetchProductDetail(req.params.id, userId);
         res.status(200).json({ success: true, data });
     } catch (error) {
         if (error.statusCode) res.status(error.statusCode);
