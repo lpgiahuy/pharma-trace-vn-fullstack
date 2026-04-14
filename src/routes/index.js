@@ -21,6 +21,8 @@ import wishlistRoutes from './ecom/wishlistRoutes.js';
 import adminBlogRoutes from './admin/adminBlogRoutes.js';
 import ecomRmaRoutes from './ecom/rmaRoutes.js';
 import adminRmaRoutes from './admin/adminRmaRoutes.js';
+import adminCustomerRoutes from './admin/adminCustomerRoutes.js';
+import ecomBlogRoutes from './ecom/blogRoutes.js';
 
 const router = express.Router();
 
@@ -51,5 +53,8 @@ router.use('/admin/categories', adminCategoryRoutes); // admin category manageme
 router.use('/admin/blogs', adminBlogRoutes); // admin blog management routes (CRUD blogs) - auth required for admin
 router.use('/rma', ecomRmaRoutes); // RMA routes (submit RMA, view RMA status) - auth required for customers
 router.use('/admin/rma', adminRmaRoutes); // admin RMA management routes (view all RMAs, update RMA status) - auth required for admin xong
+
+router.use('/admin/customers', adminCustomerRoutes); // admin customer management (list, detail, lock/unlock) - SuperAdmin only
+router.use('/blogs', ecomBlogRoutes); // public blog routes (list articles, read detail) - no auth required
 
 export default router;
