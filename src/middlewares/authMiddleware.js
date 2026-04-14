@@ -15,17 +15,30 @@ const protect = async (req, res, next) => {
             // attach the decoded user information to the request object for use in later middleware or route handlers
             req.user = decoded; 
             
-            next();
+            return next();
         } catch (error) {
             res.status(401);
-            next(new Error('Token không hợp lệ hoặc đã hết hạn! Vui lòng đăng nhập lại.'));
+            return next(new Error('Token không hợp lệ hoặc đã hết hạn! Vui lòng đăng nhập lại.'));
         }
     }
 
     if (!token) {
         res.status(401);
-        next(new Error('Không có quyền truy cập! Vui lòng cung cấp Token.'));
+        return next(new Error('Không có quyền truy cập! Vui lòng cung cấp Token.'));
     }
 };
 
-export { protect };
+const optionalProtect = async (req, res, next) => {
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        try {
+            const token = req.headers.authorization.split(' ')[1];
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            req.user = decoded;
+        } catch (error) {
+            // ignore error for optional protect
+        }
+    }
+    next();
+};
+
+export { protect, optionalProtect };

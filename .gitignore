@@ -8,6 +8,8 @@ uploads/*
 
 scraper.js
 test.js
+craw_data.js
+parse_html_to_json.js
 
 *.log
 npm-debug.log*

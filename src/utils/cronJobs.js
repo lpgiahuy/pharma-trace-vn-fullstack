@@ -14,8 +14,7 @@ const runBatchProcessing = async () => {
         console.log('   ✅ Đã dọn dẹp các đơn hàng quá hạn thanh toán.');
 
         // 3. Xét duyệt lại hạng thành viên (Đồng, Bạc, Vàng, Kim Cương)
-        await pool.query('CALL sp_cap_nhat_hang_thanh_vien()');
-        console.log('   ✅ Đã xét duyệt thăng hạng cho toàn bộ Khách hàng.');
+        // Cronjob này đã được thay thế bằng DB Trigger trg_auto_upgrade_tier.
 
         console.log('🎉 [CRON JOB] Hoàn tất dọn dẹp hệ thống thành công!\n');
     } catch (error) {

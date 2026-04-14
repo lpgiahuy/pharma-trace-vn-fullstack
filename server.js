@@ -15,8 +15,12 @@ import basicAuth from 'express-basic-auth';
 dotenv.config();
 
 const app = express();
+
+// Điều này giúp req.ip lấy đúng IP thật, và express-rate-limit không bị chặn nhầm người.
+app.set('trust proxy', 1);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 
 // --- 1. LỚP BẢO VỆ CƠ BẢN (MIDDLEWARE BẢO MẬT) ---
 
@@ -42,7 +46,7 @@ app.use(express.json({ limit: '10kb' }));
 // Giới hạn tối đa 100 request / 15 phút cho mỗi IP
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
-    max: 100, 
+    max: 1000, 
     message: { success: false, message: 'Bạn đã thao tác quá nhiều lần. Vui lòng thử lại sau 15 phút.' },
     standardHeaders: true, 
     legacyHeaders: false, 
