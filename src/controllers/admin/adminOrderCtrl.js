@@ -40,4 +40,39 @@ const fulfillOrder = async (req, res, next) => {
     }
 };
 
-export { getOrders, getOrderById, fulfillOrder };
+// API: Confirm delivery completed — changes status from DangGiao → HoanThanh
+// COD orders will also auto-update payment status to DaThanhToan
+const confirmOrderDelivery = async (req, res, next) => {
+    try {
+        const data = await adminOrderService.confirmDelivery(req.params.id);
+        res.status(200).json({
+            success: true,
+            message: 'Đơn hàng đã được xác nhận hoàn thành.',
+            data
+        });
+    } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
+        next(error);
+    }
+};
+
+// API: Update payment status (manual admin or VNPay/MoMo webhook callback)
+const updateOrderPayment = async (req, res, next) => {
+    try {
+        const { trang_thai_thanh_toan, ma_giao_dich_ngan_hang } = req.body;
+        if (!trang_thai_thanh_toan) {
+            return res.status(400).json({ success: false, message: 'Vui lòng cung cấp trang_thai_thanh_toan.' });
+        }
+        const data = await adminOrderService.processPaymentUpdate(req.params.id, trang_thai_thanh_toan, ma_giao_dich_ngan_hang);
+        res.status(200).json({
+            success: true,
+            message: `Trạng thái thanh toán đã cập nhật: ${trang_thai_thanh_toan}`,
+            data
+        });
+    } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
+        next(error);
+    }
+};
+
+export { getOrders, getOrderById, fulfillOrder, confirmOrderDelivery, updateOrderPayment };

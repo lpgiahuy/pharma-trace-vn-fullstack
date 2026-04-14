@@ -49,4 +49,29 @@ const packOrderWithUIDs = async (orderId, mang_uid) => {
     return true;
 };
 
-export { getAllOrders, getOrderDetail, packOrderWithUIDs }
+// Mark order as completed (DangGiao → HoanThanh)
+const completeOrder = async (orderId) => {
+    const query = `
+        UPDATE DonHang 
+        SET trang_thai_don = 'HoanThanh'
+        WHERE id = $1 AND trang_thai_don = 'DangGiao'
+        RETURNING id, trang_thai_don, trang_thai_thanh_toan;
+    `;
+    const result = await pool.query(query, [orderId]);
+    return result.rows[0]; // null nếu không tìm thấy hoặc sai trạng thái
+};
+
+// Update payment status (used by admin or payment webhook)
+const updatePaymentStatus = async (orderId, trang_thai_thanh_toan, ma_giao_dich) => {
+    const query = `
+        UPDATE DonHang 
+        SET trang_thai_thanh_toan = $2,
+            ma_giao_dich_ngan_hang = COALESCE($3, ma_giao_dich_ngan_hang)
+        WHERE id = $1
+        RETURNING id, trang_thai_don, trang_thai_thanh_toan, ma_giao_dich_ngan_hang;
+    `;
+    const result = await pool.query(query, [orderId, trang_thai_thanh_toan, ma_giao_dich || null]);
+    return result.rows[0];
+};
+
+export { getAllOrders, getOrderDetail, packOrderWithUIDs, completeOrder, updatePaymentStatus }
