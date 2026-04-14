@@ -39,4 +39,24 @@ const removeWishlist = async (req, res, next) => {
     }
 };
 
-export { getMyWishlist, addWishlist, removeWishlist };
+const toggleWishlist = async (req, res, next) => {
+    try {
+        const { duoc_pham_id } = req.body;
+        const userId = req.user.id;
+        
+        const exists = await wishlistService.isProductInWishlist(userId, duoc_pham_id);
+        
+        if (exists) {
+            await wishlistService.removeProductFromWishlist(userId, duoc_pham_id);
+            res.status(200).json({ success: true, message: 'Removed from favorites', isFavorited: false });
+        } else {
+            await wishlistService.addProductToWishlist(userId, duoc_pham_id);
+            res.status(200).json({ success: true, message: 'Added to favorites', isFavorited: true });
+        }
+    } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
+        next(error);
+    }
+};
+
+export { getMyWishlist, addWishlist, removeWishlist, toggleWishlist };

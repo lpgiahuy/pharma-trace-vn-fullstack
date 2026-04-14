@@ -22,3 +22,7 @@ export const removeProductFromWishlist = async (khach_hang_id, duoc_pham_id) => 
     }
     return true;
 };
+
+export const isProductInWishlist = async (khach_hang_id, duoc_pham_id) => {
+    return await wishlistModel.checkIfFavorited(khach_hang_id, duoc_pham_id);
+};

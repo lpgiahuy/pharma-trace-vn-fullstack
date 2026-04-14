@@ -1,5 +1,5 @@
 import express from 'express';
-import { getMyWishlist, addWishlist, removeWishlist } from '../../controllers/ecom/wishlistCtrl.js';
+import { getMyWishlist, addWishlist, removeWishlist, toggleWishlist } from '../../controllers/ecom/wishlistCtrl.js';
 import { protect } from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -83,6 +83,29 @@ router.get('/', getMyWishlist);
  *         description: Missing product ID
  */
 router.post('/add', addWishlist);
+
+/**
+ * @swagger
+ * /wishlist/toggle:
+ *   post:
+ *     summary: Toggle product in favorites (add if not exists, remove if exists)
+ *     tags: [Ecom - Wishlist]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [duoc_pham_id]
+ *             properties:
+ *               duoc_pham_id: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Toggled successfully
+ */
+router.post('/toggle', toggleWishlist);
 
 /**
  * @swagger
