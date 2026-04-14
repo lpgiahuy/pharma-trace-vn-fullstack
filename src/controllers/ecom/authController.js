@@ -44,4 +44,46 @@ const login = async (req, res, next) => {
     }
 };
 
-export { register, login };
+const getMe = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const user = await authService.getUserProfile(userId);
+        res.status(200).json({ success: true, data: user });
+    } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
+        next(error);
+    }
+};
+const getLoyaltyProgress = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const progress = await authService.getLoyaltyProgress(userId);
+        res.status(200).json({ success: true, data: progress });
+    } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
+        next(error);
+    }
+};
+
+const updateMe = async (req, res, next) => {
+    try {
+        const updated = await authService.updateProfile(req.user.id, req.body);
+        res.status(200).json({ success: true, message: 'Cập nhật thông tin thành công.', data: updated });
+    } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
+        next(error);
+    }
+};
+
+const changeMyPassword = async (req, res, next) => {
+    try {
+        const { mat_khau_cu, mat_khau_moi } = req.body;
+        await authService.changePassword(req.user.id, mat_khau_cu, mat_khau_moi);
+        res.status(200).json({ success: true, message: 'Đổi mật khẩu thành công.' });
+    } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
+        next(error);
+    }
+};
+
+export { register, login, getMe, getLoyaltyProgress, updateMe, changeMyPassword };

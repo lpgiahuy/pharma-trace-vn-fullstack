@@ -45,4 +45,62 @@ const loginUser = async (so_dien_thoai, mat_khau) => {
     return { user, token };
 };
 
-export { registerUser, loginUser };
+const getUserProfile = async (id) => {
+    const user = await authModel.findUserById(id);
+    if (!user) {
+        const error = new Error('User not found');
+        error.statusCode = 404;
+        throw error;
+    }
+    return user;
+};
+const getLoyaltyProgress = async (id) => {
+    const progress = await authModel.getLoyaltyUpgradeProgress(id);
+    if (!progress) {
+        const error = new Error('Could not retrieve loyalty progress');
+        error.statusCode = 404;
+        throw error;
+    }
+    return progress;
+};
+
+// Update profile info: ho_ten, email, dia_chi_mac_dinh
+const updateProfile = async (id, payload) => {
+    const { ho_ten, email, dia_chi_mac_dinh } = payload;
+    if (!ho_ten && !email && !dia_chi_mac_dinh) {
+        const error = new Error('Vui lòng cung cấp ít nhất một thông tin cần cập nhật (ho_ten, email, dia_chi_mac_dinh).');
+        error.statusCode = 400;
+        throw error;
+    }
+    const updated = await authModel.updateUserProfile(id, { ho_ten, email, dia_chi_mac_dinh });
+    return updated;
+};
+
+// Change password: requires current password verification
+const changePassword = async (id, mat_khau_cu, mat_khau_moi) => {
+    if (!mat_khau_cu || !mat_khau_moi) {
+        const error = new Error('Vui lòng cung cấp mật khẩu cũ và mật khẩu mới.');
+        error.statusCode = 400;
+        throw error;
+    }
+    if (mat_khau_moi.length < 6) {
+        const error = new Error('Mật khẩu mới phải có ít nhất 6 ký tự.');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    // Verify old password
+    const user = await authModel.findFullUserById(id);
+    const isMatch = await comparePassword(mat_khau_cu, user.mat_khau_hash);
+    if (!isMatch) {
+        const error = new Error('Mật khẩu hiện tại không đúng.');
+        error.statusCode = 401;
+        throw error;
+    }
+
+    const newHash = await hashPassword(mat_khau_moi);
+    await authModel.updateUserPassword(id, newHash);
+    return true;
+};
+
+export { registerUser, loginUser, getUserProfile, getLoyaltyProgress, updateProfile, changePassword };
