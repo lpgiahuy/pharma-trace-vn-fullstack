@@ -1,10 +1,10 @@
 import express from 'express';
-import { 
-    createProduct, 
-    deleteProduct, 
-    getAllProductsAdmin, 
-    getProductDetailAdmin, 
-    updateProduct 
+import {
+    createProduct,
+    deleteProduct,
+    getAllProductsAdmin,
+    getProductDetailAdmin,
+    updateProduct
 } from '../../controllers/admin/adminProductCtrl.js';
 import { protect } from '../../middlewares/authMiddleware.js';
 import { authorizeRoles } from '../../middlewares/roleMiddleware.js';
@@ -18,7 +18,7 @@ const router = express.Router();
  *     description: Pharmaceutical product management (For SuperAdmin / Warehouse Manager)
  */
 
-// All routes in this file require Admin / Warehouse Manager permissions
+// Apply middleware to all routes
 router.use(protect);
 router.use(authorizeRoles('SuperAdmin', 'QuanLyKho'));
 
@@ -26,15 +26,18 @@ router.use(authorizeRoles('SuperAdmin', 'QuanLyKho'));
  * @swagger
  * /admin/products:
  *   get:
- *     summary: Get list of all pharmaceutical products (including hidden/inactive ones)
+ *     summary: Get all pharmaceutical products (Admin)
  *     tags: [Admin - Products]
  *     security:
  *       - bearerAuth: []
+ *     description: Retrieve a list of all products with optional pagination and filtering.
  *     responses:
  *       200:
- *         description: Successfully returned list of products with categories
+ *         description: List of products retrieved successfully
+ *       401:
+ *         description: Unauthorized
  *       403:
- *         description: Insufficient permissions
+ *         description: Forbidden - Insufficient permissions
  */
 router.get('/', getAllProductsAdmin);
 
@@ -42,7 +45,7 @@ router.get('/', getAllProductsAdmin);
  * @swagger
  * /admin/products/{id}:
  *   get:
- *     summary: Get detailed information of a product including all packaging options
+ *     summary: Get detailed information of a pharmaceutical product (Admin)
  *     tags: [Admin - Products]
  *     security:
  *       - bearerAuth: []
@@ -52,10 +55,10 @@ router.get('/', getAllProductsAdmin);
  *         required: true
  *         schema:
  *           type: integer
- *         description: Product ID
+ *         description: ID of the product
  *     responses:
  *       200:
- *         description: Product details and array of packaging units
+ *         description: Product details retrieved successfully
  *       404:
  *         description: Product not found
  */
@@ -66,6 +69,7 @@ router.get('/:id', getProductDetailAdmin);
  * /admin/products/add:
  *   post:
  *     summary: Add a new pharmaceutical product with packaging units
+ *     description: Create a new product including detailed drug information and multiple packaging options.
  *     tags: [Admin - Products]
  *     security:
  *       - bearerAuth: []
@@ -88,7 +92,7 @@ router.get('/:id', getProductDetailAdmin);
  *                 properties:
  *                   ten_thuoc:
  *                     type: string
- *                     example: "Paracetamol 500mg"
+ *                     example: "Panadol Extra"
  *                   so_dang_ky:
  *                     type: string
  *                     example: "VD-12345-22"
@@ -100,45 +104,54 @@ router.get('/:id', getProductDetailAdmin);
  *                     example: 5
  *                   hinh_anh_url:
  *                     type: string
- *                     example: "https://image.com/pax.jpg"
+ *                     example: "https://image.com/panadol.jpg"
  *                   la_thuoc_ke_don:
  *                     type: boolean
  *                     example: false
  *                   mo_ta_ngan:
  *                     type: string
- *                     example: "Pain relief, fever reduction"
+ *                     example: "Pain relief and fever reduction"
  *                   chi_tiet_thuoc:
  *                     type: object
+ *                     description: JSON data containing detailed drug information extracted by AI (Open Schema)
  *                     example:
- *                       thanh_phan: "Paracetamol"
- *                       chong_chi_dinh: "Do not use if allergic..."
+ *                       mo_ta_chung: "Panadol Extra contains paracetamol as an antipyretic and analgesic..."
+ *                       chi_dinh:
+ *                         - "Headache"
+ *                         - "Migraine"
+ *                         - "Muscle pain"
+ *                       thanh_phan_chi_tiet:
+ *                         hoat_chat: "Paracetamol 500mg, Caffeine 65mg"
+ *                         ta_duoc: "Pregelatinised starch, povidone k-25..."
+ *                       huong_dan_su_dung:
+ *                         cach_dung: "Oral administration."
+ *                         lieu_dung: "Adults and children over 12 years: 1-2 tablets every 4-6 hours."
+ *                       tac_dung_phu:
+ *                         - "Thrombocytopenia"
+ *                         - "Skin hypersensitivity reactions"
+ *                       chong_chi_dinh:
+ *                         - "Patients with a history of hypersensitivity to paracetamol"
  *               quy_cach_dong_goi:
  *                 type: array
+ *                 minItems: 1
  *                 items:
  *                   type: object
  *                   required:
  *                     - ten_don_vi
- *                     - he_so_quy_doi
  *                     - gia_ban
- *                     - la_don_vi_co_ban
  *                   properties:
  *                     ten_don_vi:
  *                       type: string
  *                       example: "Tablet"
- *                     he_so_quy_doi:
- *                       type: integer
- *                       example: 1
  *                     gia_ban:
  *                       type: number
- *                       example: 1000
- *                     la_don_vi_co_ban:
- *                       type: boolean
- *                       example: true
+ *                       format: float
+ *                       example: 2000
  *     responses:
  *       201:
  *         description: Product created successfully
  *       400:
- *         description: Duplicate registration number or missing base packaging unit
+ *         description: Duplicate registration number or missing packaging unit
  */
 router.post('/add', createProduct);
 
@@ -147,6 +160,7 @@ router.post('/add', createProduct);
  * /admin/products/{id}:
  *   put:
  *     summary: Update product information and refresh packaging units
+ *     description: Update drug information and completely replace the list of packaging units.
  *     tags: [Admin - Products]
  *     security:
  *       - bearerAuth: []
@@ -163,67 +177,49 @@ router.post('/add', createProduct);
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - thong_tin_thuoc
- *               - quy_cach_dong_goi
  *             properties:
  *               thong_tin_thuoc:
  *                 type: object
  *                 properties:
  *                   ten_thuoc:
  *                     type: string
- *                     example: "Test Medicine System 2026"
+ *                     example: "Panadol Extra"
  *                   so_dang_ky:
  *                     type: string
- *                     example: "TEST-REG-2026"
+ *                     example: "VD-12345-22"
  *                   danh_muc_id:
  *                     type: integer
  *                     example: 1
  *                   don_vi_san_xuat_id:
  *                     type: integer
- *                     example: 1
+ *                     example: 5
  *                   hinh_anh_url:
  *                     type: string
- *                     example: "https://via.placeholder.com/300"
+ *                     example: "https://image.com/panadol.jpg"
  *                   la_thuoc_ke_don:
  *                     type: boolean
  *                     example: false
  *                   mo_ta_ngan:
  *                     type: string
- *                     example: "Updated product description"
+ *                     example: "Pain relief and fever reduction"
  *                   chi_tiet_thuoc:
  *                     type: object
- *                     example: { "thanh_phan": "Active ingredient X 500mg", "score": 5.0 }
- *                   trang_thai:
- *                     type: boolean
- *                     example: true
+ *                     description: JSON data containing detailed drug information (AI extracted - Open Schema)
  *               quy_cach_dong_goi:
  *                 type: array
  *                 items:
  *                   type: object
- *                   required:
- *                     - ten_don_vi
- *                     - he_so_quy_doi
- *                     - gia_ban
- *                     - la_don_vi_co_ban
  *                   properties:
  *                     ten_don_vi:
  *                       type: string
  *                       example: "Tablet"
- *                     he_so_quy_doi:
- *                       type: integer
- *                       example: 1
  *                     gia_ban:
  *                       type: number
- *                       example: 5000
- *                     la_don_vi_co_ban:
- *                       type: boolean
- *                       example: true
+ *                       format: float
+ *                       example: 2000
  *     responses:
  *       200:
  *         description: Product and packaging units updated successfully
- *       400:
- *         description: Invalid data or missing base packaging unit
  *       404:
  *         description: Product not found
  */
@@ -233,7 +229,7 @@ router.put('/:id', updateProduct);
  * @swagger
  * /admin/products/{id}:
  *   delete:
- *     summary: Soft delete a product (change status to inactive)
+ *     summary: Delete a pharmaceutical product
  *     tags: [Admin - Products]
  *     security:
  *       - bearerAuth: []
@@ -243,11 +239,12 @@ router.put('/:id', updateProduct);
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID of the product to delete
  *     responses:
  *       200:
- *         description: Product soft-deleted successfully
+ *         description: Product deleted successfully
  *       404:
- *         description: Product not found or already deleted
+ *         description: Product not found
  */
 router.delete('/:id', deleteProduct);
 

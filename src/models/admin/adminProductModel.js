@@ -1,4 +1,5 @@
 import pool from '../../config/db.js';
+import { generateSlug } from '../../utils/slugHelper.js';
 
 const createNewProduct = async (productData, variantsData) => {
     // create new client to run transaction (ensure integrity)
@@ -7,13 +8,16 @@ const createNewProduct = async (productData, variantsData) => {
     try {
         await client.query('BEGIN'); // start transaction
 
+        // Generate unique slug by appending timestamp
+        const slug = generateSlug(productData.ten_thuoc) + '-' + Date.now();
+
         // add product (Note: chi_tiet_thuoc is passed directly as an Object, pg library will auto-parse to JSONB)
         const productQuery = `
-            INSERT INTO DuocPham (ten_thuoc, so_dang_ky, danh_muc_id, don_vi_san_xuat_id, hinh_anh_url, la_thuoc_ke_don, mo_ta_ngan, chi_tiet_thuoc)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id;
+            INSERT INTO DuocPham (ten_thuoc, slug, so_dang_ky, danh_muc_id, don_vi_san_xuat_id, hinh_anh_url, la_thuoc_ke_don, mo_ta_ngan, chi_tiet_thuoc)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id;
         `;
         const pValues = [
-            productData.ten_thuoc, productData.so_dang_ky, productData.danh_muc_id,
+            productData.ten_thuoc, slug, productData.so_dang_ky, productData.danh_muc_id,
             productData.don_vi_san_xuat_id, productData.hinh_anh_url,
             productData.la_thuoc_ke_don, productData.mo_ta_ngan, productData.chi_tiet_thuoc
         ];
@@ -22,12 +26,12 @@ const createNewProduct = async (productData, variantsData) => {
 
         // add variants (quy_cach_dong_goi) 
         const variantQuery = `
-            INSERT INTO QuyCachDongGoi (duoc_pham_id, ten_don_vi, he_so_quy_doi, gia_ban, la_don_vi_co_ban)
-            VALUES ($1, $2, $3, $4, $5);
+            INSERT INTO QuyCachDongGoi (duoc_pham_id, ten_don_vi, gia_ban)
+            VALUES ($1, $2, $3);
         `;
         for (const variant of variantsData) {
             await client.query(variantQuery, [
-                newProductId, variant.ten_don_vi, variant.he_so_quy_doi, variant.gia_ban, variant.la_don_vi_co_ban
+                newProductId, variant.ten_don_vi, variant.gia_ban
             ]);
         }
 
@@ -67,7 +71,7 @@ const getAdminProductDetail = async (id) => {
     const pRes = await pool.query(pQuery, [id]);
     if (pRes.rowCount === 0) return null;
 
-    const vQuery = `SELECT * FROM QuyCachDongGoi WHERE duoc_pham_id = $1 ORDER BY he_so_quy_doi ASC`;
+    const vQuery = `SELECT id, ten_don_vi, gia_ban FROM QuyCachDongGoi WHERE duoc_pham_id = $1 ORDER BY id ASC`;
     const vRes = await pool.query(vQuery, [id]);
 
     const product = pRes.rows[0];
@@ -81,15 +85,19 @@ const updateProductDb = async (id, productData, variantsData) => {
     try {
         await client.query('BEGIN');
 
+        // Also update slug to string to match updated name (or leave it if you want fixed URLs)
+        const newSlug = generateSlug(productData.ten_thuoc) + '-' + Date.now();
+
         const pQuery = `
             UPDATE DuocPham 
-            SET ten_thuoc = $1, so_dang_ky = $2, danh_muc_id = $3, don_vi_san_xuat_id = $4,
-                hinh_anh_url = $5, la_thuoc_ke_don = $6, mo_ta_ngan = $7, chi_tiet_thuoc = $8,
-                trang_thai = COALESCE($9, trang_thai)
-            WHERE id = $10 RETURNING id;
+            SET ten_thuoc = $1, slug = $2, so_dang_ky = $3, danh_muc_id = $4, don_vi_san_xuat_id = $5,
+                hinh_anh_url = $6, la_thuoc_ke_don = $7, mo_ta_ngan = $8, chi_tiet_thuoc = $9,
+                trang_thai = COALESCE($10, trang_thai),
+                ngay_cap_nhat_moi = CURRENT_TIMESTAMP
+            WHERE id = $11 RETURNING id;
         `;
         const pValues = [
-            productData.ten_thuoc, productData.so_dang_ky, productData.danh_muc_id,
+            productData.ten_thuoc, newSlug, productData.so_dang_ky, productData.danh_muc_id,
             productData.don_vi_san_xuat_id, productData.hinh_anh_url,
             productData.la_thuoc_ke_don, productData.mo_ta_ngan, productData.chi_tiet_thuoc,
             productData.trang_thai, id
@@ -102,11 +110,11 @@ const updateProductDb = async (id, productData, variantsData) => {
         await client.query(`DELETE FROM QuyCachDongGoi WHERE duoc_pham_id = $1`, [id]);
 
         const vQuery = `
-            INSERT INTO QuyCachDongGoi (duoc_pham_id, ten_don_vi, he_so_quy_doi, gia_ban, la_don_vi_co_ban)
-            VALUES ($1, $2, $3, $4, $5);
+            INSERT INTO QuyCachDongGoi (duoc_pham_id, ten_don_vi, gia_ban)
+            VALUES ($1, $2, $3);
         `;
         for (const v of variantsData) {
-            await client.query(vQuery, [id, v.ten_don_vi, v.he_so_quy_doi, v.gia_ban, v.la_don_vi_co_ban]);
+            await client.query(vQuery, [id, v.ten_don_vi, v.gia_ban]);
         }
 
         await client.query('COMMIT');
