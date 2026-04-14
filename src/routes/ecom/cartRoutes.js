@@ -1,5 +1,5 @@
 import express from 'express';
-import { getCart, addCartItem } from '../../controllers/ecom/cartController.js';
+import { getCart, addCartItem, updateCartItem, removeCartItem } from '../../controllers/ecom/cartController.js';
 import { protect } from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -51,24 +51,59 @@ router.get('/', getCart);
  *             properties:
  *               duoc_pham_id:
  *                 type: integer
- *                 example: 15
- *                 description: ID of the product (medicine)
  *               quy_cach_id:
  *                 type: integer
- *                 example: 3
- *                 description: ID of the packaging type (e.g., blister pack, box, etc.)
  *               so_luong:
  *                 type: integer
- *                 example: 2
- *                 description: Quantity to purchase
  *     responses:
  *       200:
  *         description: Product added to cart successfully
- *       400:
- *         description: Missing information or invalid quantity
- *       401:
- *         description: Authentication error - Not logged in
  */
 router.post('/add', addCartItem);
+
+/**
+ * @swagger
+ * /cart/update:
+ *   put:
+ *     summary: Update quantity of a cart item
+ *     tags: [E-com - Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               duoc_pham_id:
+ *                 type: integer
+ *               quy_cach_id:
+ *                 type: integer
+ *               so_luong:
+ *                 type: integer
+ */
+router.put('/update', updateCartItem);
+
+/**
+ * @swagger
+ * /cart/remove/{duoc_pham_id}:
+ *   delete:
+ *     summary: Remove a product from the cart
+ *     tags: [E-com - Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: duoc_pham_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: quy_cach_id
+ *         schema:
+ *           type: integer
+ */
+router.delete('/remove/:duoc_pham_id', removeCartItem);
 
 export default router;

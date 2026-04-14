@@ -22,4 +22,15 @@ const addToCart = async (userId, duoc_pham_id, quy_cach_id, so_luong) => {
     return await cartModel.upsertCartItem(userId, duoc_pham_id, quy_cach_id, so_luong);
 };
 
-export { fetchUserCart, addToCart };
+const updateCartQuantity = async (userId, duoc_pham_id, quy_cach_id, so_luong) => {
+    if (so_luong <= 0) {
+        return await cartModel.removeCartItem(userId, duoc_pham_id, quy_cach_id);
+    }
+    return await cartModel.updateItemQuantity(userId, duoc_pham_id, quy_cach_id, so_luong);
+};
+
+const removeFromCart = async (userId, duoc_pham_id, quy_cach_id) => {
+    return await cartModel.removeCartItem(userId, duoc_pham_id, quy_cach_id);
+};
+
+export { fetchUserCart, addToCart, updateCartQuantity, removeFromCart };
