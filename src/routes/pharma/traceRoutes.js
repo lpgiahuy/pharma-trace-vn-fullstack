@@ -30,7 +30,7 @@ const router = express.Router();
  *             properties:
  *               uid:
  *                 type: string
- *                 example: "BOX-UID-2024-XYZ123"
+ *                 example: "bbbf80ea-0a2b-40b0-9911-14a43c3aa7e4"
  *                 description: Unique identifier (UID) of the medicine box scanned from QR code
  *     responses:
  *       200:
