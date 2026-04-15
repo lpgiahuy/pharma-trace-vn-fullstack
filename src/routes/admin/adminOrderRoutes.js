@@ -14,7 +14,7 @@ const router = express.Router();
 
 // Security: All order operations require authentication and specific role permissions
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'BanHang', 'QuanLyKho'));
+router.use(authorizeRoles('SuperAdmin', 'NhanVienBanHang', 'QuanLyKho'));
 
 /**
  * @swagger

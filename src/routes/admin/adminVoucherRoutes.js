@@ -14,7 +14,7 @@ const router = express.Router();
 
 // Authorization: Must be logged in with SuperAdmin or Sales role
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'BanHang'));
+router.use(authorizeRoles('SuperAdmin', 'NhanVienBanHang'));
 
 /**
  * @swagger

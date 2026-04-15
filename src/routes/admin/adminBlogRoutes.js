@@ -68,7 +68,7 @@ router.get('/public/:id', getPublicBlogDetail);
 // 2. AUTHENTICATION & AUTHORIZATION MIDDLEWARE
 // ==============================================================================
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'BanHang')); // Only Admin and Sales staff can create/edit blogs
+router.use(authorizeRoles('SuperAdmin', 'NhanVienBanHang')); // Only Admin and Sales staff can create/edit blogs
 
 // ==============================================================================
 // 3. ADMIN MANAGEMENT API

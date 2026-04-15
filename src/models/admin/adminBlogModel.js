@@ -25,7 +25,7 @@ const getBlogById = async (id) => {
 };
 
 // create a new blog post
-const createBlog = async (tieu_de, anh_bia, noi_dung, nhan_vien_dang_id) => {
+const createBlog = async (tieu_de, anh_bia, noi_dung, chuyen_muc, nhan_vien_dang_id) => {
     const query = `
         INSERT INTO BaiViet (tieu_de, anh_bia, noi_dung, nhan_vien_dang_id)
         VALUES ($1, $2, $3, $4)
@@ -36,7 +36,7 @@ const createBlog = async (tieu_de, anh_bia, noi_dung, nhan_vien_dang_id) => {
 };
 
 // update an existing blog post
-const updateBlog = async (id, tieu_de, anh_bia, noi_dung) => {
+const updateBlog = async (id, tieu_de, anh_bia, noi_dung, chuyen_muc) => {
     const query = `
         UPDATE BaiViet
         SET tieu_de = COALESCE($1, tieu_de),

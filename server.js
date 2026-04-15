@@ -39,8 +39,9 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Giới hạn dung lượng Body JSON gửi lên (Chống tấn công làm tràn bộ nhớ)
-app.use(express.json({ limit: '10kb' })); 
+// Giới hạn dung lượng Body JSON gửi lên (Nâng lên 50mb để hỗ trợ đăng bài Blog có kèm ảnh Base64)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true })); 
 
 // --- 2. LỚP CHỐNG SPAM (RATE LIMITING) ---
 // Giới hạn tối đa 100 request / 15 phút cho mỗi IP

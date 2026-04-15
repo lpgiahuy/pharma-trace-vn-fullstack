@@ -15,7 +15,7 @@ const fetchBlogDetail = async (id) => {
 };
 
 const addBlog = async (payload, nhan_vien_id) => {
-    const { tieu_de, anh_bia, noi_dung } = payload;
+    const { tieu_de, anh_bia, noi_dung, chuyen_muc } = payload;
     
     if (!tieu_de || !noi_dung) {
         const error = new Error('Title and content are required!');
@@ -23,12 +23,12 @@ const addBlog = async (payload, nhan_vien_id) => {
         throw error;
     }
 
-    return await adminBlogModel.createBlog(tieu_de, anh_bia, noi_dung, nhan_vien_id);
+    return await adminBlogModel.createBlog(tieu_de, anh_bia, noi_dung, chuyen_muc, nhan_vien_id);
 };
 
 const editBlog = async (id, payload) => {
-    const { tieu_de, anh_bia, noi_dung } = payload;
-    const updated = await adminBlogModel.updateBlog(id, tieu_de, anh_bia, noi_dung);
+    const { tieu_de, anh_bia, noi_dung, chuyen_muc } = payload;
+    const updated = await adminBlogModel.updateBlog(id, tieu_de, anh_bia, noi_dung, chuyen_muc);
     
     if (!updated) {
         const error = new Error('Blog does not exist!');

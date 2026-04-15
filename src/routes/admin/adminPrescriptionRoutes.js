@@ -14,7 +14,7 @@ const router = express.Router();
 
 // BẢO MẬT: Phải đăng nhập và có Role Dược sĩ (hoặc Admin/Bán hàng) mới được xem và duyệt toa
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'DuocSi', 'BanHang'));
+router.use(authorizeRoles('SuperAdmin', 'NhanVienBanHang'));
 
 /**
  * @swagger

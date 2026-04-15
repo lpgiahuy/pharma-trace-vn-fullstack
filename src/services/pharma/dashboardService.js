@@ -1,26 +1,72 @@
 import * as dashboardModel from '../../models/pharma/dashboardModel.js';
 
+// Helper function to calculate percentage change
+const calculateChange = (current, previous) => {
+    if (previous === 0) return current > 0 ? '+100%' : '0%';
+    const change = ((current - previous) / previous) * 100;
+    const sign = change > 0 ? '+' : '';
+    return `${sign}${change.toFixed(1)}%`;
+};
+
+const getTrend = (current, previous) => current >= previous ? 'up' : 'down';
+
 export const fetchAdminDashboard = async () => {
-    // use Promise.all to fetch all data in parallel for better performance
+    // Legacy endpoint: Keep it for compatibility if needed
     const [heatmap, canDate, doanhThu, tonKho] = await Promise.all([
         dashboardModel.getHeatmapData(),
         dashboardModel.getNearExpiredDrugs(),
         dashboardModel.getDailyRevenue(),
         dashboardModel.getInventorySummary()
     ]);
-
-    // format data as needed for frontend (e.g. convert date formats, calculate additional fields, etc.) - this is just a placeholder
     return {
-        // data for heatmap of suspicious QR code scans (potential counterfeit hotspots)
         heatmap_diem_nong: heatmap, 
-        
-        // data for list of medicines nearing expiry (within 60 days)
         thuoc_can_date: canDate,     
-        
-        // data for daily revenue chart (line chart showing revenue trends over time)
         bieu_do_doanh_thu: doanhThu, 
-        
-        // data for overall inventory summary by warehouse (total products in stock, etc.)
         tong_quan_kho: tonKho        
     };
+};
+
+export const fetchDashboardStats = async () => {
+    const rawData = await dashboardModel.getOverallStats();
+    
+    return {
+        revenue: {
+            value: parseInt(rawData.rev_current || 0),
+            change: calculateChange(parseInt(rawData.rev_current || 0), parseInt(rawData.rev_prev || 0)),
+            trend: getTrend(parseInt(rawData.rev_current || 0), parseInt(rawData.rev_prev || 0))
+        },
+        orders: {
+            value: parseInt(rawData.orders_current || 0),
+            change: calculateChange(parseInt(rawData.orders_current || 0), parseInt(rawData.orders_prev || 0)),
+            trend: getTrend(parseInt(rawData.orders_current || 0), parseInt(rawData.orders_prev || 0))
+        },
+        customers: {
+            value: parseInt(rawData.cust_current || 0),
+            change: calculateChange(parseInt(rawData.cust_current || 0), parseInt(rawData.cust_prev || 0)),
+            trend: getTrend(parseInt(rawData.cust_current || 0), parseInt(rawData.cust_prev || 0))
+        },
+        lowStock: {
+            value: parseInt(rawData.low_stock_count || 0),
+            change: '', // Low stock doesn't really need a month-over-month trend in this UI
+            trend: 'down' // Just default
+        }
+    };
+};
+
+export const fetchRevenueChart = async () => {
+    const chartData = await dashboardModel.getMonthlyRevenueChart();
+    // Parse int for react recharts
+    return chartData.map(item => ({
+        month: item.month,
+        revenue: parseInt(item.revenue),
+        orders: parseInt(item.orders)
+    }));
+};
+
+export const fetchTopProducts = async (limit = 5) => {
+    return await dashboardModel.getTopSellingProducts(limit);
+};
+
+export const fetchLowStockAlerts = async () => {
+    return await dashboardModel.getLowStockItems();
 };

@@ -46,7 +46,7 @@ router.get('/public', getPublicCategories);
 // 2. AUTHENTICATION & AUTHORIZATION MIDDLEWARE
 // ==============================================================================
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'BanHang'));
+router.use(authorizeRoles('SuperAdmin', 'NhanVienBanHang'));
 
 // ==============================================================================
 // 3. ADMIN-ONLY API
