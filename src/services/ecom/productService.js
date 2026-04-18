@@ -1,7 +1,28 @@
 import * as productModel from '../../models/ecom/productModel.js';
 
 const fetchCategories = async () => {
-    return await productModel.getAllCategories();
+    const flatCategories = await productModel.getAllCategories();
+    
+    const categoryMap = {};
+    const tree = [];
+
+    // Initialize map
+    flatCategories.forEach(cat => {
+        categoryMap[cat.id] = { ...cat, children: [] };
+    });
+
+    // Build tree
+    flatCategories.forEach(cat => {
+        if (cat.danh_muc_cha_id) {
+            if (categoryMap[cat.danh_muc_cha_id]) {
+                categoryMap[cat.danh_muc_cha_id].children.push(categoryMap[cat.id]);
+            }
+        } else {
+            tree.push(categoryMap[cat.id]);
+        }
+    });
+
+    return tree;
 };
 
 const fetchProducts = async (query, userId = null) => {

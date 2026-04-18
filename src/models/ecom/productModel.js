@@ -3,10 +3,10 @@ import pool from '../../config/db.js';
 // 1. Get all categories
 const getAllCategories = async () => {
     const query = `
-        SELECT id, ten_danh_muc, hinh_anh_icon 
+        SELECT id, ten_danh_muc, hinh_anh_icon, danh_muc_cha_id 
         FROM DanhMuc 
         WHERE trang_thai = TRUE
-        ORDER BY thu_tu_hien_thi ASC;
+        ORDER BY thu_tu_hien_thi ASC, ten_danh_muc ASC;
     `;
     const result = await pool.query(query);
     return result.rows;

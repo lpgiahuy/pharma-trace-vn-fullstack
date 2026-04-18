@@ -30,12 +30,25 @@ app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 
 // Cấu hình CORS chặt chẽ: Chỉ cho phép tên miền Frontend của bạn truy cập
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    process.env.FRONTEND_URL,
+    process.env.FRONTEND_URL_2 // Optional backup
+].filter(Boolean);
+
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'production' 
-        ? [process.env.FRONTEND_URL] // Ví dụ: 'https://pharmachain.com'
-        : '*', // Mở cửa khi code ở máy Local
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin || process.env.NODE_ENV !== 'production') return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // Bắt buộc nếu bạn dùng Cookie để Auth
+    credentials: true,
 };
 app.use(cors(corsOptions));
 

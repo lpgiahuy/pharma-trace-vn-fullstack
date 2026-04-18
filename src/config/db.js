@@ -5,12 +5,15 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const pool = new Pool({
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    database: process.env.DB_NAME,
+    connectionString: process.env.DATABASE_URL,
+    // Fallback for local development if DATABASE_URL is not set
+    user: process.env.DATABASE_URL ? undefined : process.env.DB_USER,
+    password: process.env.DATABASE_URL ? undefined : process.env.DB_PASSWORD,
+    host: process.env.DATABASE_URL ? undefined : process.env.DB_HOST,
+    port: process.env.DATABASE_URL ? undefined : process.env.DB_PORT,
+    database: process.env.DATABASE_URL ? undefined : process.env.DB_NAME,
     max: 20,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 export const connectToDatabase = async () => {
