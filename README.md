@@ -121,10 +121,8 @@ All endpoint URLs below are relative to the base URL.
 
 ---
 
-<details>
-<summary><strong>1. 🔐 Customer Authentication</strong></summary>
-
-### 1. 🔐 Customer Authentication
+<details open>
+<summary><h3>1. 🔐 Customer Authentication</h3></summary>
 
 #### `POST /auth/register`
 
@@ -153,9 +151,7 @@ Customer login — returns a JWT token.
 ---
 
 <details>
-<summary><strong>2. 🛍️ Products (Public)</strong></summary>
-
-### 2. 🛍️ Products (Public)
+<summary><h3>2. 🛍️ Products (Public)</h3></summary>
 
 #### `GET /products`
 
@@ -203,9 +199,7 @@ Get detailed product information by ID or slug.
 ---
 
 <details>
-<summary><strong>3. 🛒 Cart</strong></summary>
-
-### 3. 🛒 Cart
+<summary><h3>3. 🛒 Cart</h3></summary>
 
 > **All cart endpoints require Customer JWT token.**
 
@@ -231,9 +225,7 @@ Add a product to the shopping cart.
 ---
 
 <details>
-<summary><strong>4. 📦 Orders</strong></summary>
-
-### 4. 📦 Orders
+<summary><h3>4. 📦 Orders</h3></summary>
 
 #### `POST /orders/checkout`
 
@@ -249,15 +241,13 @@ Place an order from the current cart.
 | `dia_chi_giao_hang` | string | ✅ | Delivery address |
 | `phuong_thuc_thanh_toan` | string | ✅ | Payment method: `COD`, `VNPAY`, `MOMO` |
 | `ghi_chu` | string | ❌ | Note for shipper |
-| `voucher_id` | integer | ❌ | Voucher ID for discount |
+| `voucher_id" | integer | ❌ | Voucher ID for discount |
 </details>
 
 ---
 
 <details>
-<summary><strong>5. ⭐ Reviews</strong></summary>
-
-### 5. ⭐ Reviews
+<summary><h3>5. ⭐ Reviews</h3></summary>
 
 #### `GET /reviews/product/:productId`
 
@@ -280,9 +270,7 @@ Submit a product review (one review per product per customer).
 ---
 
 <details>
-<summary><strong>6. 💝 Wishlist</strong></summary>
-
-### 6. 💝 Wishlist
+<summary><h3>6. 💝 Wishlist</h3></summary>
 
 > **All wishlist endpoints require Customer JWT token.**
 
@@ -297,9 +285,7 @@ Submit a product review (one review per product per customer).
 ---
 
 <details>
-<summary><strong>7. 🎟️ Vouchers (Customer)</strong></summary>
-
-### 7. 🎟️ Vouchers (Customer)
+<summary><h3>7. 🎟️ Vouchers (Customer)</h3></summary>
 
 #### `POST /vouchers/apply`
 
@@ -312,9 +298,7 @@ Apply a voucher code to the order.
 ---
 
 <details>
-<summary><strong>8. 📋 Prescriptions (Customer)</strong></summary>
-
-### 8. 📋 Prescriptions (Customer)
+<summary><h3>8. 📋 Prescriptions (Customer)</h3></summary>
 
 #### `POST /prescriptions/upload`
 
@@ -335,9 +319,7 @@ Upload a prescription image for pharmacist review.
 ---
 
 <details>
-<summary><strong>9. 🔄 RMA — Returns (Customer)</strong></summary>
-
-### 9. 🔄 RMA — Returns (Customer)
+<summary><h3>9. 🔄 RMA — Returns (Customer)</h3></summary>
 
 #### `POST /rma/request`
 
@@ -359,9 +341,7 @@ Submit a return/refund request (order must be in "Delivered" status).
 ---
 
 <details>
-<summary><strong>10. 🔍 Traceability (QR Scan)</strong></summary>
-
-### 10. 🔍 Traceability (QR Scan)
+<summary><h3>10. 🔍 Traceability (QR Scan)</h3></summary>
 
 #### `POST /trace/scan-qr`
 
@@ -376,9 +356,7 @@ Scan a QR code to trace a medicine box's full journey.
 ---
 
 <details>
-<summary><strong>11. 🏢 Admin Authentication</strong></summary>
-
-### 11. 🏢 Admin Authentication
+<summary><h3>11. 🏢 Admin Authentication</h3></summary>
 
 #### `POST /admin/auth/login`
 
@@ -398,9 +376,7 @@ Initialize the first SuperAdmin account (first-time deployment only).
 ---
 
 <details>
-<summary><strong>12. 📦 Admin — Product Management</strong></summary>
-
-### 12. 📦 Admin — Product Management
+<summary><h3>12. 📦 Admin — Product Management</h3></summary>
 
 > **Auth Required:** JWT with `SuperAdmin` or `QuanLyKho` role.
 
@@ -417,9 +393,7 @@ Initialize the first SuperAdmin account (first-time deployment only).
 ---
 
 <details>
-<summary><strong>13. 📋 Admin — Order Management</strong></summary>
-
-### 13. 📋 Admin — Order Management
+<summary><h3>13. 📋 Admin — Order Management</h3></summary>
 
 > **Auth Required:** JWT with `SuperAdmin`, `NhanVienBanHang`, or `QuanLyKho` role.
 
@@ -434,9 +408,7 @@ Initialize the first SuperAdmin account (first-time deployment only).
 ---
 
 <details>
-<summary><strong>14. 💊 Admin — Prescription Management</strong></summary>
-
-### 14. 💊 Admin — Prescription Management
+<summary><h3>14. 💊 Admin — Prescription Management</h3></summary>
 
 > **Auth Required:** JWT with `SuperAdmin` or `NhanVienBanHang` role.
 
@@ -450,9 +422,7 @@ Initialize the first SuperAdmin account (first-time deployment only).
 ---
 
 <details>
-<summary><strong>15. 👥 Admin — Staff Management</strong></summary>
-
-### 15. 👥 Admin — Staff Management
+<summary><h3>15. 👥 Admin — Staff Management</h3></summary>
 
 > **Auth Required:** JWT with `SuperAdmin` role only.
 
@@ -470,9 +440,7 @@ Available roles: `SuperAdmin`, `QuanLyKho`, `NhanVienBanHang`
 ---
 
 <details>
-<summary><strong>16. 🎟️ Admin — Voucher Management</strong></summary>
-
-### 16. 🎟️ Admin — Voucher Management
+<summary><h3>16. 🎟️ Admin — Voucher Management</h3></summary>
 
 > **Auth Required:** JWT with `SuperAdmin` or `NhanVienBanHang` role.
 
@@ -487,9 +455,7 @@ Available roles: `SuperAdmin`, `QuanLyKho`, `NhanVienBanHang`
 ---
 
 <details>
-<summary><strong>17. 📂 Admin — Category Management</strong></summary>
-
-### 17. 📂 Admin — Category Management
+<summary><h3>17. 📂 Admin — Category Management</h3></summary>
 
 > **Auth Required:** JWT with `SuperAdmin` or `NhanVienBanHang` role (except public endpoint).
 
@@ -505,9 +471,7 @@ Available roles: `SuperAdmin`, `QuanLyKho`, `NhanVienBanHang`
 ---
 
 <details>
-<summary><strong>18. 📝 Admin — Blog Management</strong></summary>
-
-### 18. 📝 Admin — Blog Management
+<summary><h3>18. 📝 Admin — Blog Management</h3></summary>
 
 > **Auth Required:** JWT with `SuperAdmin` or `NhanVienBanHang` role (except public endpoints).
 
@@ -523,9 +487,7 @@ Available roles: `SuperAdmin`, `QuanLyKho`, `NhanVienBanHang`
 ---
 
 <details>
-<summary><strong>19. 🔄 Admin — RMA Management</strong></summary>
-
-### 19. 🔄 Admin — RMA Management
+<summary><h3>19. 🔄 Admin — RMA Management</h3></summary>
 
 > **Auth Required:** JWT with `SuperAdmin` or `NhanVienBanHang` role.
 
@@ -538,9 +500,7 @@ Available roles: `SuperAdmin`, `QuanLyKho`, `NhanVienBanHang`
 ---
 
 <details>
-<summary><strong>20. 🏭 Inventory Management</strong></summary>
-
-### 20. 🏭 Inventory Management
+<summary><h3>20. 🏭 Inventory Management</h3></summary>
 
 #### `POST /inventory/nhap-kho`
 
@@ -553,9 +513,7 @@ Import a new medicine batch from supplier into warehouse inventory.
 ---
 
 <details>
-<summary><strong>21. 📊 Dashboard</strong></summary>
-
-### 21. 📊 Dashboard
+<summary><h3>21. 📊 Dashboard</h3></summary>
 
 #### `GET /dashboard`
 
@@ -568,9 +526,7 @@ Get comprehensive admin dashboard data.
 ---
 
 <details>
-<summary><strong>22. 🚚 Logistics</strong></summary>
-
-### 22. 🚚 Logistics
+<summary><h3>22. 🚚 Logistics</h3></summary>
 
 > **Auth Required:** JWT with `SuperAdmin` or `QuanLyKho` role.
 
