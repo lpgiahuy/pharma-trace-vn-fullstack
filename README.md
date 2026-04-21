@@ -121,6 +121,9 @@ All endpoint URLs below are relative to the base URL.
 
 ---
 
+<details>
+<summary><strong>1. 🔐 Customer Authentication</strong></summary>
+
 ### 1. 🔐 Customer Authentication
 
 #### `POST /auth/register`
@@ -144,8 +147,13 @@ Register a new customer account.
 Customer login — returns a JWT token.
 
 - **Auth Required:** No
+</details>
+
 
 ---
+
+<details>
+<summary><strong>2. 🛍️ Products (Public)</strong></summary>
 
 ### 2. 🛍️ Products (Public)
 
@@ -190,8 +198,12 @@ Get detailed product information by ID or slug.
 | Parameter | In | Type | Description |
 |---|---|---|---|
 | `id` | path | string | Product ID or slug |
+</details>
 
 ---
+
+<details>
+<summary><strong>3. 🛒 Cart</strong></summary>
 
 ### 3. 🛒 Cart
 
@@ -214,8 +226,12 @@ Add a product to the shopping cart.
 | `duoc_pham_id` | integer | ✅ | Product (medicine) ID |
 | `quy_cach_id` | integer | ✅ | Packaging type ID |
 | `so_luong` | integer | ✅ | Quantity |
+</details>
 
 ---
+
+<details>
+<summary><strong>4. 📦 Orders</strong></summary>
 
 ### 4. 📦 Orders
 
@@ -234,8 +250,12 @@ Place an order from the current cart.
 | `phuong_thuc_thanh_toan` | string | ✅ | Payment method: `COD`, `VNPAY`, `MOMO` |
 | `ghi_chu` | string | ❌ | Note for shipper |
 | `voucher_id` | integer | ❌ | Voucher ID for discount |
+</details>
 
 ---
+
+<details>
+<summary><strong>5. ⭐ Reviews</strong></summary>
 
 ### 5. ⭐ Reviews
 
@@ -254,9 +274,13 @@ Get reviews for a specific product.
 Submit a product review (one review per product per customer).
 
 - **Auth Required:** Customer JWT
+</details>
 
 
 ---
+
+<details>
+<summary><strong>6. 💝 Wishlist</strong></summary>
 
 ### 6. 💝 Wishlist
 
@@ -267,9 +291,13 @@ Submit a product review (one review per product per customer).
 | `GET` | `/wishlist` | Get my wishlist |
 | `POST` | `/wishlist/add` | Add product to wishlist |
 | `DELETE` | `/wishlist/remove/:productId` | Remove product from wishlist |
+</details>
 
 
 ---
+
+<details>
+<summary><strong>7. 🎟️ Vouchers (Customer)</strong></summary>
 
 ### 7. 🎟️ Vouchers (Customer)
 
@@ -278,9 +306,13 @@ Submit a product review (one review per product per customer).
 Apply a voucher code to the order.
 
 - **Auth Required:** Customer JWT
+</details>
 
 
 ---
+
+<details>
+<summary><strong>8. 📋 Prescriptions (Customer)</strong></summary>
 
 ### 8. 📋 Prescriptions (Customer)
 
@@ -297,9 +329,13 @@ Upload a prescription image for pharmacist review.
 | `ten_bac_si` | string | ❌ | Doctor name |
 | `ten_benh_vien` | string | ❌ | Hospital name |
 | `chuan_doan` | string | ❌ | Diagnosis |
+</details>
 
 
 ---
+
+<details>
+<summary><strong>9. 🔄 RMA — Returns (Customer)</strong></summary>
 
 ### 9. 🔄 RMA — Returns (Customer)
 
@@ -318,8 +354,12 @@ Submit a return/refund request (order must be in "Delivered" status).
 | `400` | Order not eligible or missing data |
 | `403` | Attempting to return another user's order |
 | `404` | Order not found |
+</details>
 
 ---
+
+<details>
+<summary><strong>10. 🔍 Traceability (QR Scan)</strong></summary>
 
 ### 10. 🔍 Traceability (QR Scan)
 
@@ -331,8 +371,12 @@ Scan a QR code to trace a medicine box's full journey.
 
 
 **Returns:** Batch info, manufacturer, expiry date, and full warehouse movement history.
+</details>
 
 ---
+
+<details>
+<summary><strong>11. 🏢 Admin Authentication</strong></summary>
 
 ### 11. 🏢 Admin Authentication
 
@@ -349,8 +393,12 @@ Admin/Staff login.
 Initialize the first SuperAdmin account (first-time deployment only).
 
 - **Auth Required:** No
+</details>
 
 ---
+
+<details>
+<summary><strong>12. 📦 Admin — Product Management</strong></summary>
 
 ### 12. 📦 Admin — Product Management
 
@@ -363,9 +411,13 @@ Initialize the first SuperAdmin account (first-time deployment only).
 | `POST` | `/admin/products/add` | Create a new product |
 | `PUT` | `/admin/products/:id` | Update product & packaging units |
 | `DELETE` | `/admin/products/:id` | Soft delete (set inactive) |
+</details>
 
 
 ---
+
+<details>
+<summary><strong>13. 📋 Admin — Order Management</strong></summary>
 
 ### 13. 📋 Admin — Order Management
 
@@ -376,9 +428,13 @@ Initialize the first SuperAdmin account (first-time deployment only).
 | `GET` | `/admin/orders` | List all orders |
 | `GET` | `/admin/orders/:id` | Get order detail with line items |
 | `POST` | `/admin/orders/:id/fulfill` | Fulfill order by assigning scanned UIDs |
+</details>
 
 
 ---
+
+<details>
+<summary><strong>14. 💊 Admin — Prescription Management</strong></summary>
 
 ### 14. 💊 Admin — Prescription Management
 
@@ -388,9 +444,13 @@ Initialize the first SuperAdmin account (first-time deployment only).
 |---|---|---|
 | `GET` | `/admin/prescriptions` | List prescriptions (filter by `?status=ChoDuyet\|HopLe\|TuChoi`) |
 | `PUT` | `/admin/prescriptions/:id/status` | Approve or reject a prescription |
+</details>
 
 
 ---
+
+<details>
+<summary><strong>15. 👥 Admin — Staff Management</strong></summary>
 
 ### 15. 👥 Admin — Staff Management
 
@@ -405,8 +465,12 @@ Initialize the first SuperAdmin account (first-time deployment only).
 
 
 Available roles: `SuperAdmin`, `QuanLyKho`, `NhanVienBanHang`
+</details>
 
 ---
+
+<details>
+<summary><strong>16. 🎟️ Admin — Voucher Management</strong></summary>
 
 ### 16. 🎟️ Admin — Voucher Management
 
@@ -417,9 +481,13 @@ Available roles: `SuperAdmin`, `QuanLyKho`, `NhanVienBanHang`
 | `GET` | `/admin/vouchers` | List all vouchers |
 | `POST` | `/admin/vouchers/add` | Create a new voucher |
 | `DELETE` | `/admin/vouchers/:id` | Delete a voucher (hard delete) |
+</details>
 
 
 ---
+
+<details>
+<summary><strong>17. 📂 Admin — Category Management</strong></summary>
 
 ### 17. 📂 Admin — Category Management
 
@@ -432,8 +500,12 @@ Available roles: `SuperAdmin`, `QuanLyKho`, `NhanVienBanHang`
 | `POST` | `/admin/categories/add` | ✅ Admin | Create a category |
 | `PUT` | `/admin/categories/:id` | ✅ Admin | Update a category |
 | `DELETE` | `/admin/categories/:id` | ✅ Admin | Soft delete (hide from customers) |
+</details>
 
 ---
+
+<details>
+<summary><strong>18. 📝 Admin — Blog Management</strong></summary>
 
 ### 18. 📝 Admin — Blog Management
 
@@ -446,8 +518,12 @@ Available roles: `SuperAdmin`, `QuanLyKho`, `NhanVienBanHang`
 | `POST` | `/admin/blogs/add` | ✅ Admin | Create a blog post |
 | `PUT` | `/admin/blogs/:id` | ✅ Admin | Update a blog post |
 | `DELETE` | `/admin/blogs/:id` | ✅ Admin | Delete a blog post (hard delete) |
+</details>
 
 ---
+
+<details>
+<summary><strong>19. 🔄 Admin — RMA Management</strong></summary>
 
 ### 19. 🔄 Admin — RMA Management
 
@@ -457,8 +533,12 @@ Available roles: `SuperAdmin`, `QuanLyKho`, `NhanVienBanHang`
 |---|---|---|
 | `GET` | `/admin/rma` | List all return requests |
 | `PUT` | `/admin/rma/:id/status` | Approve (`DaHoanTien`) or reject (`TuChoi`) |
+</details>
 
 ---
+
+<details>
+<summary><strong>20. 🏭 Inventory Management</strong></summary>
 
 ### 20. 🏭 Inventory Management
 
@@ -467,9 +547,13 @@ Available roles: `SuperAdmin`, `QuanLyKho`, `NhanVienBanHang`
 Import a new medicine batch from supplier into warehouse inventory.
 
 - **Auth Required:** JWT with `SuperAdmin` or `QuanLyKho` role
+</details>
 
 
 ---
+
+<details>
+<summary><strong>21. 📊 Dashboard</strong></summary>
 
 ### 21. 📊 Dashboard
 
@@ -478,9 +562,13 @@ Import a new medicine batch from supplier into warehouse inventory.
 Get comprehensive admin dashboard data.
 
 - **Auth Required:** JWT with `SuperAdmin` role only
+</details>
 
 
 ---
+
+<details>
+<summary><strong>22. 🚚 Logistics</strong></summary>
 
 ### 22. 🚚 Logistics
 
@@ -492,6 +580,7 @@ Get comprehensive admin dashboard data.
 | `POST` | `/logistics/dispose` | Dispose of damaged/expired boxes |
 | `POST` | `/logistics/return` | Process customer return to warehouse |
 | `POST` | `/logistics/recall/:loThuocId` | Emergency batch recall |
+</details>
 
 
 ---
