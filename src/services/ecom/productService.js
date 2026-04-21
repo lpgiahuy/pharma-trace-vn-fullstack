@@ -36,21 +36,70 @@ const fetchProducts = async (query, userId = null) => {
 
     const products = await productModel.getProducts(categoryId, search, sort, limit, offset, userId);
     
+    // Map DB fields to Frontend fields
+    const mappedItems = products.map(p => ({
+        id: p.id,
+        name: p.ten_thuoc,
+        slug: p.slug,
+        image: p.hinh_anh_url,
+        price: parseFloat(p.gia_ban),
+        originalPrice: parseFloat(p.gia_goc),
+        discount: p.phan_tram_giam,
+        unit: p.don_vi_ban,
+        inStock: p.total_stock > 0,
+        totalStock: p.total_stock,
+        isPrescription: p.la_thuoc_ke_don,
+        rating: parseFloat(p.diem_danh_gia),
+        isFavorited: p.is_favorited,
+        soldCount: p.so_luong_da_ban
+    }));
+
     return {
         current_page: page,
         limit_per_page: limit,
-        items: products
+        items: mappedItems
     };
 };
 
 const fetchProductDetail = async (idOrSlug, userId = null) => {
-    const product = await productModel.getProductByIdOrSlug(idOrSlug, userId);
-    if (!product) {
+    const p = await productModel.getProductByIdOrSlug(idOrSlug, userId);
+    if (!p) {
         const error = new Error('Product not found');
         error.statusCode = 404;
         throw error;
     }
-    return product;
+    
+    // Map main product to frontend expectations
+    const mappedProduct = {
+        id: p.id,
+        name: p.ten_thuoc,
+        slug: p.slug,
+        registrationNumber: p.so_dang_ky,
+        image: p.hinh_anh_url,
+        isPrescription: p.la_thuoc_ke_don,
+        shortDescription: p.mo_ta_ngan,
+        chi_tiet_thuoc: p.chi_tiet_thuoc, // KEEP THIS AS IS FOR THE TABS
+        soldCount: p.so_luong_da_ban,
+        rating: parseFloat(p.diem_danh_gia),
+        category: p.ten_danh_muc,
+        manufacturer: p.nha_san_xuat,
+        totalStock: p.total_stock,
+        inStock: p.total_stock > 0,
+        isFavorited: p.is_favorited,
+        variants: p.quy_cach_dong_goi.map(v => ({
+            id: v.quy_cach_id,
+            unit: v.ten_don_vi,
+            price: parseFloat(v.gia_ban),
+            originalPrice: parseFloat(v.gia_goc),
+            discount: v.phan_tram_giam
+        }))
+    };
+
+    return mappedProduct;
 };
 
-export { fetchCategories, fetchProducts, fetchProductDetail };
+const fetchUniqueBrands = async () => {
+    return await productModel.getUniqueBrands();
+};
+
+export { fetchCategories, fetchProducts, fetchProductDetail, fetchUniqueBrands };

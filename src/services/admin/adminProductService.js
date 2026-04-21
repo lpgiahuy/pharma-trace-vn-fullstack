@@ -39,8 +39,8 @@ const removeProduct = async (id) => {
     return true;
 };
 
-const fetchAdminProducts = async () => {
-    return await adminProductModel.getAllAdminProducts();
+const fetchAdminProducts = async (search = null) => {
+    return await adminProductModel.getAllAdminProducts(search);
 };
 
 const fetchAdminProductById = async (id) => {

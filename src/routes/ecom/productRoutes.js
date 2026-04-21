@@ -1,5 +1,5 @@
 import express from 'express';
-import { getCategories, getProducts, getProductDetail } from '../../controllers/ecom/productController.js';
+import { getCategories, getProducts, getProductDetail, getBrands } from '../../controllers/ecom/productController.js';
 import { optionalProtect } from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -157,6 +157,31 @@ router.get('/', optionalProtect, getProducts);
  *                   type: string
  *                   example: "Product not found"
  */
+
+/**
+ * @swagger
+ * /products/brands:
+ *   get:
+ *     summary: Get all product brands/manufacturers
+ *     tags: [E-com - Products]
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved list of brands
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     example: "DHG Pharma"
+ */
+router.get('/brands', getBrands);
 
 router.get('/:id', optionalProtect, getProductDetail);
 

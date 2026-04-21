@@ -24,7 +24,7 @@ const getProducts = async (categoryId, search, sort, limit, offset, userId = nul
     const query = `
         SELECT dp.id, dp.ten_thuoc, dp.slug, dp.hinh_anh_url, dp.la_thuoc_ke_don, 
                 dp.mo_ta_ngan, dp.so_luong_da_ban, dp.diem_danh_gia,
-                qc.gia_ban, qc.ten_don_vi AS don_vi_ban,
+                qc.gia_ban, qc.gia_goc, qc.phan_tram_giam, qc.ten_don_vi AS don_vi_ban,
                 (SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE duoc_pham_id = dp.id) AS total_stock,
                 (SELECT EXISTS(SELECT 1 FROM SanPhamYeuThich WHERE khach_hang_id = $5 AND duoc_pham_id = dp.id)) AS is_favorited
         FROM DuocPham dp
@@ -67,7 +67,7 @@ const getProductByIdOrSlug = async (identifier, userId = null) => {
 
     const variantQuery = `
         -- SỬA Ở ĐÂY: Chỉ lấy id, ten_don_vi và gia_ban
-        SELECT id AS quy_cach_id, ten_don_vi, gia_ban
+        SELECT id AS quy_cach_id, ten_don_vi, gia_ban, gia_goc, phan_tram_giam
         FROM QuyCachDongGoi
         WHERE duoc_pham_id = $1
         ORDER BY id ASC; -- Sắp xếp theo ID cho ổn định
@@ -90,4 +90,16 @@ const getNearestPharmacy = async (productId, lat, lng) => {
     return result.rows[0] || null;
 };
 
-export { getAllCategories, getProducts, getProductByIdOrSlug, getNearestPharmacy };
+const getUniqueBrands = async () => {
+    const query = `
+        SELECT DISTINCT dv.ten_don_vi 
+        FROM DonVi dv
+        JOIN DuocPham dp ON dv.id = dp.don_vi_san_xuat_id
+        WHERE dp.trang_thai = TRUE
+        ORDER BY dv.ten_don_vi ASC;
+    `;
+    const result = await pool.query(query);
+    return result.rows.map(r => r.ten_don_vi);
+};
+
+export { getAllCategories, getProducts, getProductByIdOrSlug, getNearestPharmacy, getUniqueBrands };

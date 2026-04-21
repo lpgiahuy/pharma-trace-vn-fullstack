@@ -54,14 +54,31 @@ const softDeleteProduct = async (id) => {
 };
 
 // get all products for admin view (includes hidden/soft-deleted ones)
-const getAllAdminProducts = async () => {
-    const query = `
-        SELECT dp.id, dp.ten_thuoc, dp.so_dang_ky, dp.hinh_anh_url, dp.trang_thai, dm.ten_danh_muc
+const getAllAdminProducts = async (search = null) => {
+    let query = `
+        SELECT DISTINCT ON (dp.id)
+               dp.id, dp.ten_thuoc, dp.so_dang_ky, dp.hinh_anh_url, dp.trang_thai, dm.ten_danh_muc,
+               qc.gia_ban AS price
         FROM DuocPham dp
         LEFT JOIN DanhMuc dm ON dp.danh_muc_id = dm.id
-        ORDER BY dp.id DESC;
+        LEFT JOIN QuyCachDongGoi qc ON dp.id = qc.duoc_pham_id
+        WHERE 1=1
     `;
-    const result = await pool.query(query);
+    const params = [];
+
+    if (search) {
+        query += ` AND (
+            dp.id::TEXT = $1 OR 
+            dp.ten_thuoc ILIKE '%' || $1 || '%' OR 
+            dp.so_dang_ky ILIKE '%' || $1 || '%'
+        )`;
+        params.push(search);
+    }
+
+    // Sort by id DESC, but must include dp.id as the first sort criterion for DISTINCT ON
+    query += ` ORDER BY dp.id DESC, qc.id ASC;`;
+
+    const result = await pool.query(query, params);
     return result.rows;
 };
 

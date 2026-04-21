@@ -36,7 +36,8 @@ const deleteProduct = async (req, res, next) => {
 
 const getAllProductsAdmin = async (req, res, next) => {
     try {
-        const data = await adminProductService.fetchAdminProducts();
+        const { search } = req.query;
+        const data = await adminProductService.fetchAdminProducts(search) || [];
         res.status(200).json({ success: true, data });
     } catch (error) {
         next(error);
