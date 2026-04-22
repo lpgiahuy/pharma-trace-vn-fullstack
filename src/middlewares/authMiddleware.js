@@ -17,14 +17,16 @@ const protect = async (req, res, next) => {
             
             return next();
         } catch (error) {
-            res.status(401);
-            return next(new Error('Token không hợp lệ hoặc đã hết hạn! Vui lòng đăng nhập lại.'));
+            const err = new Error('Token không hợp lệ hoặc đã hết hạn! Vui lòng đăng nhập lại.');
+            err.statusCode = 401;
+            return next(err);
         }
     }
 
     if (!token) {
-        res.status(401);
-        return next(new Error('Không có quyền truy cập! Vui lòng cung cấp Token.'));
+        const err = new Error('Không có quyền truy cập! Vui lòng cung cấp Token.');
+        err.statusCode = 401;
+        return next(err);
     }
 };
 
@@ -35,7 +37,8 @@ const optionalProtect = async (req, res, next) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             req.user = decoded;
         } catch (error) {
-            // ignore error for optional protect
+            // Token hết hạn hoặc không hợp lệ => bỏ qua, tiếp tục xử lý như guest
+            req.user = null;
         }
     }
     next();

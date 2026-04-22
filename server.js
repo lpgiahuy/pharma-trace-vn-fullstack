@@ -97,8 +97,12 @@ app.use((req, res) => {
 
 // [MỚI] 500 Global Error Handler: Bắt mọi lỗi sập server để không lộ Stack Trace
 app.use((err, req, res, next) => {
-    console.error(`[Lỗi Hệ Thống]: ${err.message}`);
-    const statusCode = err.statusCode || 500;
+    // Ưu tiên: status đã set bởi res.status() > err.statusCode > mặc định 500
+    const statusCode = (res.statusCode && res.statusCode !== 200) 
+        ? res.statusCode 
+        : (err.statusCode || 500);
+    
+    console.error(`[Lỗi ${statusCode}]: ${err.message}`);
     res.status(statusCode).json({ 
         success: false, 
         message: process.env.NODE_ENV === 'production' ? 'Đã có lỗi máy chủ nội bộ xảy ra!' : err.message
