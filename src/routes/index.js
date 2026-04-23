@@ -23,6 +23,7 @@ import ecomRmaRoutes from './ecom/rmaRoutes.js';
 import adminRmaRoutes from './admin/adminRmaRoutes.js';
 import adminCustomerRoutes from './admin/adminCustomerRoutes.js';
 import ecomBlogRoutes from './ecom/blogRoutes.js';
+import kienHangRoutes from './pharma/kienHangRoutes.js';
 
 const router = express.Router();
 
@@ -56,5 +57,6 @@ router.use('/admin/rma', adminRmaRoutes); // admin RMA management routes (view a
 
 router.use('/admin/customers', adminCustomerRoutes); // admin customer management (list, detail, lock/unlock) - SuperAdmin only
 router.use('/blogs', ecomBlogRoutes); // public blog routes (list articles, read detail) - no auth required
+router.use('/kien-hang', kienHangRoutes); // bundle/pallet management (create, transfer, inspect) - QuanLyKho & SuperAdmin
 
 export default router;

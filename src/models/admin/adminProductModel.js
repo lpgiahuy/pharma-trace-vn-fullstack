@@ -88,7 +88,9 @@ const getAdminProductDetail = async (id) => {
     const pRes = await pool.query(pQuery, [id]);
     if (pRes.rowCount === 0) return null;
 
-    const vQuery = `SELECT id, ten_don_vi, gia_ban FROM QuyCachDongGoi WHERE duoc_pham_id = $1 ORDER BY id ASC`;
+    const vQuery = `SELECT id, ten_don_vi, gia_ban, gia_goc, phan_tram_giam, 
+                           thoi_gian_bat_dau_sale, thoi_gian_ket_thuc_sale 
+                    FROM QuyCachDongGoi WHERE duoc_pham_id = $1 ORDER BY id ASC`;
     const vRes = await pool.query(vQuery, [id]);
 
     const product = pRes.rows[0];

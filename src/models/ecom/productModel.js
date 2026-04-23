@@ -13,7 +13,7 @@ const getAllCategories = async () => {
 };
 
 // 2. Get products (List)
-const getProducts = async (categoryId, search, sort, limit, offset, userId = null) => {
+const getProducts = async (categoryId, search, sort, limit, offset, userId = null, isFlashSale = false) => {
     let orderBy = 'dp.id DESC';
     if (sort === 'price_asc') orderBy = 'qc.gia_ban ASC NULLS LAST';
     if (sort === 'price_desc') orderBy = 'qc.gia_ban DESC NULLS LAST';
@@ -33,6 +33,7 @@ const getProducts = async (categoryId, search, sort, limit, offset, userId = nul
         WHERE ($1::INT IS NULL OR dp.danh_muc_id = $1)
             AND ($2::VARCHAR IS NULL OR dp.ten_thuoc ILIKE '%' || $2 || '%')
             AND dp.trang_thai = TRUE
+            ${isFlashSale ? `AND qc.phan_tram_giam > 0 AND CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh' BETWEEN qc.thoi_gian_bat_dau_sale AND qc.thoi_gian_ket_thuc_sale` : ''}
         ORDER BY ${orderBy}
         LIMIT $3 OFFSET $4;
     `;
@@ -80,8 +81,15 @@ const getProductByIdOrSlug = async (identifier, userId = null) => {
 
 const getNearestPharmacy = async (productId, lat, lng) => {
     const query = `
-        SELECT ten_nha_thuoc, dia_chi, khoang_cach 
-        FROM fn_find_nearest_pharmacy($1, $2, $3);
+        SELECT dv.id as don_vi_id, dv.ten_don_vi as ten_nha_thuoc, 
+               dv.dia_chi, 
+               fn_tinh_khoang_cach_km($1, $2, dv.toa_do_lat, dv.toa_do_lng) AS khoang_cach
+        FROM DonVi dv
+        JOIN TonKho tk ON dv.id = tk.don_vi_id
+        WHERE dv.loai_don_vi = 'NhaThuoc' 
+          AND tk.duoc_pham_id = $3 
+          AND tk.so_luong_ton > 0
+        ORDER BY khoang_cach ASC LIMIT 1
     `;
     // Lưu ý: Thứ tự tham số trong SQL là (lat, lng, productId)
     const result = await pool.query(query, [lat, lng, productId]);

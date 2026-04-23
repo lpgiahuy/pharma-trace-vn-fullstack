@@ -1,8 +1,8 @@
 import pool from '../../config/db.js';
 
-export const callCheckoutProcedure = async (userId, dia_chi_giao, phuong_thuc_tt, ma_giam_gia, diem_su_dung, phi_ship) => {
-    const query = `CALL sp_tao_don_hang_tu_gio($1, $2, $3, $4, $5, $6)`;
-    await pool.query(query, [userId, dia_chi_giao, phuong_thuc_tt, ma_giam_gia, diem_su_dung, phi_ship]);
+export const callCheckoutProcedure = async (userId, dia_chi_giao, phuong_thuc_tt, ma_giam_gia, diem_su_dung, phi_ship, don_vi_xuat_id = null) => {
+    const query = `CALL sp_tao_don_hang_tu_gio($1, $2, $3, $4, $5, $6, $7)`;
+    await pool.query(query, [userId, dia_chi_giao, phuong_thuc_tt, ma_giam_gia, diem_su_dung, phi_ship, don_vi_xuat_id]);
 
     const result = await pool.query(
         `SELECT * FROM DonHang WHERE khach_hang_id = $1 ORDER BY ngay_dat_hang DESC LIMIT 1`,

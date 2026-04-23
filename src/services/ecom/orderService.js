@@ -31,11 +31,14 @@ const processCheckout = async (userId, payload) => {
 
     // 3. Tính phí ship dựa trên kho gần nhất còn hàng
     let phiShip = 30000; // Giá trị mặc định
+    let nearestStoreId = null;
+
     if (lat && lng) {
         // Lấy sản phẩm đầu tiên làm căn cứ tìm kho gần nhất
         const nearestStore = await productModel.getNearestPharmacy(cartItems[0].duoc_pham_id, lat, lng);
         if (nearestStore) {
             phiShip = await orderModel.getShippingFee(nearestStore.khoang_cach);
+            nearestStoreId = nearestStore.don_vi_id;
         }
     }
 
@@ -50,7 +53,8 @@ const processCheckout = async (userId, payload) => {
         phuong_thuc_thanh_toan,
         voucher,
         points,
-        phiShip // Đảm bảo truyền đủ tham số thứ 6
+        phiShip, // Đảm bảo truyền đủ tham số thứ 6
+        nearestStoreId // Thêm don_vi_xuat_id
     );
 
     // 5. Tích điểm thưởng 0.5% dựa trên tổng tiền thực tế
