@@ -30,17 +30,36 @@ const addProduct = async (payload) => {
 };
 
 const removeProduct = async (id) => {
-    const isDeleted = await adminProductModel.softDeleteProduct(id);
-    if (!isDeleted) {
-        const error = new Error('Product not found or already deleted!');
+    try {
+        const isDeleted = await adminProductModel.hardDeleteProduct(id);
+        if (!isDeleted) {
+            const error = new Error('Product not found!');
+            error.statusCode = 404;
+            throw error;
+        }
+        return true;
+    } catch (error) {
+        if (error.code === '23503') { // Foreign key violation
+            const err = new Error('Cannot delete this product because it has associated data (inventory, orders, etc.). Please hide it instead.');
+            err.statusCode = 400;
+            throw err;
+        }
+        throw error;
+    }
+};
+
+const changeStatus = async (id) => {
+    const product = await adminProductModel.toggleProductStatus(id);
+    if (!product) {
+        const error = new Error('Product not found!');
         error.statusCode = 404;
         throw error;
     }
-    return true;
+    return product;
 };
 
-const fetchAdminProducts = async (search = null) => {
-    return await adminProductModel.getAllAdminProducts(search);
+const fetchAdminProducts = async (filters = {}) => {
+    return await adminProductModel.getAllAdminProducts(filters);
 };
 
 const fetchAdminProductById = async (id) => {
@@ -89,4 +108,4 @@ const editProduct = async (id, payload) => {
     }
 };
 
-export { addProduct, removeProduct, fetchAdminProducts, fetchAdminProductById, editProduct };
+export { addProduct, removeProduct, changeStatus, fetchAdminProducts, fetchAdminProductById, editProduct };

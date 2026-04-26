@@ -48,21 +48,41 @@ const createNewProduct = async (productData, variantsData) => {
 
 const softDeleteProduct = async (id) => {
     // Soft delete by setting trang_thai to FALSE (hidden from public, but still in DB)
-    const query = `UPDATE DuocPham SET trang_thai = FALSE WHERE id = $1 AND trang_thai = TRUE RETURNING id;`;
+    // We remove "AND trang_thai = TRUE" to make this operation idempotent.
+    const query = `UPDATE DuocPham SET trang_thai = FALSE WHERE id = $1 RETURNING id;`;
     const result = await pool.query(query, [id]);
-    return result.rowCount > 0; // return true if a row was updated, false if not found or already deleted
+    return result.rowCount > 0; // return true if the product exists (even if already false), false if not found
+};
+
+const hardDeleteProduct = async (id) => {
+    // [WARNING] This permanently removes the product from the database
+    // This may fail if there are foreign key constraints (orders, stock, etc.)
+    const query = `DELETE FROM DuocPham WHERE id = $1 RETURNING id;`;
+    const result = await pool.query(query, [id]);
+    return result.rowCount > 0;
+};
+
+const toggleProductStatus = async (id) => {
+    // Toggle between TRUE (Active) and FALSE (Hidden)
+    const query = `UPDATE DuocPham SET trang_thai = NOT trang_thai, ngay_cap_nhat_moi = CURRENT_TIMESTAMP WHERE id = $1 RETURNING id, trang_thai;`;
+    const result = await pool.query(query, [id]);
+    return result.rows[0]; // returns { id, trang_thai }
 };
 
 // get all products for admin view (includes hidden/soft-deleted ones)
-const getAllAdminProducts = async (search = null) => {
+const getAllAdminProducts = async (filters = {}) => {
+    const { search, sort } = filters;
+    
     let query = `
-        SELECT DISTINCT ON (dp.id)
-               dp.id, dp.ten_thuoc, dp.so_dang_ky, dp.hinh_anh_url, dp.trang_thai, dm.ten_danh_muc,
-               qc.gia_ban AS price
-        FROM DuocPham dp
-        LEFT JOIN DanhMuc dm ON dp.danh_muc_id = dm.id
-        LEFT JOIN QuyCachDongGoi qc ON dp.id = qc.duoc_pham_id
-        WHERE 1=1
+        WITH DistinctProducts AS (
+            SELECT DISTINCT ON (dp.id)
+                   dp.id, dp.ten_thuoc, dp.so_dang_ky, dp.hinh_anh_url, dp.trang_thai, dm.ten_danh_muc,
+                   qc.gia_ban AS price,
+                   (SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE duoc_pham_id = dp.id) AS total_stock
+            FROM DuocPham dp
+            LEFT JOIN DanhMuc dm ON dp.danh_muc_id = dm.id
+            LEFT JOIN QuyCachDongGoi qc ON dp.id = qc.duoc_pham_id
+            WHERE 1=1
     `;
     const params = [];
 
@@ -75,8 +95,22 @@ const getAllAdminProducts = async (search = null) => {
         params.push(search);
     }
 
-    // Sort by id DESC, but must include dp.id as the first sort criterion for DISTINCT ON
-    query += ` ORDER BY dp.id DESC, qc.id ASC;`;
+    query += `
+            ORDER BY dp.id, qc.id ASC
+        )
+        SELECT * FROM DistinctProducts
+    `;
+
+    // Handle sorting
+    switch (sort) {
+        case 'price_asc':  query += ` ORDER BY price ASC`; break;
+        case 'price_desc': query += ` ORDER BY price DESC`; break;
+        case 'name_asc':   query += ` ORDER BY ten_thuoc ASC`; break;
+        case 'name_desc':  query += ` ORDER BY ten_thuoc DESC`; break;
+        case 'oldest':     query += ` ORDER BY id ASC`; break;
+        case 'newest':     
+        default:           query += ` ORDER BY id DESC`; break;
+    }
 
     const result = await pool.query(query, params);
     return result.rows;
@@ -146,4 +180,12 @@ const updateProductDb = async (id, productData, variantsData) => {
     }
 };
 
-export { createNewProduct, softDeleteProduct, getAllAdminProducts, getAdminProductDetail, updateProductDb };
+export { 
+    createNewProduct, 
+    softDeleteProduct, 
+    hardDeleteProduct,
+    toggleProductStatus,
+    getAllAdminProducts, 
+    getAdminProductDetail, 
+    updateProductDb 
+};

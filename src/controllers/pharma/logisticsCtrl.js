@@ -55,4 +55,17 @@ const handleBatchRecall = async (req, res, next) => {
     } catch (error) { next(error); }
 };
 
-export { transferWarehouse, handleDisposal, handleRMA, handleBatchRecall };
+const getAllLogisticsUnits = async (req, res, next) => {
+    try {
+        const data = await logisticsService.fetchAllUnits();
+        res.status(200).json({ success: true, data });
+    } catch (error) { next(error); }
+};
+
+export { 
+    transferWarehouse, 
+    handleDisposal, 
+    handleRMA, 
+    handleBatchRecall, 
+    getAllLogisticsUnits 
+};

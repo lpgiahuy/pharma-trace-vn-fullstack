@@ -39,4 +39,16 @@ const recallBatch = async (lo_thuoc_id) => {
     return true;
 };
 
-export { callTransferProcedure, disposeMedicine, returnMedicine, recallBatch };
+const getAllUnits = async () => {
+    const query = `SELECT id, ten_don_vi, loai_don_vi, dia_chi FROM DonVi ORDER BY id ASC`;
+    const result = await pool.query(query);
+    return result.rows;
+};
+
+export { 
+    callTransferProcedure, 
+    disposeMedicine, 
+    returnMedicine, 
+    recallBatch, 
+    getAllUnits 
+};

@@ -78,4 +78,14 @@ const processBatchRecall = async (lo_thuoc_id) => {
     return { message: `Successfully initiated emergency recall for Batch ${lo_thuoc_id} across the entire system!` };
 };
 
-export { transferStock, processDisposal, processRMA, processBatchRecall };
+const fetchAllUnits = async () => {
+    return await logisticsModel.getAllUnits();
+};
+
+export { 
+    transferStock, 
+    processDisposal, 
+    processRMA, 
+    processBatchRecall, 
+    fetchAllUnits 
+};

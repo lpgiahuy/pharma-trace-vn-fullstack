@@ -1,5 +1,11 @@
 import express from 'express';
-import { transferWarehouse, handleDisposal, handleRMA, handleBatchRecall } from '../../controllers/pharma/logisticsCtrl.js';
+import { 
+    transferWarehouse, 
+    handleDisposal, 
+    handleRMA, 
+    handleBatchRecall, 
+    getAllLogisticsUnits 
+} from '../../controllers/pharma/logisticsCtrl.js';
 import { protect } from '../../middlewares/authMiddleware.js';
 import { authorizeRoles } from '../../middlewares/roleMiddleware.js';
 
@@ -15,6 +21,20 @@ const router = express.Router();
 // Apply authentication and role authorization to all logistics routes
 router.use(protect);
 router.use(authorizeRoles('SuperAdmin', 'QuanLyKho'));
+
+/**
+ * @swagger
+ * /logistics/units:
+ *   get:
+ *     summary: Get all available nodes/warehouses/units
+ *     tags: [Logistics]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of units retrieved successfully
+ */
+router.get('/units', getAllLogisticsUnits);
 
 /**
  * @swagger

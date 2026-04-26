@@ -2,6 +2,7 @@ import express from 'express';
 import {
     createProduct,
     deleteProduct,
+    toggleProductStatus,
     getAllProductsAdmin,
     getProductDetailAdmin,
     updateProduct
@@ -224,6 +225,27 @@ router.post('/add', createProduct);
  *         description: Product not found
  */
 router.put('/:id', updateProduct);
+
+/**
+ * @swagger
+ * /admin/products/{id}/status:
+ *   patch:
+ *     summary: Toggle product status (Active/Hidden)
+ *     tags: [Admin - Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the product
+ *     responses:
+ *       200:
+ *         description: Status toggled successfully
+ */
+router.patch('/:id/status', toggleProductStatus);
 
 /**
  * @swagger

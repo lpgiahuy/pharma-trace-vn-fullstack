@@ -1,4 +1,3 @@
-import e from 'express';
 import * as adminProductService from '../../services/admin/adminProductService.js';
 
 const createProduct = async (req, res, next) => {
@@ -10,7 +9,6 @@ const createProduct = async (req, res, next) => {
             data: { duoc_pham_id: newId }
         });
     } catch (error) {
-        // error code 23505 is PostgreSQL's unique violation error (e.g., duplicate registration number)
         if (error.code === '23505') {
             res.status(400);
             return next(new Error('Failed! The drug registration number already exists in the system.'));
@@ -26,7 +24,22 @@ const deleteProduct = async (req, res, next) => {
         await adminProductService.removeProduct(id);
         res.status(200).json({
             success: true,
-            message: `Successfully soft deleted (hidden) the product with ID ${id}.`
+            message: `Successfully permanently deleted the product with ID ${id}.`
+        });
+    } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
+        next(error);
+    }
+};
+
+const toggleProductStatus = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const product = await adminProductService.changeStatus(id);
+        res.status(200).json({
+            success: true,
+            message: `Product status toggled to ${product.trang_thai ? 'Active' : 'Hidden'}`,
+            data: product
         });
     } catch (error) {
         if (error.statusCode) res.status(error.statusCode);
@@ -36,8 +49,7 @@ const deleteProduct = async (req, res, next) => {
 
 const getAllProductsAdmin = async (req, res, next) => {
     try {
-        const { search } = req.query;
-        const data = await adminProductService.fetchAdminProducts(search) || [];
+        const data = await adminProductService.fetchAdminProducts(req.query) || [];
         res.status(200).json({ success: true, data });
     } catch (error) {
         next(error);
@@ -73,5 +85,11 @@ const updateProduct = async (req, res, next) => {
     }
 };
 
-
-export { createProduct, deleteProduct, getAllProductsAdmin, getProductDetailAdmin, updateProduct };
+export { 
+    createProduct, 
+    deleteProduct, 
+    toggleProductStatus, 
+    getAllProductsAdmin, 
+    getProductDetailAdmin, 
+    updateProduct 
+};
