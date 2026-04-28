@@ -1,5 +1,5 @@
 import express from 'express';
-import { getOrders, getOrderById, fulfillOrder, confirmOrderDelivery, updateOrderPayment } from '../../controllers/admin/adminOrderCtrl.js';
+import { getOrders, getOrderById, fulfillOrder, handleStartShipping, confirmOrderDelivery, updateOrderPayment } from '../../controllers/admin/adminOrderCtrl.js';
 import { protect } from '../../middlewares/authMiddleware.js';
 import { authorizeRoles } from '../../middlewares/roleMiddleware.js';
 
@@ -95,13 +95,37 @@ router.get('/:id', getOrderById);
  *                   example: "550e8400-e29b-41d4-a716-446655440000"
  *     responses:
  *       200:
- *         description: Order fulfilled successfully. Order status changed to 'DangGiao' (Shipping)
+ *         description: Order fulfilled successfully. Order status changed to 'DaDongGoi' (Packed)
  *       400:
  *         description: Order is not in pending status or UID is invalid/not available in inventory
  *       404:
  *         description: Order not found
  */
 router.post('/:id/fulfill', fulfillOrder);
+
+/**
+ * @swagger
+ * /admin/orders/{id}/ship:
+ *   patch:
+ *     summary: Bắt đầu giao hàng (DaDongGoi → DangGiao)
+ *     description: Chuyển trạng thái đơn hàng sang đang giao và cập nhật trạng thái các hộp thuốc.
+ *     tags: [Admin - Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID đơn hàng
+ *     responses:
+ *       200:
+ *         description: Trạng thái đã chuyển sang DangGiao
+ *       400:
+ *         description: Đơn hàng không ở trạng thái DaDongGoi
+ */
+router.patch('/:id/ship', handleStartShipping);
 
 /**
  * @swagger

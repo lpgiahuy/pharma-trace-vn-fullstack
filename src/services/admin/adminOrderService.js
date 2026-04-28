@@ -43,12 +43,39 @@ const processOrderFulfillment = async (orderId, mang_uid) => {
     return {
         don_hang_id: orderId,
         so_luong_hop_thuoc_da_gan: mang_uid.length,
+        trang_thai_moi: 'DaDongGoi'
+    };
+};
+
+const shipOrder = async (orderId) => {
+    const order = await adminOrderModel.getOrderDetail(orderId);
+    if (!order) {
+        const error = new Error('Order not found!');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    if (order.trang_thai_don !== 'DaDongGoi') {
+        const error = new Error(`Không thể bắt đầu giao hàng. Đơn hàng đang ở trạng thái: "${order.trang_thai_don}". Chỉ đơn "DaDongGoi" mới được chuyển sang giao hàng.`);
+        error.statusCode = 400;
+        throw error;
+    }
+
+    await adminOrderModel.startShippingOrder(orderId);
+
+    return {
+        don_hang_id: orderId,
         trang_thai_moi: 'DangGiao'
     };
 };
 
 // Confirm delivery: DangGiao → HoanThanh
-// Also auto-mark COD payment as DaThanhToan when order is completed
+// The stored procedure sp_hoan_thanh_don_hang now handles:
+// 1. Updating status to HoanThanh
+// 2. Updating payment status to DaThanhToan
+// 3. Updating medicine boxes status to DaBan
+// 4. Adding loyalty points to customer
+// 5. Updating product sales statistics
 const confirmDelivery = async (orderId) => {
     const order = await adminOrderModel.getOrderDetail(orderId);
     if (!order) {
@@ -63,13 +90,6 @@ const confirmDelivery = async (orderId) => {
     }
 
     const updated = await adminOrderModel.completeOrder(orderId);
-
-    // Tự động đánh dấu thanh toán COD khi hoàn thành giao hàng
-    if (order.phuong_thuc_thanh_toan === 'COD' && order.trang_thai_thanh_toan === 'ChuaThanhToan') {
-        await adminOrderModel.updatePaymentStatus(orderId, 'DaThanhToan', null);
-        updated.trang_thai_thanh_toan = 'DaThanhToan';
-    }
-
     return updated;
 };
 
@@ -99,4 +119,4 @@ const processPaymentUpdate = async (orderId, trang_thai_thanh_toan, ma_giao_dich
     return updated;
 };
 
-export { fetchOrders, fetchOrderDetail, processOrderFulfillment, confirmDelivery, processPaymentUpdate }
+export { fetchOrders, fetchOrderDetail, processOrderFulfillment, shipOrder, confirmDelivery, processPaymentUpdate }

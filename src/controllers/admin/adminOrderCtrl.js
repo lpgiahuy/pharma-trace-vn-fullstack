@@ -29,13 +29,28 @@ const fulfillOrder = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            message: 'Order packed successfully. Status updated to "Shipping"',
+            message: 'Order packed successfully. Status updated to "Packed"',
             data: data
         });
     } catch (error) {
         // procedure will throw error if any of the provided UIDs do not exist in inventory or are already assigned to another order
         if (error.statusCode) res.status(error.statusCode);
         else res.status(400); 
+        next(error);
+    }
+};
+
+// API: Start shipping the order — changes status from DaDongGoi → DangGiao
+const handleStartShipping = async (req, res, next) => {
+    try {
+        const data = await adminOrderService.shipOrder(req.params.id);
+        res.status(200).json({
+            success: true,
+            message: 'Đơn hàng đã bắt đầu được giao.',
+            data
+        });
+    } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
         next(error);
     }
 };
@@ -75,4 +90,4 @@ const updateOrderPayment = async (req, res, next) => {
     }
 };
 
-export { getOrders, getOrderById, fulfillOrder, confirmOrderDelivery, updateOrderPayment };
+export { getOrders, getOrderById, fulfillOrder, handleStartShipping, confirmOrderDelivery, updateOrderPayment };

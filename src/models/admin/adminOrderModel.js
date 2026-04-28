@@ -39,7 +39,7 @@ const getOrderDetail = async (orderId) => {
     return order;
 };
 
-// pack order with provided array of medicine box UIDs (called by procedure in database)
+// Pack order with provided array of medicine box UIDs (called by procedure in database)
 const packOrderWithUIDs = async (orderId, mang_uid) => {
     // Convert array of UUIDs to PostgreSQL array string format
     const pgArrayString = `{${mang_uid.join(',')}}`;
@@ -49,16 +49,24 @@ const packOrderWithUIDs = async (orderId, mang_uid) => {
     return true;
 };
 
-// Mark order as completed (DangGiao → HoanThanh)
+// Start shipping an order (DaDongGoi → DangGiao)
+const startShippingOrder = async (orderId) => {
+    const query = `CALL sp_xuat_giao_don_hang($1::INT)`;
+    await pool.query(query, [orderId]);
+    return true;
+};
+
+// Mark order as completed using stored procedure (DangGiao → HoanThanh)
 const completeOrder = async (orderId) => {
-    const query = `
-        UPDATE DonHang 
-        SET trang_thai_don = 'HoanThanh'
-        WHERE id = $1 AND trang_thai_don = 'DangGiao'
-        RETURNING id, trang_thai_don, trang_thai_thanh_toan;
-    `;
-    const result = await pool.query(query, [orderId]);
-    return result.rows[0]; // null nếu không tìm thấy hoặc sai trạng thái
+    const query = `CALL sp_hoan_thanh_don_hang($1::INT)`;
+    await pool.query(query, [orderId]);
+
+    // Lấy lại thông tin đơn hàng sau khi hoàn thành để trả về cho frontend
+    const result = await pool.query(
+        `SELECT id, trang_thai_don, trang_thai_thanh_toan FROM DonHang WHERE id = $1`,
+        [orderId]
+    );
+    return result.rows[0];
 };
 
 // Update payment status (used by admin or payment webhook)
@@ -74,4 +82,4 @@ const updatePaymentStatus = async (orderId, trang_thai_thanh_toan, ma_giao_dich)
     return result.rows[0];
 };
 
-export { getAllOrders, getOrderDetail, packOrderWithUIDs, completeOrder, updatePaymentStatus }
+export { getAllOrders, getOrderDetail, packOrderWithUIDs, startShippingOrder, completeOrder, updatePaymentStatus }
