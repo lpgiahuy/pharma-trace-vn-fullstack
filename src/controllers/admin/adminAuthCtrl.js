@@ -5,11 +5,20 @@ import * as adminAuthModel from '../../models/admin/adminAuthModel.js';
 // API login for both Admin and Staff (will check role inside service)
 const login = async (req, res, next) => {
     try {
-        const { email, password } = req.body;
+        let { email, password } = req.body;
+
+        // Optimization: sanitize and validate email
+        if (email) email = email.trim().toLowerCase();
 
         if (!email || !password) {
             res.status(400);
             throw new Error('Email and password are required!');
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            res.status(400);
+            throw new Error('Invalid email format!');
         }
 
         const data = await adminAuthService.loginAdmin(email, password);
