@@ -122,7 +122,7 @@ export const findStoreWithAllItems = async (items) => {
           AND NOT EXISTS (
               SELECT 1 FROM UNNEST($1::INT[], $2::INT[]) AS req(pid, qty)
               LEFT JOIN TonKho tk ON tk.duoc_pham_id = req.pid AND tk.don_vi_id = dv.id
-              WHERE tk.id IS NULL OR tk.so_luong_ton < req.qty
+              WHERE tk.duoc_pham_id IS NULL OR tk.so_luong_ton < req.qty
           )
         LIMIT 1
     `;
