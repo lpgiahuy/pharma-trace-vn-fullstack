@@ -1,8 +1,11 @@
 import express from 'express';
 import { checkoutOrder, getMyOrders, getMyOrderDetail, cancelMyOrder } from '../../controllers/ecom/orderController.js';
-import { protect } from '../../middlewares/authMiddleware.js';
+import { protect, restrictTo } from '../../middlewares/authMiddleware.js';
+import { checkoutLimiter } from '../../middlewares/rateLimitMiddleware.js';
 
 const router = express.Router();
+
+const customerOnly = [protect, restrictTo('customer')];
 
 /**
  * @swagger
@@ -102,7 +105,7 @@ const router = express.Router();
  *       400:
  *         description: Error (Out of stock, empty cart, or invalid coordinates).
  */
-router.post('/checkout', protect, checkoutOrder);
+router.post('/checkout', ...customerOnly, checkoutLimiter, checkoutOrder);
 
 /**
  * @swagger
@@ -145,7 +148,7 @@ router.post('/checkout', protect, checkoutOrder);
  *                         type: integer
  *                         example: 2
  */
-router.get('/my-orders', protect, getMyOrders);
+router.get('/my-orders', ...customerOnly, getMyOrders);
 
 /**
  * @swagger
@@ -201,7 +204,7 @@ router.get('/my-orders', protect, getMyOrders);
  *       404:
  *         description: Order not found or you do not have permission to view this order.
  */
-router.get('/:id', protect, getMyOrderDetail);
+router.get('/:id', ...customerOnly, getMyOrderDetail);
 
 /**
  * @swagger
@@ -247,6 +250,6 @@ router.get('/:id', protect, getMyOrderDetail);
  *       404:
  *         description: Không tìm thấy đơn hàng.
  */
-router.delete('/:id/cancel', protect, cancelMyOrder);
+router.delete('/:id/cancel', ...customerOnly, cancelMyOrder);
 
 export default router;

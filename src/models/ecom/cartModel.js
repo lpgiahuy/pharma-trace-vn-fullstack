@@ -17,9 +17,6 @@ const getCartItems = async (userId) => {
 };
 
 const upsertCartItem = async (userId, duoc_pham_id, quy_cach_id, so_luong) => {
-    // ensure cart exists for user (if not, create an empty cart)
-    await pool.query('INSERT INTO GioHang (khach_hang_id) VALUES ($1) ON CONFLICT (khach_hang_id) DO NOTHING', [userId]);
-
     // add or update cart item
     const query = `
         INSERT INTO ChiTietGioHang (khach_hang_id, duoc_pham_id, quy_cach_id, so_luong)

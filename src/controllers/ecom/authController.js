@@ -20,10 +20,15 @@ const register = async (req, res, next) => {
 
         const data = await authService.registerUser(ho_ten, so_dien_thoai, mat_khau);
 
+
+
         res.status(201).json({
             success: true,
             message: 'Registration successful',
-            data: data
+            data: {
+                user: data.user,
+                token: data.token // Restored for Swagger/Postman compatibility
+            }
         });
     } catch (error) {
         if (error.statusCode) res.status(error.statusCode);
@@ -45,10 +50,15 @@ const login = async (req, res, next) => {
 
         const data = await authService.loginUser(so_dien_thoai, mat_khau);
 
+
+
         res.status(200).json({
             success: true,
             message: 'Login successful',
-            data: data
+            data: {
+                user: data.user,
+                token: data.token // Restored for Swagger/Postman compatibility
+            }
         });
     } catch (error) {
         if (error.statusCode) res.status(error.statusCode);
@@ -98,4 +108,12 @@ const changeMyPassword = async (req, res, next) => {
     }
 };
 
-export { register, login, getMe, getLoyaltyProgress, updateMe, changeMyPassword };
+const logout = async (req, res, next) => {
+    // Clear the JWT token cookie
+    res.status(200).json({
+        success: true,
+        message: 'Logged out successfully'
+    });
+};
+
+export { register, login, logout, getMe, getLoyaltyProgress, updateMe, changeMyPassword };

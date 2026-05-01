@@ -1,6 +1,6 @@
 import express from 'express';
 import { getCart, addCartItem, updateCartItem, removeCartItem } from '../../controllers/ecom/cartController.js';
-import { protect } from '../../middlewares/authMiddleware.js';
+import { protect, restrictTo } from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -12,7 +12,7 @@ const router = express.Router();
  */
 
 // Force authentication for all cart routes
-router.use(protect);
+router.use(protect, restrictTo('customer'));
 
 /**
  * @swagger

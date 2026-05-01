@@ -1,8 +1,21 @@
 import express from 'express';
-import { register, login, getMe, getLoyaltyProgress, updateMe, changeMyPassword } from '../../controllers/ecom/authController.js';
+import { register, login, logout, getMe, getLoyaltyProgress, updateMe, changeMyPassword } from '../../controllers/ecom/authController.js';
 import { protect } from '../../middlewares/authMiddleware.js';
+import { authLimiter } from '../../middlewares/rateLimitMiddleware.js';
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Customer logout (clear cookies)
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ */
+router.post('/logout', logout);
 
 /**
  * @swagger
@@ -50,7 +63,7 @@ const router = express.Router();
  *       400:
  *         description: Phone number or email already exists
  */
-router.post('/register', register);
+router.post('/register', authLimiter, register);
 
 /**
  * @swagger
@@ -81,7 +94,7 @@ router.post('/register', register);
  *       401:
  *         description: Invalid phone number or password
  */
-router.post('/login', login);
+router.post('/login', authLimiter, login);
 
 /**
  * @swagger

@@ -1,5 +1,6 @@
 import express from 'express';
 import { login, setupAdmin } from '../../controllers/admin/adminAuthCtrl.js';
+import { authLimiter } from '../../middlewares/rateLimitMiddleware.js';
 
 const router = express.Router();
 
@@ -53,7 +54,7 @@ const router = express.Router();
  *       400:
  *         description: Missing login credentials
  */
-router.post('/login', login);
+router.post('/login', authLimiter, login);
 
 /**
  * @swagger
@@ -91,6 +92,6 @@ router.post('/login', login);
  *       400:
  *         description: Email already exists or invalid data
  */
-router.post('/setup', setupAdmin); 
+router.post('/setup', setupAdmin);
 
 export default router;

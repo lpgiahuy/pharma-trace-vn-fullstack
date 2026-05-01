@@ -34,8 +34,9 @@ const fetchProducts = async (query, userId = null) => {
     const limit = parseInt(query.limit) || 20;
     const offset = (page - 1) * limit;
     const isFlashSale = query.is_flash_sale === 'true';
+    const inStock = query.in_stock === 'true';
 
-    const products = await productModel.getProducts(categoryId, search, sort, limit, offset, userId, isFlashSale);
+    const products = await productModel.getProducts(categoryId, search, sort, limit, offset, userId, isFlashSale, inStock);
     
     // Map DB fields to Frontend fields
     const mappedItems = products.map(p => ({

@@ -3,8 +3,8 @@ import * as orderService from '../../services/ecom/orderService.js';
 export const checkoutOrder = async (req, res, next) => {
     try {
         const { dia_chi_giao_hang, lat, lng } = req.body;
-        if (!dia_chi_giao_hang || !lat || !lng) {
-            return res.status(400).json({ success: false, message: 'Missing delivery address or coordinates.' });
+        if (!dia_chi_giao_hang) {
+            return res.status(400).json({ success: false, message: 'Missing delivery address.' });
         }
 
         const order = await orderService.processCheckout(req.user.id, req.body);
