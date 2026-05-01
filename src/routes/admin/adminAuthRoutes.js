@@ -91,6 +91,6 @@ router.post('/login', login);
  *       400:
  *         description: Email already exists or invalid data
  */
-router.post('/setup', setupAdmin); 
+router.post('/setup', setupAdmin);
 
 export default router;

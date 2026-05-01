@@ -1,8 +1,20 @@
 import express from 'express';
-import { register, login, getMe, getLoyaltyProgress, updateMe, changeMyPassword } from '../../controllers/ecom/authController.js';
+import { register, login, logout, getMe, getLoyaltyProgress, updateMe, changeMyPassword } from '../../controllers/ecom/authController.js';
 import { protect } from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Customer logout (clear cookies)
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ */
+router.post('/logout', logout);
 
 /**
  * @swagger
