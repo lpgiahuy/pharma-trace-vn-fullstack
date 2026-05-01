@@ -1,6 +1,7 @@
 import express from 'express';
 import { checkoutOrder, getMyOrders, getMyOrderDetail, cancelMyOrder } from '../../controllers/ecom/orderController.js';
 import { protect } from '../../middlewares/authMiddleware.js';
+import { checkoutLimiter } from '../../middlewares/rateLimitMiddleware.js';
 
 const router = express.Router();
 
@@ -102,7 +103,7 @@ const router = express.Router();
  *       400:
  *         description: Error (Out of stock, empty cart, or invalid coordinates).
  */
-router.post('/checkout', protect, checkoutOrder);
+router.post('/checkout', protect, checkoutLimiter, checkoutOrder);
 
 /**
  * @swagger
