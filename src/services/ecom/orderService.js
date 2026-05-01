@@ -6,24 +6,22 @@ import * as inventoryModel from '../../models/pharma/inventoryModel.js';
 const processCheckout = async (userId, payload) => {
     const { dia_chi_giao_hang, phuong_thuc_thanh_toan, ma_giam_gia, diem_su_dung, lat, lng } = payload;
 
-    // 1. Lấy items trong giỏ hàng
+    // 1. Get cart items
     const cartItems = await cartModel.getCartItems(userId);
     if (cartItems.length === 0) {
-        const error = new Error('Giỏ hàng của bạn đang trống!');
+        const error = new Error('Your cart is empty!');
         error.statusCode = 400;
         throw error;
     }
 
-    // 2. Kiểm tra tồn kho (Logic 1-1: 1 sản phẩm đặt = 1 đơn vị kho)
-    // Bước này giúp báo lỗi "đẹp" cho Frontend trước khi gọi vào Database
+    // 2. Check inventory
     for (const item of cartItems) {
         const totalStock = await inventoryModel.getTotalProductStock(item.duoc_pham_id);
 
-        // SỬA TẠI ĐÂY: Không còn nhân he_so_quy_doi nữa
         const requiredUnits = item.so_luong;
 
         if (totalStock < requiredUnits) {
-            const error = new Error(`Sản phẩm "${item.ten_thuoc}" không đủ hàng. (Kho còn: ${totalStock})`);
+            const error = new Error(`Product "${item.ten_thuoc}" is out of stock. (Available: ${totalStock})`);
             error.statusCode = 400;
             throw error;
         }
@@ -68,17 +66,17 @@ const processCheckout = async (userId, payload) => {
 const cancelUserOrder = async (orderId, userId) => {
     try {
         await orderModel.cancelOrder(orderId, userId);
-        return { don_hang_id: orderId, trang_thai_moi: 'DaHuy' };
+        return { don_hang_id: orderId, trang_thai_moi: 'Cancelled' };
     } catch (err) {
-        // Procedure sẽ RAISE EXCEPTION nếu đơn không ở trạng thái 'ChoXacNhan'
-        const error = new Error(err.message || 'Không thể hủy đơn hàng này.');
+        const error = new Error(err.message || 'Cannot cancel this order.');
         error.statusCode = 400;
         throw error;
     }
 };
 
-const fetchUserOrders = async (userId) => {
-    return await orderModel.getOrdersByUserId(userId);
+const fetchUserOrders = async (userId, page = 1, limit = 10) => {
+    const offset = (page - 1) * limit;
+    return await orderModel.getOrdersByUserId(userId, limit, offset);
 };
 
 const fetchUserOrderDetail = async (orderId, userId) => {
