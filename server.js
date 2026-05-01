@@ -66,7 +66,7 @@ const apiLimiter = rateLimit({
     legacyHeaders: false,
 });
 // Áp dụng giới hạn này cho toàn bộ API
-app.use('/v1/pharmachain', apiLimiter, rootRoutes);
+app.use('/v1/pharmatrace', apiLimiter, rootRoutes);
 
 
 // --- 3. TÀI NGUYÊN TĨNH VÀ TÀI LIỆU ---

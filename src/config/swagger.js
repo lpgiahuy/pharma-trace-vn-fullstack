@@ -9,16 +9,16 @@ const options = {
     definition: {
         openapi: '3.0.0',
         info: {
-            title: 'Pharma-Chain API Documentation',
+            title: 'PharmaTrace VN Backend API',
             version: '1.0.0',
-            description: 'An Integrated System for Sales Management, Supply Chain Transparency, and Pharmaceutical Authentication',
+            description: 'API documentation for PharmaTrace VN - Pharmaceutical Supply Chain & E-commerce Platform',
             contact: {
                 name: 'Developer Team',
             },
         },
         servers: [
             {
-                url: 'http://localhost:3002/v1/pharmachain',
+                url: 'http://localhost:3002/v1/pharmatrace',
                 description: 'Development server',
             },
         ],
