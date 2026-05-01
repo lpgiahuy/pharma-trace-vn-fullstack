@@ -5,6 +5,7 @@ const getCategories = async (req, res, next) => {
         const data = await productService.fetchCategories();
         res.status(200).json({ success: true, data });
     } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
         next(error);
     }
 };
@@ -12,9 +13,16 @@ const getCategories = async (req, res, next) => {
 const getProducts = async (req, res, next) => {
     try {
         const userId = req.user?.id || null;
+        
+        // Optimization: sanitize search query
+        if (req.query.search) {
+            req.query.search = req.query.search.trim();
+        }
+
         const data = await productService.fetchProducts(req.query, userId);
         res.status(200).json({ success: true, data });
     } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
         next(error);
     }
 };
@@ -35,6 +43,7 @@ const getBrands = async (req, res, next) => {
         const data = await productService.fetchUniqueBrands();
         res.status(200).json({ success: true, data });
     } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
         next(error);
     }
 };

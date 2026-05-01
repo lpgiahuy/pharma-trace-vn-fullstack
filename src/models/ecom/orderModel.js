@@ -29,12 +29,13 @@ export const addLoyaltyPoints = async (userId, amount) => {
     };
 };
 
-export const getOrdersByUserId = async (userId) => {
+export const getOrdersByUserId = async (userId, limit = 10, offset = 0) => {
     const query = `
         SELECT dh.*, dh.trang_thai_don AS trang_thai,
         (SELECT COUNT(*) FROM ChiTietDonHang WHERE don_hang_id = dh.id) as items_count
-        FROM DonHang dh WHERE khach_hang_id = $1 ORDER BY ngay_dat_hang DESC`;
-    const res = await pool.query(query, [userId]);
+        FROM DonHang dh WHERE khach_hang_id = $1 ORDER BY ngay_dat_hang DESC
+        LIMIT $2 OFFSET $3`;
+    const res = await pool.query(query, [userId, limit, offset]);
     return res.rows;
 };
 
