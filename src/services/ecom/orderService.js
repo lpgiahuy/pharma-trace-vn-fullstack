@@ -54,14 +54,34 @@ const processCheckout = async (userId, payload) => {
             }
         }
 
-        // 4. Calculate shipping fee (Read-only logic)
+        // 4. Find a pharmacy that can fulfill ALL items in the cart
         let phiShip = 30000;
         let nearestStoreId = null;
-        if (lat && lng) {
-            const nearestStore = await productModel.getNearestPharmacy(cartItems[0].duoc_pham_id, lat, lng);
-            if (nearestStore) {
-                phiShip = await orderModel.getShippingFee(nearestStore.khoang_cach);
-                nearestStoreId = nearestStore.don_vi_id;
+
+        // Try to find a store that has everything
+        const storeWithAll = await productModel.findStoreWithAllItems(cartItems);
+        
+        if (storeWithAll) {
+            nearestStoreId = storeWithAll.don_vi_id;
+            // If we have coordinates, calculate real shipping fee from this store
+            if (lat && lng) {
+                const distanceRes = await client.query(
+                    'SELECT fn_tinh_khoang_cach_km($1, $2, toa_do_lat, toa_do_lng) AS km FROM DonVi WHERE id = $3',
+                    [lat, lng, nearestStoreId]
+                );
+                if (distanceRes.rows[0]?.km) {
+                    phiShip = await orderModel.getShippingFee(distanceRes.rows[0].km);
+                }
+            }
+        } else {
+            // Fallback if no single store has everything: 
+            // Pick any store for now (the procedure will still fail deduction later, but this is better than NULL)
+            const fallbackStore = await productModel.getNearestPharmacy(cartItems[0].duoc_pham_id, lat, lng, cartItems[0].so_luong);
+            nearestStoreId = fallbackStore?.don_vi_id || null;
+            
+            if (!nearestStoreId) {
+                const anyStoreRes = await client.query("SELECT id FROM DonVi WHERE loai_don_vi = 'NhaThuoc' LIMIT 1");
+                nearestStoreId = anyStoreRes.rows[0]?.id;
             }
         }
 
