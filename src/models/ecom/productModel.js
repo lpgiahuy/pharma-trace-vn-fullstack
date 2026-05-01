@@ -13,13 +13,11 @@ const getAllCategories = async () => {
 };
 
 // 2. Get products (List)
-const getProducts = async (categoryId, search, sort, limit, offset, userId = null, isFlashSale = false) => {
+const getProducts = async (categoryId, search, sort, limit, offset, userId = null, isFlashSale = false, inStock = false) => {
     let orderBy = 'dp.id DESC';
     if (sort === 'price_asc') orderBy = 'qc.gia_ban ASC NULLS LAST';
     if (sort === 'price_desc') orderBy = 'qc.gia_ban DESC NULLS LAST';
     if (sort === 'best_selling') orderBy = 'dp.so_luong_da_ban DESC NULLS LAST';
-
-    // ... (phần orderBy giữ nguyên)
 
     const query = `
         SELECT dp.id, dp.ten_thuoc, dp.slug, dp.hinh_anh_url, dp.la_thuoc_ke_don, 
@@ -28,16 +26,16 @@ const getProducts = async (categoryId, search, sort, limit, offset, userId = nul
                 (SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE duoc_pham_id = dp.id) AS total_stock,
                 (SELECT EXISTS(SELECT 1 FROM SanPhamYeuThich WHERE khach_hang_id = $5 AND duoc_pham_id = dp.id)) AS is_favorited
         FROM DuocPham dp
-        -- SỬA Ở ĐÂY: Xóa điều kiện la_don_vi_co_ban
         LEFT JOIN QuyCachDongGoi qc ON dp.id = qc.duoc_pham_id 
         WHERE ($1::INT IS NULL OR dp.danh_muc_id = $1)
             AND ($2::VARCHAR IS NULL OR dp.ten_thuoc ILIKE '%' || $2 || '%')
             AND dp.trang_thai = TRUE
+            AND ($6::BOOLEAN IS FALSE OR (SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE duoc_pham_id = dp.id) > 0)
             ${isFlashSale ? `AND qc.phan_tram_giam > 0 AND CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh' BETWEEN qc.thoi_gian_bat_dau_sale AND qc.thoi_gian_ket_thuc_sale` : ''}
         ORDER BY ${orderBy}
         LIMIT $3 OFFSET $4;
     `;
-    const result = await pool.query(query, [categoryId, search, limit, offset, userId]);
+    const result = await pool.query(query, [categoryId, search, limit, offset, userId, inStock]);
     return result.rows;
 };
 
