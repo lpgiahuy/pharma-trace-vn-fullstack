@@ -23,15 +23,35 @@ const login = async (req, res, next) => {
 
         const data = await adminAuthService.loginAdmin(email, password);
 
+        // [NEW] Set JWT in HTTP-Only Cookie for enhanced security
+        res.cookie('token', data.token, {
+            httpOnly: true, // Prevents JavaScript access (XSS protection)
+            secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
+            sameSite: 'strict', // CSRF protection
+            maxAge: 24 * 60 * 60 * 1000 // Token expires in 1 day
+        });
+
         res.status(200).json({
             success: true,
             message: 'Login successful!',
-            data: data
+            data: {
+                nhan_vien: data.nhan_vien,
+                token: data.token // Restored for Swagger/Postman compatibility
+            }
         });
     } catch (error) {
         if (error.statusCode) res.status(error.statusCode);
         next(error);
     }
+};
+
+const logout = async (req, res, next) => {
+    // Clear the JWT token cookie
+    res.clearCookie('token');
+    res.status(200).json({
+        success: true,
+        message: 'Logged out successfully!'
+    });
 };
 
 // hidden api to create the first SuperAdmin account (only used once when setting up the system for the first time)
@@ -45,9 +65,9 @@ const setupAdmin = async (req, res, next) => {
 
         const newAdmin = await adminAuthModel.createFirstAdmin(
             don_vi_id || 1, // Default to Unit 1 (Head Office)
-            ho_ten, 
-            email, 
-            hashedPassword, 
+            ho_ten,
+            email,
+            hashedPassword,
             'SuperAdmin'
         );
 
@@ -66,5 +86,5 @@ const setupAdmin = async (req, res, next) => {
     }
 };
 
-export { login, setupAdmin };
+export { login, setupAdmin, logout };
 

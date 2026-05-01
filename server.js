@@ -25,7 +25,7 @@ const __dirname = path.dirname(__filename);
 // --- 1. LỚP BẢO VỆ CƠ BẢN (MIDDLEWARE BẢO MẬT) ---
 
 // Che giấu Express và thêm các Header bảo mật
-app.use(helmet()); 
+app.use(helmet());
 // Cho phép hiển thị ảnh tĩnh từ domain khác (nếu Front-end khác domain)
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 
@@ -54,16 +54,16 @@ app.use(cors(corsOptions));
 
 // Giới hạn dung lượng Body JSON gửi lên (Nâng lên 50mb để hỗ trợ đăng bài Blog có kèm ảnh Base64)
 app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true })); 
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // --- 2. LỚP CHỐNG SPAM (RATE LIMITING) ---
 // Giới hạn tối đa 100 request / 15 phút cho mỗi IP
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, 
-    max: 1000, 
+    windowMs: 15 * 60 * 1000,
+    max: 1000,
     message: { success: false, message: 'Bạn đã thao tác quá nhiều lần. Vui lòng thử lại sau 15 phút.' },
-    standardHeaders: true, 
-    legacyHeaders: false, 
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 // Áp dụng giới hạn này cho toàn bộ API
 app.use('/v1/pharmachain', apiLimiter, rootRoutes);
@@ -98,13 +98,13 @@ app.use((req, res) => {
 // [MỚI] 500 Global Error Handler: Bắt mọi lỗi sập server để không lộ Stack Trace
 app.use((err, req, res, next) => {
     // Ưu tiên: status đã set bởi res.status() > err.statusCode > mặc định 500
-    const statusCode = (res.statusCode && res.statusCode !== 200) 
-        ? res.statusCode 
+    const statusCode = (res.statusCode && res.statusCode !== 200)
+        ? res.statusCode
         : (err.statusCode || 500);
-    
+
     console.error(`[Lỗi ${statusCode}]: ${err.message}`);
-    res.status(statusCode).json({ 
-        success: false, 
+    res.status(statusCode).json({
+        success: false,
         message: process.env.NODE_ENV === 'production' ? 'Đã có lỗi máy chủ nội bộ xảy ra!' : err.message
     });
 });
