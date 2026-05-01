@@ -23,13 +23,7 @@ const login = async (req, res, next) => {
 
         const data = await adminAuthService.loginAdmin(email, password);
 
-        // [NEW] Set JWT in HTTP-Only Cookie for enhanced security
-        res.cookie('token', data.token, {
-            httpOnly: true, // Prevents JavaScript access (XSS protection)
-            secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
-            sameSite: 'strict', // CSRF protection
-            maxAge: 24 * 60 * 60 * 1000 // Token expires in 1 day
-        });
+
 
         res.status(200).json({
             success: true,
@@ -47,7 +41,6 @@ const login = async (req, res, next) => {
 
 const logout = async (req, res, next) => {
     // Clear the JWT token cookie
-    res.clearCookie('token');
     res.status(200).json({
         success: true,
         message: 'Logged out successfully!'

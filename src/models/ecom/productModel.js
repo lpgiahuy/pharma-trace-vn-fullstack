@@ -23,14 +23,14 @@ const getProducts = async (categoryId, search, sort, limit, offset, userId = nul
         SELECT dp.id, dp.ten_thuoc, dp.slug, dp.hinh_anh_url, dp.la_thuoc_ke_don, 
                 dp.mo_ta_ngan, dp.so_luong_da_ban, dp.diem_danh_gia,
                 qc.gia_ban, qc.gia_goc, qc.phan_tram_giam, qc.ten_don_vi AS don_vi_ban,
-                (SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE duoc_pham_id = dp.id) AS total_stock,
+                (SELECT COALESCE(MAX(tk.so_luong_ton), 0) FROM TonKho tk JOIN DonVi dv_tk ON tk.don_vi_id = dv_tk.id WHERE tk.duoc_pham_id = dp.id AND dv_tk.loai_don_vi = 'NhaThuoc') AS total_stock,
                 (SELECT EXISTS(SELECT 1 FROM SanPhamYeuThich WHERE khach_hang_id = $5 AND duoc_pham_id = dp.id)) AS is_favorited
         FROM DuocPham dp
         LEFT JOIN QuyCachDongGoi qc ON dp.id = qc.duoc_pham_id 
         WHERE ($1::INT IS NULL OR dp.danh_muc_id = $1)
             AND ($2::VARCHAR IS NULL OR dp.ten_thuoc ILIKE '%' || $2 || '%')
             AND dp.trang_thai = TRUE
-            AND ($6::BOOLEAN IS FALSE OR (SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE duoc_pham_id = dp.id) > 0)
+            AND ($6::BOOLEAN IS FALSE OR (SELECT COALESCE(MAX(tk.so_luong_ton), 0) FROM TonKho tk JOIN DonVi dv_tk ON tk.don_vi_id = dv_tk.id WHERE tk.duoc_pham_id = dp.id AND dv_tk.loai_don_vi = 'NhaThuoc') > 0)
             ${isFlashSale ? `AND qc.phan_tram_giam > 0 AND CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh' BETWEEN qc.thoi_gian_bat_dau_sale AND qc.thoi_gian_ket_thuc_sale` : ''}
         ORDER BY ${orderBy}
         LIMIT $3 OFFSET $4;
@@ -52,7 +52,7 @@ const getProductByIdOrSlug = async (identifier, userId = null) => {
         SELECT dp.id, dp.ten_thuoc, dp.slug, dp.so_dang_ky, dp.hinh_anh_url, dp.la_thuoc_ke_don, 
                dp.mo_ta_ngan, dp.chi_tiet_thuoc, dp.so_luong_da_ban, dp.diem_danh_gia,
                dm.ten_danh_muc, dv.ten_don_vi AS nha_san_xuat,
-               (SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE duoc_pham_id = dp.id) AS total_stock,
+               (SELECT COALESCE(MAX(tk.so_luong_ton), 0) FROM TonKho tk JOIN DonVi dv_tk ON tk.don_vi_id = dv_tk.id WHERE tk.duoc_pham_id = dp.id AND dv_tk.loai_don_vi = 'NhaThuoc') AS total_stock,
                (SELECT EXISTS(SELECT 1 FROM SanPhamYeuThich WHERE khach_hang_id = $2 AND duoc_pham_id = dp.id)) AS is_favorited
         FROM DuocPham dp
         LEFT JOIN DanhMuc dm ON dp.danh_muc_id = dm.id
@@ -111,22 +111,32 @@ const getUniqueBrands = async () => {
 export const findStoreWithAllItems = async (items) => {
     if (!items || items.length === 0) return null;
 
-    // items is an array of { duoc_pham_id, so_luong }
-    const productIds = items.map(i => i.duoc_pham_id);
-    const quantities = items.map(i => i.so_luong);
+    // Consolidate quantities by product ID (since same product might have multiple rows with different packaging)
+    const consolidated = items.reduce((acc, item) => {
+        acc[item.duoc_pham_id] = (acc[item.duoc_pham_id] || 0) + item.so_luong;
+        return acc;
+    }, {});
+
+    const uniqueItems = Object.entries(consolidated).map(([id, qty]) => ({
+        duoc_pham_id: parseInt(id),
+        so_luong: qty
+    }));
+
+    // Build individual stock checks per unique product
+    const conditions = uniqueItems.map((_, i) => 
+        `(SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE don_vi_id = dv.id AND duoc_pham_id = $${i * 2 + 1}) >= $${i * 2 + 2}`
+    ).join(' AND ');
+
+    const params = uniqueItems.flatMap(item => [item.duoc_pham_id, item.so_luong]);
 
     const query = `
         SELECT dv.id as don_vi_id, dv.ten_don_vi, dv.dia_chi
         FROM DonVi dv
         WHERE dv.loai_don_vi = 'NhaThuoc'
-          AND NOT EXISTS (
-              SELECT 1 FROM UNNEST($1::INT[], $2::INT[]) AS req(pid, qty)
-              LEFT JOIN TonKho tk ON tk.duoc_pham_id = req.pid AND tk.don_vi_id = dv.id
-              WHERE tk.duoc_pham_id IS NULL OR tk.so_luong_ton < req.qty
-          )
+          AND ${conditions}
         LIMIT 1
     `;
-    const result = await pool.query(query, [productIds, quantities]);
+    const result = await pool.query(query, params);
     return result.rows[0] || null;
 };
 

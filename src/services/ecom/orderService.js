@@ -18,13 +18,14 @@ const processCheckout = async (userId, payload) => {
 
     // Acquire a client from the pool to manage the transaction
     const client = await pool.connect();
+    let cartItems = [];
 
     try {
         // Start the transaction
         await client.query('BEGIN');
 
         // 1. Get cart items
-        const cartItems = await cartModel.getCartItems(userId);
+        cartItems = await cartModel.getCartItems(userId);
         if (cartItems.length === 0) {
             const error = new Error('Your cart is empty!');
             error.statusCode = 400;
@@ -121,6 +122,19 @@ const processCheckout = async (userId, payload) => {
     } catch (error) {
         // Rollback on any failure to maintain data integrity
         await client.query('ROLLBACK');
+        
+        // Translate database trigger error for frontend user
+        if (error.message && error.message.includes('không đủ số lượng cho sản phẩm')) {
+            const match = error.message.match(/sản phẩm \(ID: (\d+)\)/);
+            if (match) {
+                const pId = match[1];
+                const pName = cartItems.find(i => i.duoc_pham_id == pId)?.ten_thuoc || `ID ${pId}`;
+                error.message = `Xin lỗi, sản phẩm "${pName}" không đủ số lượng tại một chi nhánh duy nhất để giao hàng. Vui lòng giảm số lượng.`;
+            } else {
+                error.message = 'Xin lỗi, một số sản phẩm trong giỏ không đủ tồn kho tại cùng một chi nhánh để giao hàng.';
+            }
+        }
+
         if (!error.statusCode) error.statusCode = 400;
         throw error;
     } finally {
