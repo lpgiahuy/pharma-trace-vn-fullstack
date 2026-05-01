@@ -77,7 +77,7 @@ const getProductByIdOrSlug = async (identifier, userId = null) => {
     return product;
 };
 
-const getNearestPharmacy = async (productId, lat, lng) => {
+const getNearestPharmacy = async (productId, lat, lng, quantity = 1) => {
     const query = `
         SELECT dv.id as don_vi_id, dv.ten_don_vi as ten_nha_thuoc, 
                dv.dia_chi, 
@@ -86,11 +86,11 @@ const getNearestPharmacy = async (productId, lat, lng) => {
         JOIN TonKho tk ON dv.id = tk.don_vi_id
         WHERE dv.loai_don_vi = 'NhaThuoc' 
           AND tk.duoc_pham_id = $3 
-          AND tk.so_luong_ton > 0
+          AND tk.so_luong_ton >= $4
         ORDER BY khoang_cach ASC LIMIT 1
     `;
-    // Lưu ý: Thứ tự tham số trong SQL là (lat, lng, productId)
-    const result = await pool.query(query, [lat, lng, productId]);
+    // Lưu ý: Thứ tự tham số trong SQL là (lat, lng, productId, quantity)
+    const result = await pool.query(query, [lat, lng, productId, quantity]);
 
     // Trả về nhà thuốc gần nhất nếu có, hoặc null nếu không tìm thấy
     return result.rows[0] || null;
@@ -106,6 +106,28 @@ const getUniqueBrands = async () => {
     `;
     const result = await pool.query(query);
     return result.rows.map(r => r.ten_don_vi);
+};
+
+export const findStoreWithAllItems = async (items) => {
+    if (!items || items.length === 0) return null;
+
+    // items is an array of { duoc_pham_id, so_luong }
+    const productIds = items.map(i => i.duoc_pham_id);
+    const quantities = items.map(i => i.so_luong);
+
+    const query = `
+        SELECT dv.id as don_vi_id, dv.ten_don_vi, dv.dia_chi
+        FROM DonVi dv
+        WHERE dv.loai_don_vi = 'NhaThuoc'
+          AND NOT EXISTS (
+              SELECT 1 FROM UNNEST($1::INT[], $2::INT[]) AS req(pid, qty)
+              LEFT JOIN TonKho tk ON tk.duoc_pham_id = req.pid AND tk.don_vi_id = dv.id
+              WHERE tk.id IS NULL OR tk.so_luong_ton < req.qty
+          )
+        LIMIT 1
+    `;
+    const result = await pool.query(query, [productIds, quantities]);
+    return result.rows[0] || null;
 };
 
 export { getAllCategories, getProducts, getProductByIdOrSlug, getNearestPharmacy, getUniqueBrands };
