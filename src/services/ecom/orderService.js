@@ -4,7 +4,17 @@ import * as cartModel from '../../models/ecom/cartModel.js';
 import * as productModel from '../../models/ecom/productModel.js';
 
 const processCheckout = async (userId, payload) => {
-    const { dia_chi_giao_hang, phuong_thuc_thanh_toan, ma_giam_gia, diem_su_dung, lat, lng } = payload;
+    const { 
+        dia_chi_giao_hang, 
+        phuong_thuc_thanh_toan, 
+        ma_giam_gia, 
+        voucher_id,
+        diem_su_dung, 
+        lat, 
+        lng 
+    } = payload;
+
+    const dbVoucher = ma_giam_gia || voucher_id || null;
 
     // Acquire a client from the pool to manage the transaction
     const client = await pool.connect();
@@ -55,7 +65,6 @@ const processCheckout = async (userId, payload) => {
             }
         }
 
-        const voucher = ma_giam_gia || null;
         const points = diem_su_dung ? parseInt(diem_su_dung) : 0;
 
         // 5. Create the order using the stored procedure (Passing the client to stay in transaction)
@@ -64,7 +73,7 @@ const processCheckout = async (userId, payload) => {
             userId,
             dia_chi_giao_hang,
             phuong_thuc_thanh_toan,
-            voucher,
+            dbVoucher,
             points,
             phiShip,
             nearestStoreId,
