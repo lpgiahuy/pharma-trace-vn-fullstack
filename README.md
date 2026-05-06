@@ -1,4 +1,4 @@
-# 💊 PharmaChain Backend API
+# 💊 PharmaTrace VN Backend API
 
 <div align="center">
   <p><strong>An Integrated System for Pharmaceutical Sales Management, Supply Chain Transparency, and Drug Authentication</strong></p>
@@ -13,7 +13,7 @@
 
 ## 📌 Introduction
 
-PharmaChain Backend API is a production-ready RESTful service built with **Node.js** and **Express 5**. It powers the entire pharmaceutical e-commerce and supply chain management platform — from customer shopping and order processing to warehouse logistics, drug traceability, and administrative operations.
+PharmaTrace VN Backend API is a production-ready RESTful service built with **Node.js** and **Express 5**. It powers the entire pharmaceutical e-commerce and supply chain management platform — from customer shopping and order processing to warehouse logistics, drug traceability, and administrative operations.
 
 ### Key Capabilities
 
@@ -41,8 +41,8 @@ PharmaChain Backend API is a production-ready RESTful service built with **Node.
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/huyle44/PharmaChain_BackEnd.git
-cd PharmaChain_BackEnd
+git clone https://github.com/huyle44/PharmaTrace_VN_BackEnd.git
+cd PharmaTrace_VN_BackEnd
 npm install
 ```
 
@@ -60,7 +60,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=your_password
-DB_NAME=pharmachain_db
+DB_NAME=pharmatrace_vn_db
 
 # Authentication
 JWT_SECRET=your_secret_key
@@ -81,7 +81,7 @@ FRONTEND_URL=https://your-frontend-domain.com
 npm run dev
 
 # The API will be available at:
-# http://localhost:3002/v1/pharmachain
+# http://localhost:3002/v1/pharmatrace
 ```
 
 ### 4. Access Swagger Docs
@@ -115,7 +115,7 @@ All API endpoints are rate-limited to **100 requests per 15 minutes** per IP add
 
 ## 📡 API Reference
 
-**Base URL:** `http://localhost:3002/v1/pharmachain`
+**Base URL:** `http://localhost:3002/v1/pharmatrace`
 
 All endpoint URLs below are relative to the base URL.
 
@@ -172,7 +172,7 @@ Get product list with pagination, filtering, and search.
 **Example:**
 
 ```bash
-curl -X GET 'http://localhost:3002/v1/pharmachain/products?page=1&limit=10&search=paracetamol&sort=price_asc'
+curl -X GET 'http://localhost:3002/v1/pharmatrace/products?page=1&limit=10&search=paracetamol&sort=price_asc'
 ```
 
 ---
@@ -544,7 +544,7 @@ Get comprehensive admin dashboard data.
 ## 📂 Project Structure
 
 ```
-PharmaChain_BackEnd/
+PharmaTrace_VN_BackEnd/
 ├── server.js               # Application entry point
 ├── package.json
 ├── .env                    # Environment variables (not committed)

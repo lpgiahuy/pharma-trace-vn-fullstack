@@ -29,7 +29,7 @@ const router = express.Router();
  *             properties:
  *               email:
  *                 type: string
- *                 example: "admin@pharmachain.vn"
+ *                 example: "admin@pharmatrace.vn"
  *                 description: Email of the admin or staff member
  *               password:
  *                 type: string
@@ -78,7 +78,7 @@ router.post('/login', authLimiter, login);
  *                 example: "Admin Tối Cao"
  *               email:
  *                 type: string
- *                 example: "admin@pharmachain.vn"
+ *                 example: "admin@pharmatrace.vn"
  *               password:
  *                 type: string
  *                 example: "123456"

@@ -30,6 +30,7 @@ import wishlistRoutes from './ecom/wishlistRoutes.js';
 import ecomVoucherRoutes from './ecom/voucherRoutes.js';
 import ecomRmaRoutes from './ecom/rmaRoutes.js';
 import ecomBlogRoutes from './ecom/blogRoutes.js';
+import chatbotRoutes from './ecom/chatbotRoutes.js';
 
 const router = express.Router();
 
@@ -69,5 +70,6 @@ router.use('/wishlist', wishlistRoutes); // wishlist routes (add to wishlist, vi
 router.use('/vouchers', ecomVoucherRoutes); // voucher routes (redeem voucher, view available vouchers) - auth required for customers
 router.use('/rma', ecomRmaRoutes); // RMA routes (submit RMA, view RMA status) - auth required for customers
 router.use('/blogs', ecomBlogRoutes); // public blog routes (list articles, read detail) - no auth required
+router.use('/chatbot', chatbotRoutes); // AI chatbot tư vấn dược phẩm - public
 
 export default router;

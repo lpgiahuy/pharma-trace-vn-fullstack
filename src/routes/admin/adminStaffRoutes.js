@@ -34,7 +34,7 @@ router.use(authorizeRoles('SuperAdmin'));
  *               data:
  *                 - id: 1
  *                   ho_ten: "Nguyễn Văn A"
- *                   email: "nva@pharmachain.vn"
+ *                   email: "nva@pharmatrace.vn"
  *                   vai_tro: "QuanLyKho"
  *                   trang_thai: true
  *                   ten_don_vi: "Southern Main Warehouse"
@@ -73,7 +73,7 @@ router.get('/', getStaffList);
  *                 example: "Trần Thị B"
  *               email:
  *                 type: string
- *                 example: "ttb@pharmachain.vn"
+ *                 example: "ttb@pharmatrace.vn"
  *               password:
  *                 type: string
  *                 example: "SecurePassword123!"
