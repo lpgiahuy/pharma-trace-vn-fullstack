@@ -1,5 +1,5 @@
 import express from 'express';
-import { getCategories, getProducts, getProductDetail, getBrands } from '../../controllers/ecom/productController.js';
+import { getCategories, getProducts, getProductDetail, getBrands, getNearestPharmacies } from '../../controllers/ecom/productController.js';
 import { optionalProtect } from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -182,6 +182,67 @@ router.get('/', optionalProtect, getProducts);
  *                     example: "DHG Pharma"
  */
 router.get('/brands', getBrands);
+
+/**
+ * @swagger
+ * /products/{id}/nearest-pharmacies:
+ *   get:
+ *     summary: Find nearest pharmacies with available stock
+ *     tags: [E-com - Products]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID or Slug
+ *       - in: query
+ *         name: lat
+ *         required: true
+ *         schema:
+ *           type: number
+ *         description: Customer latitude coordinate
+ *       - in: query
+ *         name: lng
+ *         required: true
+ *         schema:
+ *           type: number
+ *         description: Customer longitude coordinate
+ *     responses:
+ *       200:
+ *         description: Found nearest pharmacy with available stock
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 5
+ *                     name:
+ *                       type: string
+ *                       example: "Nhà thuốc ABC"
+ *                     address:
+ *                       type: string
+ *                       example: "123 Nguyễn Huệ, Q.1, HCM"
+ *                     distance:
+ *                       type: number
+ *                       example: 2.5
+ *                     distanceUnit:
+ *                       type: string
+ *                       example: "km"
+ *       400:
+ *         description: Invalid coordinates
+ *       404:
+ *         description: Product or pharmacy not found
+ */
+router.get('/:id/nearest-pharmacies', getNearestPharmacies);
 
 router.get('/:id', optionalProtect, getProductDetail);
 

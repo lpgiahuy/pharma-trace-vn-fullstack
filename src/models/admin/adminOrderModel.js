@@ -24,12 +24,15 @@ const getOrderDetail = async (orderId) => {
     const orderRes = await pool.query(orderQuery, [orderId]);
     if (orderRes.rowCount === 0) return null;
 
-    // ordered medicines info
+    // ordered medicines info (with product image and packaging details)
     const itemsQuery = `
-        SELECT ct.id, dp.ten_thuoc, qc.ten_don_vi, ct.so_luong, ct.don_gia
+        SELECT ct.id, ct.duoc_pham_id, dp.ten_thuoc, dp.hinh_anh_url, dp.la_thuoc_ke_don,
+               qc.id as quy_cach_id, qc.ten_don_vi, ct.so_luong, ct.don_gia,
+               ct.gia_goc_luc_mua, ct.phan_tram_giam_luc_mua, dv.ten_don_vi as don_vi_xuat
         FROM ChiTietDonHang ct
         JOIN DuocPham dp ON ct.duoc_pham_id = dp.id
         JOIN QuyCachDongGoi qc ON ct.quy_cach_id = qc.id
+        LEFT JOIN DonVi dv ON ct.don_vi_xuat_id = dv.id
         WHERE ct.don_hang_id = $1;
     `;
     const itemsRes = await pool.query(itemsQuery, [orderId]);
