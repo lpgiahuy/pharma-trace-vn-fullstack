@@ -48,4 +48,17 @@ const getBrands = async (req, res, next) => {
     }
 };
 
-export { getCategories, getProducts, getProductDetail, getBrands };
+const getNearestPharmacies = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { lat, lng } = req.query;
+
+        const data = await productService.fetchNearestPharmacies(id, lat, lng);
+        res.status(200).json({ success: true, data });
+    } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
+        next(error);
+    }
+};
+
+export { getCategories, getProducts, getProductDetail, getBrands, getNearestPharmacies };

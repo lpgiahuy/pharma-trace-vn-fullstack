@@ -104,4 +104,35 @@ const fetchUniqueBrands = async () => {
     return await productModel.getUniqueBrands();
 };
 
-export { fetchCategories, fetchProducts, fetchProductDetail, fetchUniqueBrands };
+const fetchNearestPharmacies = async (productId, lat, lng) => {
+    // Validate product exists
+    const product = await productModel.getProductByIdOrSlug(productId);
+    if (!product) {
+        const error = new Error('Product not found');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    // Validate coordinates
+    if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+        const error = new Error('Invalid coordinates (lat, lng required and must be numbers)');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const pharmacy = await productModel.getNearestPharmacy(productId, parseFloat(lat), parseFloat(lng), 1);
+
+    if (!pharmacy) {
+        return null; // No pharmacy nearby with stock
+    }
+
+    return {
+        id: pharmacy.don_vi_id,
+        name: pharmacy.ten_nha_thuoc,
+        address: pharmacy.dia_chi,
+        distance: parseFloat(pharmacy.khoang_cach),
+        distanceUnit: 'km'
+    };
+};
+
+export { fetchCategories, fetchProducts, fetchProductDetail, fetchUniqueBrands, fetchNearestPharmacies };
