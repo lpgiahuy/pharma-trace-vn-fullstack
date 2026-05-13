@@ -18,13 +18,13 @@ export default function AdminBlogPage() {
   useEffect(fetchData, [])
 
   const handleDelete = async (id) => {
-    try { await blogService.delete(id); toast.success('Post deleted'); fetchData() }
-    catch { toast.error('Delete failed') }
+    try { await blogService.delete(id); toast.success('Đã xóa bài viết'); fetchData() }
+    catch { toast.error('Xóa thất bại') }
   }
 
   const cols = [
     {
-      title: 'Title', dataIndex: 'title', key: 'title',
+      title: 'Tiêu đề', dataIndex: 'title', key: 'title',
       render: (v, row) => (
         <div className="flex items-center gap-3">
           <img src={row.coverImage} alt="" className="w-10 h-8 rounded-lg object-cover bg-slate-100 shrink-0" />
@@ -32,16 +32,16 @@ export default function AdminBlogPage() {
         </div>
       ),
     },
-    { title: 'Category', dataIndex: 'category',    key: 'cat',    render: v => <Tag>{v}</Tag> },
-    { title: 'Author',   dataIndex: 'author',      key: 'author', render: v => <span className="text-xs text-slate-500">{v}</span> },
-    { title: 'Date',     dataIndex: 'publishedAt', key: 'date',   render: v => formatDate(v) },
-    { title: 'Views',    dataIndex: 'views',       key: 'views',  render: v => v?.toLocaleString() },
+    { title: 'Danh mục', dataIndex: 'category',    key: 'cat',    render: v => <Tag>{v}</Tag> },
+    { title: 'Tác giả',  dataIndex: 'author',      key: 'author', render: v => <span className="text-xs text-slate-500">{v}</span> },
+    { title: 'Ngày đăng', dataIndex: 'publishedAt', key: 'date',  render: v => formatDate(v) },
+    { title: 'Lượt xem', dataIndex: 'views',       key: 'views',  render: v => v?.toLocaleString() },
     {
       title: '', key: 'actions', width: 100,
       render: (_, row) => (
         <div className="flex gap-1">
           <AButton size="small" icon={<EditOutlined />} onClick={() => navigate(`/admin/blog/${row.id}/edit`)} />
-          <Popconfirm title="Delete this post?" onConfirm={() => handleDelete(row.id)} okText="Delete" okButtonProps={{ danger: true }}>
+          <Popconfirm title="Xóa bài viết này?" onConfirm={() => handleDelete(row.id)} okText="Xóa" okButtonProps={{ danger: true }}>
             <AButton size="small" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </div>
@@ -52,8 +52,8 @@ export default function AdminBlogPage() {
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-xl font-display font-bold text-slate-900">Blog Posts</h1></div>
-        <AButton type="primary" icon={<PlusOutlined />} onClick={() => navigate('/admin/blog/new')}>New Post</AButton>
+        <div><h1 className="text-xl font-display font-bold text-slate-900">Bài viết Blog</h1></div>
+        <AButton type="primary" icon={<PlusOutlined />} onClick={() => navigate('/admin/blog/new')}>Bài viết mới</AButton>
       </div>
       <div className="card p-4">
         <Table dataSource={data} columns={cols} rowKey="id" loading={loading} pagination={{ pageSize: 10 }} size="middle" />

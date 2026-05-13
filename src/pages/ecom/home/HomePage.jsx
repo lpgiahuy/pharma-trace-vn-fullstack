@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, Shield, Truck, HeartPulse, Award, ShieldCheck, Eye } from 'lucide-react'
+import { ArrowRight, Shield, HeartPulse, ShieldCheck, Eye, Search, MapPin, Pill, ChevronLeft, ChevronRight, Tag, Activity } from 'lucide-react'
 import { productService } from '@/services/product.service'
 import { blogService } from '@/services/analytics.service'
 import { ProductCard, ProductCardSkeleton } from '@/components/ui/ProductCard'
@@ -55,7 +55,9 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [blogLoading, setBlogLoading] = useState(true)
   const [flashSaleLoading, setFlashSaleLoading] = useState(true)
-  const [activeBanner, setActiveBanner] = useState(0)
+  const [heroSearch, setHeroSearch] = useState('')
+  const [bgSlide, setBgSlide] = useState(0)
+  const [currentSlide, setCurrentSlide] = useState(0)
   const [activeParentId, setActiveParentId] = useState(null)
   const categories = useCategoryStore(s => s.categories)
 
@@ -73,17 +75,34 @@ export default function HomePage() {
     return true // Navigate to product list
   }
 
-  const BANNERS = [
-    { id: 1, title: t('home.banner1_title', { defaultValue: 'Trusted Medicines, Delivered Fast' }), subtitle: t('home.banner1_desc', { defaultValue: 'Shop 10,000+ certified pharmaceutical products' }), cta: t('home.shop_now'), to: '/products', bg: 'from-brand-600 to-brand-800', img: 'medication', image: 'https://wallpapercave.com/wp/wp15262378.jpg' },
-    { id: 2, title: t('home.banner2_title', { defaultValue: 'Vitamins & Supplements Sale' }), subtitle: t('home.banner2_desc', { defaultValue: 'Up to 30% off premium health supplements' }), cta: t('home.view_deals', { defaultValue: 'View Deals' }), to: '/products?category=1', bg: 'from-teal-500 to-teal-700', img: 'eco', image: 'https://thumbs.dreamstime.com/z/vitamins-supplements-shelves-different-types-pharmacy-45969522.jpg' },
-    { id: 3, title: t('home.banner3_title', { defaultValue: 'Free Delivery Over 500K VND' }), subtitle: t('home.banner3_desc', { defaultValue: 'Fast, secure pharmaceutical delivery' }), cta: t('home.start_shopping', { defaultValue: 'Start Shopping' }), to: '/products', bg: 'from-purple-600 to-purple-800', img: 'local_shipping', image: 'https://wallpapercave.com/wp/wp13751014.jpg' },
+  const BG_SLIDES = [
+    { id: 1, image: 'https://wallpapercave.com/wp/wp15262378.jpg' },
+    { id: 2, image: 'https://wallpapercave.com/wp/wp13751014.jpg' },
+    { id: 3, image: 'https://thumbs.dreamstime.com/z/vitamins-supplements-shelves-different-types-pharmacy-45969522.jpg' },
   ]
 
-  const TRUST_ITEMS = [
-    { icon: Shield,     label: t('home.trust1_label', { defaultValue: 'GMP Certified' }),     desc: t('home.trust1_desc', { defaultValue: 'Ministry of Health approved' }) },
-    { icon: Truck,      label: t('home.trust2_label', { defaultValue: 'Fast Delivery' }),      desc: t('home.trust2_desc', { defaultValue: 'Same-day for orders before 3pm' }) },
-    { icon: HeartPulse, label: t('home.trust3_label', { defaultValue: 'Expert Pharmacists' }), desc: t('home.trust3_desc', { defaultValue: 'Free consultation anytime' }) },
-    { icon: Award,      label: t('home.trust4_label', { defaultValue: 'Authentic Products' }), desc: t('home.trust4_desc', { defaultValue: '100% genuine pharmaceuticals' }) },
+  const BANNERS = [
+    { id: 1, title: 'Thuốc chính hãng, giao nhanh toàn quốc', cta: 'Mua ngay', to: '/products', image: 'https://wallpapercave.com/wp/wp15262378.jpg' },
+    { id: 2, title: 'Vitamin & Thực phẩm bổ sung – Giảm đến 30%', cta: 'Xem ưu đãi', to: '/products', image: 'https://thumbs.dreamstime.com/z/vitamins-supplements-shelves-different-types-pharmacy-45969522.jpg' },
+    { id: 3, title: 'Chăm sóc sức khỏe mẹ & bé toàn diện', cta: 'Khám phá ngay', to: '/products', image: 'https://wallpapercave.com/wp/wp13751014.jpg' },
+    { id: 4, title: 'Giao hàng miễn phí – Đơn từ 500.000đ', cta: 'Mua ngay', to: '/products', image: 'https://wallpapercave.com/wp/wp15262378.jpg' },
+  ]
+  const slideCount = Math.ceil(BANNERS.length / 2)
+
+  const SUGGESTIONS = ['khẩu trang', 'sữa dinh dưỡng', 'nước nhỏ mắt', 'omega 3', 'xịt chống nắng', 'probiotics', 'Mua 1 Tặng 1']
+
+  const QUICK_LINKS = [
+    { label: 'Đặt đơn thuốc', icon: Pill, to: '/account/prescriptions' },
+    { label: 'Liên hệ dược sĩ', icon: HeartPulse, to: '/blog' },
+    { label: 'Tìm nhà thuốc', icon: MapPin, to: '/pharmacies' },
+  ]
+
+  const ACTION_CARDS = [
+    { label: 'Tư vấn mua thuốc', icon: Pill, to: '/account/prescriptions', bg: 'bg-green-100', color: 'text-green-600' },
+    { label: 'Hệ thống nhà thuốc', icon: MapPin, to: '/pharmacies', bg: 'bg-blue-100', color: 'text-blue-600' },
+    { label: 'Liên hệ dược sĩ', icon: HeartPulse, to: '/blog', bg: 'bg-teal-100', color: 'text-teal-600' },
+    { label: 'Mã giảm giá riêng', icon: Tag, to: '/account/vouchers', bg: 'bg-amber-100', color: 'text-amber-600' },
+    { label: 'Kiểm tra sức khỏe', icon: Activity, to: '/blog', bg: 'bg-purple-100', color: 'text-purple-600' },
   ]
 
   useEffect(() => {
@@ -128,9 +147,14 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
-    const t = setInterval(() => setActiveBanner(b => (b + 1) % BANNERS.length), 5000)
-    return () => clearInterval(t)
-  }, [BANNERS.length])
+    const timer = setInterval(() => setBgSlide(s => (s + 1) % BG_SLIDES.length), 4000)
+    return () => clearInterval(timer)
+  }, [BG_SLIDES.length])
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentSlide(s => (s + 1) % slideCount), 5000)
+    return () => clearInterval(timer)
+  }, [slideCount])
 
   const navigate = useNavigate()
   const [traceUid, setTraceUid] = useState('')
@@ -141,76 +165,188 @@ export default function HomePage() {
     }
   }
 
+  const handleHeroSearch = (e) => {
+    e.preventDefault()
+    if (heroSearch.trim()) {
+      navigate(`/products?search=${encodeURIComponent(heroSearch.trim())}`)
+    }
+  }
+
   return (
     <div className="animate-fade-in bg-white pb-12">
-      {/* Hero Section - Optimized height to push Trust Bar to the bottom edge */}
-      <section className="bg-white pb-10 pt-4">
-        <div className="page-container">
-          {/* Main Slider - Height balanced to show content at the fold */}
-          <div className="relative group overflow-hidden rounded-[40px] shadow-2xl h-[400px] tablet:h-[520px] laptop:h-[620px]">
-            <div 
-              className={`w-full h-full ${!BANNERS[activeBanner].image ? `bg-gradient-to-br ${BANNERS[activeBanner].bg}` : 'bg-cover bg-center'} transition-all duration-1000 flex items-center px-8 tablet:px-24 text-white relative`}
-              style={BANNERS[activeBanner].image ? { backgroundImage: `url(${BANNERS[activeBanner].image})` } : {}}
-            >
-              {/* Solid Blue Overlay */}
-              {BANNERS[activeBanner].image && (
-                <div className="absolute inset-0 bg-brand-900/40 backdrop-blur-[1px] z-[1]" />
-              )}
-              
-              <div className="max-w-2xl relative z-10 animate-slide-up">
-                <span className="inline-block bg-white/10 backdrop-blur-xl px-4 py-1.5 tablet:px-6 tablet:py-2 rounded-full text-[11px] tablet:text-[14px] font-black uppercase tracking-[0.2em] tablet:tracking-[0.3em] mb-6 tablet:mb-10 border border-white/20 shadow-xl">
-                  {t('home.exclusive_offers')}
-                </span>
-                <h2 className="text-3xl tablet:text-8xl font-black mb-6 tablet:mb-10 leading-[1.1] tablet:leading-[1] tracking-tighter drop-shadow-2xl">
-                  {BANNERS[activeBanner].title}
-                </h2>
-                <p className="text-lg tablet:text-2xl text-white/90 mb-8 tablet:mb-14 hidden tablet:block line-clamp-3 font-medium max-w-xl leading-relaxed">
-                  {BANNERS[activeBanner].subtitle}
-                </p>
-                <Link to={BANNERS[activeBanner].to} className="inline-flex items-center gap-3 tablet:gap-4 bg-white text-brand-600 font-extrabold px-8 py-4 tablet:px-14 tablet:py-6 rounded-xl tablet:rounded-[24px] hover:bg-brand-50 transition-all shadow-2xl shadow-brand-950/60 hover:-translate-y-2 active:scale-95 text-base tablet:text-xl uppercase tracking-widest">
-                  {BANNERS[activeBanner].cta} <ArrowRight className="w-5 h-5 tablet:w-7 tablet:h-7" />
-                </Link>
-              </div>
+      {/* Hero — background slider + search card */}
+      <section className="relative overflow-hidden min-h-[360px] sm:min-h-[435px]">
+        {/* Background image slides */}
+        {BG_SLIDES.map((slide, i) => (
+          <div
+            key={slide.id}
+            className="absolute inset-0 transition-opacity duration-1000"
+            style={{
+              opacity: i === bgSlide ? 1 : 0,
+              backgroundImage: `url(${slide.image})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          />
+        ))}
+        <div className="absolute inset-0 bg-brand-900/55" />
 
-              {!BANNERS[activeBanner].image && (
-                <div className="hidden tablet:flex absolute right-[10%] top-1/2 -translate-y-1/2 text-[400px] opacity-10 transform rotate-12 select-none pointer-events-none">
-                  <span className="material-symbols-outlined text-[400px]">{BANNERS[activeBanner].img}</span>
+        {/* Right arrow for bg slider */}
+        <button
+          onClick={() => setBgSlide(s => (s + 1) % BG_SLIDES.length)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-all"
+          aria-label="Ảnh nền tiếp theo"
+        >
+          <ChevronRight className="w-5 h-5 text-slate-700" />
+        </button>
+
+        {/* Search card — centered over background */}
+        <div className="absolute inset-0 z-10 flex flex-col justify-end pointer-events-none">
+          <div className="page-container pb-24 flex justify-center pointer-events-auto">
+            <div className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden">
+              <div className="px-4 pt-4 pb-3">
+                <form onSubmit={handleHeroSearch}>
+                  <div className="relative flex items-center border border-slate-200 rounded-full h-12 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 transition-all">
+                  <Search className="absolute left-4 w-5 h-5 text-slate-400 pointer-events-none" />
+                  <input
+                    value={heroSearch}
+                    onChange={e => setHeroSearch(e.target.value)}
+                    placeholder="Bạn đang tìm gì hôm nay..."
+                    className="flex-1 h-full pl-12 pr-4 rounded-full focus:outline-none text-slate-800 placeholder:text-slate-400 text-[15px] font-medium"
+                  />
+                  </div>
+                </form>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3">
+                  {SUGGESTIONS.map(kw => (
+                    <Link
+                    key={kw}
+                    to={`/products?search=${encodeURIComponent(kw)}`}
+                    className="text-[13px] text-brand-500 hover:text-brand-700 hover:underline transition-colors"
+                  >
+                    {kw}
+                    </Link>
+                  ))}
                 </div>
-              )}
+              </div>
+              <div className="border-t border-slate-100 grid grid-cols-3 divide-x divide-slate-100">
+                {QUICK_LINKS.map(({ label, icon: Icon, to }) => (
+                  <Link
+                    key={label}
+                    to={to}
+                    className="flex items-center gap-2.5 px-4 py-3 hover:bg-slate-50 transition-colors group"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-brand-600" />
+                    </div>
+                    <span className="text-[13px] font-bold text-slate-700 group-hover:text-brand-600 flex-1 leading-tight">{label}</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                  </Link>
+                ))}
+              </div>
             </div>
-            
-            {/* Extended Slider Controls */}
-            <div className="absolute bottom-8 tablet:bottom-12 left-1/2 -translate-x-1/2 flex gap-3 tablet:gap-4 z-20">
-              {BANNERS.map((_, i) => (
-                <button 
-                  key={i} 
-                  onClick={() => setActiveBanner(i)}
-                  className={`h-1.5 tablet:h-2 rounded-full transition-all duration-700 ${i === activeBanner ? 'bg-white w-12 tablet:w-24' : 'bg-white/30 w-4 tablet:w-8 hover:bg-white/50'}`}
-                  aria-label={`Go to slide ${i + 1}`}
-                />
+          </div>
+        </div>
+
+        {/* Bg slide dots */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          {BG_SLIDES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setBgSlide(i)}
+              className={`rounded-full transition-all duration-300 ${i === bgSlide ? 'bg-white w-5 h-2' : 'bg-white/40 w-2 h-2 hover:bg-white/60'}`}
+              aria-label={`Nền ${i + 1}`}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* Promo banner slider — trong page-container */}
+      <section className="bg-white pt-5 pb-2">
+        <div className="page-container">
+          <div className="relative overflow-hidden rounded-2xl">
+            <div
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+            >
+              {Array.from({ length: slideCount }).map((_, slideIdx) => (
+                <div key={slideIdx} className="w-full shrink-0 grid grid-cols-2 gap-3">
+                  {BANNERS.slice(slideIdx * 2, slideIdx * 2 + 2).map(banner => (
+                    <Link
+                      key={banner.id}
+                      to={banner.to}
+                      className="relative rounded-xl overflow-hidden h-44 sm:h-56 group block"
+                    >
+                      <img
+                        src={banner.image}
+                        alt={banner.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/65 via-slate-900/10 to-transparent" />
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <p className="text-white font-black text-sm sm:text-base leading-tight drop-shadow-lg line-clamp-2">{banner.title}</p>
+                        <span className="text-white/80 text-xs font-semibold mt-1 inline-flex items-center gap-1 uppercase tracking-wide">
+                          {banner.cta} <ArrowRight className="w-3 h-3" />
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               ))}
             </div>
+
+            {slideCount > 1 && (
+              <>
+                <button
+                  onClick={() => setCurrentSlide(s => (s - 1 + slideCount) % slideCount)}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-all z-10"
+                  aria-label="Slide trước"
+                >
+                  <ChevronLeft className="w-5 h-5 text-slate-700" />
+                </button>
+                <button
+                  onClick={() => setCurrentSlide(s => (s + 1) % slideCount)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-all z-10"
+                  aria-label="Slide sau"
+                >
+                  <ChevronRight className="w-5 h-5 text-slate-700" />
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Dots */}
+          <div className="flex justify-center gap-2 mt-4 mb-2">
+            {Array.from({ length: slideCount }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentSlide(i)}
+                className={`rounded-full transition-all duration-300 ${i === currentSlide ? 'bg-brand-500 w-5 h-2' : 'bg-slate-300 w-2 h-2 hover:bg-slate-400'}`}
+                aria-label={`Slide ${i + 1}`}
+              />
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Support Bar - Below Hero */}
-      <section className="relative z-30 pb-12">
+      {/* Action cards row */}
+      <section className="bg-white border-b border-slate-100 py-4">
         <div className="page-container">
-          <div className="bg-white rounded-[32px] shadow-xl shadow-brand-900/10 border border-slate-100 py-8 tablet:py-10 px-4 tablet:px-12">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-8 gap-x-2 tablet:gap-4 divide-slate-100 lg:divide-x">
-              {TRUST_ITEMS.map(({ icon: Icon, label, desc }, i) => (
-                <div key={label} className="flex items-center gap-3 tablet:gap-5 px-2 tablet:px-4 first:pl-0">
-                  <div className="w-10 h-10 tablet:w-14 tablet:h-14 rounded-xl tablet:rounded-2xl bg-brand-50 flex items-center justify-center shrink-0 shadow-sm shadow-brand-100/50 group-hover:bg-brand-100 transition-colors">
-                    <Icon className="w-5 h-5 tablet:w-7 tablet:h-7 text-brand-500" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[12px] tablet:text-[14px] font-black text-slate-800 uppercase tracking-tight truncate tablet:whitespace-normal">{label}</p>
-                    <p className="text-[10px] tablet:text-xs text-slate-500 leading-tight mt-0.5 tablet:mt-1 font-medium line-clamp-2">{desc}</p>
-                  </div>
+          <div className="flex gap-3 overflow-x-auto pb-1 no-scrollbar">
+            {ACTION_CARDS.map(({ label, icon: Icon, to, bg, color }) => (
+              <Link
+                key={label}
+                to={to}
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-slate-100 hover:border-brand-200 hover:bg-brand-50/50 transition-all whitespace-nowrap shrink-0 group min-w-[150px]"
+              >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${bg}`}>
+                  <Icon className={`w-5 h-5 ${color}`} />
                 </div>
-              ))}
-            </div>
+                <span className="text-sm font-bold text-slate-700 group-hover:text-brand-600 leading-tight">{label}</span>
+              </Link>
+            ))}
+            <button className="flex items-center justify-center w-10 h-10 rounded-full border border-slate-200 hover:border-brand-300 hover:bg-brand-50 transition-all shrink-0 self-center ml-1">
+              <ChevronRight className="w-5 h-5 text-slate-500" />
+            </button>
           </div>
         </div>
       </section>

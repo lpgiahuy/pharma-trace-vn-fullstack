@@ -96,6 +96,12 @@ export const userService = {
     return data.data || data
   },
 
+  async getMyPrescriptions() {
+    const { data } = await apiClient.get('/prescriptions/my')
+    const result = data.data || data
+    return Array.isArray(result) ? result : (result.items || [])
+  },
+
   async getWishlist() {
     const { data } = await apiClient.get('/wishlist')
     return data.data || data
@@ -113,6 +119,80 @@ export const userService = {
 
   async getRoles() {
     const { data } = await apiClient.get('/admin/staff/roles')
+    return data.data || data
+  },
+}
+
+export const customerService = {
+  async getAll() {
+    const { data } = await apiClient.get('/admin/customers')
+    return data.data || data
+  },
+
+  async getById(id) {
+    const { data } = await apiClient.get(`/admin/customers/${id}`)
+    return data.data || data
+  },
+
+  async setStatus(id, action) {
+    const { data } = await apiClient.patch(`/admin/customers/${id}/status`, { action })
+    return data.data || data
+  },
+}
+
+export const unitService = {
+  async getAll() {
+    const { data } = await apiClient.get('/admin/units')
+    const result = data.data || data
+    const items = Array.isArray(result) ? result : (result.items || result.data || [])
+    return items.map(u => ({
+      ...u,
+      id: u.id,
+      name: u.ten_don_vi || u.name || '',
+      type: u.loai_don_vi || u.type || '',
+      address: u.dia_chi || u.address || '',
+      lat: u.toa_do_lat ?? null,
+      lng: u.toa_do_lng ?? null,
+    }))
+  },
+
+  async create(payload) {
+    const { data } = await apiClient.post('/admin/units/add', {
+      ten_don_vi:   payload.ten_don_vi,
+      loai_don_vi:  payload.loai_don_vi,
+      dia_chi:      payload.dia_chi || '',
+      toa_do_lat:   payload.toa_do_lat ?? null,
+      toa_do_lng:   payload.toa_do_lng ?? null,
+    })
+    return data.data || data
+  },
+
+  async update(id, payload) {
+    const { data } = await apiClient.put(`/admin/units/${id}`, {
+      ten_don_vi:   payload.ten_don_vi,
+      loai_don_vi:  payload.loai_don_vi,
+      dia_chi:      payload.dia_chi || '',
+      toa_do_lat:   payload.toa_do_lat ?? null,
+      toa_do_lng:   payload.toa_do_lng ?? null,
+    })
+    return data.data || data
+  },
+
+  async delete(id) {
+    const { data } = await apiClient.delete(`/admin/units/${id}`)
+    return data.data || data
+  },
+}
+
+export const prescriptionAdminService = {
+  async getAll(status) {
+    const url = status ? `/admin/prescriptions?status=${status}` : '/admin/prescriptions'
+    const { data } = await apiClient.get(url)
+    return data.data || data
+  },
+
+  async updateStatus(id, trang_thai_duyet) {
+    const { data } = await apiClient.put(`/admin/prescriptions/${id}/status`, { trang_thai_duyet })
     return data.data || data
   },
 }

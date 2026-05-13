@@ -10,7 +10,11 @@ const normalizeOrder = (o) => {
     price: Number(i.don_gia) || Number(i.price),
     quantity: i.so_luong || i.quantity,
     image: i.hinh_anh_url || i.image,
-    unit: i.ten_don_vi || i.unit
+    unit: i.ten_don_vi || i.unit,
+    isPrescription: i.la_thuoc_ke_don || false,
+    don_vi_xuat: i.don_vi_xuat || null,
+    gia_goc_luc_mua: Number(i.gia_goc_luc_mua) || null,
+    phan_tram_giam_luc_mua: Number(i.phan_tram_giam_luc_mua) || 0
   })) : []
 
   return {
@@ -22,7 +26,11 @@ const normalizeOrder = (o) => {
     itemsCount: o.items_count || items.length || 0,
     items: items,
     address: o.dia_chi_giao_hang || o.dia_chi || o.address || '',
-    paymentMethod: o.phuong_thuc_thanh_toan || o.paymentMethod || 'COD'
+    paymentMethod: o.phuong_thuc_thanh_toan || o.paymentMethod || 'COD',
+    paymentStatus: o.trang_thai_thanh_toan || o.paymentStatus,
+    customerName: o.ho_ten || o.customerName,
+    customerPhone: o.so_dien_thoai || o.customerPhone,
+    customerEmail: o.email || o.customerEmail
   }
 }
 
@@ -80,7 +88,8 @@ export const orderService = {
       voucher_id:             payload.voucher_id || payload.voucherId,
       diem_su_dung:           payload.diem_su_dung || payload.points || 0,
       lat:                    payload.lat || null,
-      lng:                    payload.lng || null
+      lng:                    payload.lng || null,
+      toa_thuoc_id:           payload.toa_thuoc_id || null,
     })
     return data.data || data
   },

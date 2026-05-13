@@ -14,6 +14,7 @@ import { formatCurrency, formatDate, cn } from '@/utils'
 import { sanitizeHtml } from '@/utils/security'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
+import NearestPharmacy from './components/NearestPharmacy'
 
 /**
  * Helper component to safely render content that might be a string (HTMl), 
@@ -75,7 +76,12 @@ export default function ProductDetailPage() {
   const [error, setError]     = useState(null)
   const [qty, setQty]         = useState(1)
   const [activeTab, setActiveTab] = useState('thanh_phan')
-  const [selectedVariant, setSelectedVariant] = useState(null)   // { id, label, price }
+  const [selectedVariant, setSelectedVariant] = useState(null)
+  const [reviews, setReviews] = useState([])
+  const [reviewsLoading, setReviewsLoading] = useState(false)
+  const [reviewStars, setReviewStars] = useState(5)
+  const [reviewText, setReviewText] = useState('')
+  const [reviewSubmitting, setReviewSubmitting] = useState(false)
   
   const addItem = useCartStore(s => s.addItem)
   const user = useAuthStore(s => s.user)
@@ -88,7 +94,6 @@ export default function ProductDetailPage() {
       .then(res => {
         setProduct(res)
         setIsFavorite(res.isFavorited)
-        // Auto-select the base variant or the first one
         if (res.variants?.length > 0) {
           const base = res.variants.find(v => v.isBase) || res.variants[0]
           setSelectedVariant(base)
@@ -97,6 +102,32 @@ export default function ProductDetailPage() {
       .catch(setError)
       .finally(() => setLoading(false))
   }, [id])
+
+  useEffect(() => {
+    if (activeTab !== 'reviews' || !id) return
+    setReviewsLoading(true)
+    productService.getReviews(id)
+      .then(res => setReviews(Array.isArray(res) ? res : (res.data || [])))
+      .catch(() => {})
+      .finally(() => setReviewsLoading(false))
+  }, [activeTab, id])
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault()
+    if (!user) { toast.error(t('auth.login_required', { defaultValue: 'Please login to submit a review.' })); return }
+    setReviewSubmitting(true)
+    try {
+      const newReview = await productService.addReview(id, { so_sao: reviewStars, noi_dung: reviewText })
+      setReviews(prev => [newReview, ...prev])
+      setReviewText('')
+      setReviewStars(5)
+      toast.success('Review submitted!')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit review.')
+    } finally {
+      setReviewSubmitting(false)
+    }
+  }
 
   const handleToggleFavorite = async () => {
     if (!user) {
@@ -173,7 +204,7 @@ export default function ProductDetailPage() {
               ))}
             </div>
             <span className="text-sm text-slate-500">
-              {Number(product.rating).toFixed(1)} ({t('product.reviews_count', { count: product.reviewCount, defaultValue: `${product.reviewCount} reviews` })})
+              {Number(product.rating).toFixed(1)}
             </span>
             <span className="text-slate-300" aria-hidden="true">|</span>
             <span className="text-sm text-slate-500">
@@ -322,6 +353,9 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Nearest Pharmacy Section */}
+      <NearestPharmacy productId={product.id} inStock={product.inStock} />
 
       {/* Tabs Section */}
       <div className="card overflow-hidden">
@@ -528,8 +562,66 @@ export default function ProductDetailPage() {
           )}
 
           {activeTab === 'reviews' && (
-            <div className="text-slate-500 text-base py-12 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 font-medium animate-fade-in shadow-inner">
-              {t('product.no_reviews', { defaultValue: 'No reviews yet. Be the first to review this product.' })}
+            <div className="space-y-8 animate-fade-in">
+              {/* Submit review form */}
+              {user && (
+                <form onSubmit={handleSubmitReview} className="card p-6 space-y-4 border-brand-100">
+                  <h3 className="font-display font-bold text-slate-900">Write a Review</h3>
+                  {/* Star selector */}
+                  <div>
+                    <p className="text-sm font-medium text-slate-700 mb-2">Rating</p>
+                    <div className="flex gap-1">
+                      {[1,2,3,4,5].map(s => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setReviewStars(s)}
+                          className="p-0.5 transition-transform hover:scale-110"
+                          aria-label={`Rate ${s} star${s > 1 ? 's' : ''}`}
+                        >
+                          <Star className={`w-7 h-7 transition-colors ${s <= reviewStars ? 'fill-yellow-400 text-yellow-400' : 'text-slate-200'}`} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Your Review</label>
+                    <textarea
+                      value={reviewText}
+                      onChange={e => setReviewText(e.target.value)}
+                      rows={3}
+                      placeholder="Share your experience with this product..."
+                      className="w-full px-4 py-3 border border-surface-border rounded-xl focus:outline-none focus:border-brand-500 text-sm resize-none"
+                    />
+                  </div>
+                  <Button type="submit" loading={reviewSubmitting} size="sm">Submit Review</Button>
+                </form>
+              )}
+
+              {/* Existing reviews */}
+              {reviewsLoading ? (
+                <div className="py-8 text-center text-slate-400 text-sm">Loading reviews…</div>
+              ) : reviews.length === 0 ? (
+                <div className="text-slate-500 text-base py-12 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 font-medium shadow-inner">
+                  {t('product.no_reviews', { defaultValue: 'No reviews yet. Be the first to review this product.' })}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((rv, i) => (
+                    <div key={rv.id ?? i} className="card p-5 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1">
+                          {[1,2,3,4,5].map(s => (
+                            <Star key={s} className={`w-4 h-4 ${s <= rv.so_sao ? 'fill-yellow-400 text-yellow-400' : 'text-slate-200'}`} />
+                          ))}
+                        </div>
+                        <span className="text-xs text-slate-400">{formatDate(rv.ngay_danh_gia || rv.date)}</span>
+                      </div>
+                      {rv.noi_dung && <p className="text-sm text-slate-700 leading-relaxed">{rv.noi_dung}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

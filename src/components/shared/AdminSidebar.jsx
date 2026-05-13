@@ -3,7 +3,8 @@ import { Layout, Menu, Drawer } from 'antd'
 import {
   DashboardOutlined, ShoppingOutlined, AppstoreOutlined,
   OrderedListOutlined, TeamOutlined, TagOutlined, FileTextOutlined,
-  SwapOutlined, AlertOutlined
+  SwapOutlined, AlertOutlined, UserOutlined, FileDoneOutlined,
+  BankOutlined,
 } from '@ant-design/icons'
 import { Pill as PillIcon } from 'lucide-react'
 const Logo = 'https://res.cloudinary.com/dc64co0el/image/upload/v1777731026/Logo_ck5ouv.svg'
@@ -31,9 +32,12 @@ export const AdminSidebar = ({ collapsed, onCollapse, isMobile }) => {
         { key: '/admin/rma',    label: <Link to="/admin/rma">{t('admin.rma')}</Link> },
       ],
     },
-    { key: '/admin/vouchers', icon: <TagOutlined />,         label: <Link to="/admin/vouchers">{t('admin.vouchers')}</Link> },
-    { key: '/admin/blog',     icon: <FileTextOutlined />,    label: <Link to="/admin/blog">{t('admin.blog_news')}</Link> },
-    { key: '/admin/staff',    icon: <TeamOutlined />,        label: <Link to="/admin/staff">{t('admin.staff_rbac')}</Link> },
+    { key: '/admin/vouchers',       icon: <TagOutlined />,       label: <Link to="/admin/vouchers">{t('admin.vouchers')}</Link> },
+    { key: '/admin/blog',           icon: <FileTextOutlined />,  label: <Link to="/admin/blog">{t('admin.blog_news')}</Link> },
+    { key: '/admin/staff',          icon: <TeamOutlined />,      label: <Link to="/admin/staff">{t('admin.staff_rbac')}</Link> },
+    { key: '/admin/customers',      icon: <UserOutlined />,      label: <Link to="/admin/customers">{t('admin.customers')}</Link> },
+    { key: '/admin/prescriptions',  icon: <FileDoneOutlined />,  label: <Link to="/admin/prescriptions">{t('admin.prescriptions')}</Link> },
+    { key: '/admin/units',          icon: <BankOutlined />,      label: <Link to="/admin/units">Units & Locations</Link> },
   ]
 
   const SidebarContent = ({ collapsed }) => {

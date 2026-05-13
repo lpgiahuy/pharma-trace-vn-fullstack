@@ -145,4 +145,14 @@ export const analyticsService = {
     const { data } = await apiClient.get('/dashboard/expiry-alerts')
     return data.data || data
   },
+
+  async getCategoryRevenue() {
+    const { data } = await apiClient.get('/dashboard/category-revenue')
+    return data.data || data
+  },
+
+  async getCategoryCount() {
+    const { data } = await apiClient.get('/dashboard/category-count')
+    return data.data || data
+  },
 }

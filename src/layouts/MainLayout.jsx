@@ -4,6 +4,7 @@ import { Header } from '@/components/shared/Header'
 import { Footer } from '@/components/shared/Footer'
 import { BottomNav } from '@/components/shared/BottomNav'
 import { CartDrawer } from '@/components/shared/CartDrawer'
+import { ChatbotWidget } from '@/components/shared/ChatbotWidget'
 import { PageLoader } from '@/components/ui/Spinner'
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
 
@@ -20,5 +21,6 @@ export const MainLayout = () => (
     <Footer />
     <BottomNav />
     <CartDrawer />
+    <ChatbotWidget />
   </div>
 )
