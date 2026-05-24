@@ -45,3 +45,21 @@ export const getLowStockAlerts = async (req, res, next) => {
         next(error);
     }
 };
+
+export const getCategoryRevenue = async (req, res, next) => {
+    try {
+        const data = await dashboardService.fetchCategoryRevenue();
+        res.status(200).json({ success: true, data: data });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getCategoryCount = async (req, res, next) => {
+    try {
+        const data = await dashboardService.fetchCategoryProductCount();
+        res.status(200).json({ success: true, data: data });
+    } catch (error) {
+        next(error);
+    }
+};

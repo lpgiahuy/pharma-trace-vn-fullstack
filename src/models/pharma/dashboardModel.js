@@ -56,14 +56,17 @@ export const getMonthlyRevenueChart = async () => {
                 '1 month'
             )::date AS month_start
         )
-        SELECT 
+        SELECT
             to_char(m.month_start, 'Mon') as month,
-            COALESCE(SUM(dh.tong_tien), 0) as revenue,
-            COUNT(dh.id) as orders
+            COALESCE(SUM(
+                CASE WHEN dh.trang_thai_don = 'HoanThanh' THEN dh.tong_tien ELSE 0 END
+            ), 0) as revenue,
+            COUNT(
+                CASE WHEN dh.trang_thai_don != 'DaHuy' THEN dh.id END
+            ) as orders
         FROM months m
-        LEFT JOIN DonHang dh 
+        LEFT JOIN DonHang dh
             ON date_trunc('month', dh.ngay_dat_hang) = m.month_start
-            AND dh.trang_thai_don != 'DaHuy'
         GROUP BY m.month_start
         ORDER BY m.month_start ASC;
     `;
@@ -85,6 +88,39 @@ export const getTopSellingProducts = async (limit) => {
         LIMIT $1;
     `;
     const res = await pool.query(query, [limit]);
+    return res.rows;
+};
+
+export const getCategoryRevenue = async () => {
+    const query = `
+        SELECT
+            COALESCE(dm.ten_danh_muc, 'Khác') AS category,
+            COALESCE(SUM(ct.so_luong * ct.don_gia), 0)::bigint AS revenue
+        FROM DonHang dh
+        JOIN ChiTietDonHang ct ON dh.id = ct.don_hang_id
+        JOIN DuocPham dp ON ct.duoc_pham_id = dp.id
+        LEFT JOIN DanhMuc dm ON dp.danh_muc_id = dm.id
+        WHERE dh.trang_thai_don = 'HoanThanh'
+        GROUP BY dm.ten_danh_muc
+        ORDER BY revenue DESC;
+    `;
+    const res = await pool.query(query);
+    return res.rows;
+};
+
+export const getCategoryProductCount = async () => {
+    const query = `
+        SELECT
+            COALESCE(parent.ten_danh_muc, dm.ten_danh_muc, 'Khác') AS category,
+            COUNT(dp.id)::int                                         AS count
+        FROM DuocPham dp
+        LEFT JOIN DanhMuc dm     ON dp.danh_muc_id      = dm.id
+        LEFT JOIN DanhMuc parent ON dm.danh_muc_cha_id  = parent.id
+        WHERE dp.trang_thai = TRUE
+        GROUP BY COALESCE(parent.ten_danh_muc, dm.ten_danh_muc, 'Khác')
+        ORDER BY count DESC;
+    `;
+    const res = await pool.query(query);
     return res.rows;
 };
 

@@ -1,6 +1,6 @@
 import express from 'express';
 import { scanQR } from '../../controllers/pharma/traceController.js';
-import { protect } from '../../middlewares/authMiddleware.js';
+import { optionalProtect } from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -8,17 +8,16 @@ const router = express.Router();
  * @swagger
  * tags:
  *   - name: Pharma - Traceability
- *     description: Pharmaceutical traceability using QR code (Requires authentication)
+ *     description: Pharmaceutical traceability using QR code (Public - no authentication required)
  */
 
 /**
  * @swagger
  * /trace/scan-qr:
  *   post:
- *     summary: Scan QR code to trace product batch and movement history
+ *     summary: Scan QR code to trace product batch and movement history (public endpoint)
  *     tags: [Pharma - Traceability]
- *     security:
- *       - bearerAuth: []
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -30,7 +29,7 @@ const router = express.Router();
  *             properties:
  *               uid:
  *                 type: string
- *                 example: "bbbf80ea-0a2b-40b0-9911-14a43c3aa7e4"
+ *                 example: "5dbf5a73-6bd9-4a78-8f6f-0bdca4ab8d9a"
  *                 description: Unique identifier (UID) of the medicine box scanned from QR code
  *     responses:
  *       200:
@@ -42,6 +41,6 @@ const router = express.Router();
  *       404:
  *         description: No medicine box found matching this UID
  */
-router.post('/scan-qr', protect, scanQR);
+router.post('/scan-qr', optionalProtect, scanQR);
 
 export default router;

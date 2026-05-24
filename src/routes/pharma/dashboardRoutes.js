@@ -1,5 +1,5 @@
 import express from 'express';
-import { getDashboardData, getDashboardStats, getRevenueChart, getTopProducts, getLowStockAlerts } from '../../controllers/pharma/dashboardCtrl.js';
+import { getDashboardData, getDashboardStats, getRevenueChart, getTopProducts, getLowStockAlerts, getCategoryRevenue, getCategoryCount } from '../../controllers/pharma/dashboardCtrl.js';
 import { protect } from '../../middlewares/authMiddleware.js';
 import { authorizeRoles } from '../../middlewares/roleMiddleware.js';
 
@@ -91,5 +91,33 @@ router.get('/top-products', getTopProducts);
  *         description: Low stock items loaded successfully
  */
 router.get('/low-stock', getLowStockAlerts);
+
+/**
+ * @swagger
+ * /dashboard/category-revenue:
+ *   get:
+ *     summary: Get revenue breakdown by product category (for pie chart)
+ *     tags: [Pharma - Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Category revenue data loaded successfully
+ */
+router.get('/category-revenue', getCategoryRevenue);
+
+/**
+ * @swagger
+ * /dashboard/category-count:
+ *   get:
+ *     summary: Get product count breakdown by category (for pie chart)
+ *     tags: [Pharma - Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Category product count loaded successfully
+ */
+router.get('/category-count', getCategoryCount);
 
 export default router;
