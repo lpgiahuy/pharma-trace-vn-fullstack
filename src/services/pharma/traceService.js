@@ -9,24 +9,26 @@ const processQRScan = async (uid, lat, lng, ip) => {
         throw error;
     }
 
-    // 2. Ghi nhật ký quét (Trigger trong DB sẽ tự xử lý logic vị trí)
+    // 2. Ghi nhật ký quét
     await traceModel.insertScanLog(uid, lat, lng, ip);
 
-    // 3. Lấy lại thông tin mới nhất (để xem trạng thái có bị đổi thành CanhBaoGia không)
+    // 3. Lấy lại thông tin mới nhất (kiểm tra trạng thái CanhBaoGia sau khi log)
     boxInfo = await traceModel.getBoxInfo(uid);
 
-    // 4. Lấy lịch sử phân phối
-    const history = await traceModel.getDistributionHistory(uid);
-
-    // 5. [MỚI] Lấy điểm rủi ro từ Function SQL
-    const riskScore = await traceModel.getQRRiskScore(uid);
+    // 4. Lấy lịch sử phân phối + điểm rủi ro + chi tiết scan song song
+    const [history, riskScore, scanDetails] = await Promise.all([
+        traceModel.getDistributionHistory(uid),
+        traceModel.getQRRiskScore(uid),
+        traceModel.getScanDetails(uid),
+    ]);
 
     return {
-        box_info: boxInfo,
+        box_info:     boxInfo,
         trace_history: history,
-        risk_score: riskScore, // Trả về điểm rủi ro (VD: 0, 15, 30, 100)
-        is_authentic: boxInfo.trang_thai !== 'CanhBaoGia' && riskScore < 80 
-        // Nếu risk_score quá cao (trên 80), chúng ta coi như không an toàn
+        risk_score:   riskScore,
+        is_authentic: boxInfo.trang_thai !== 'CanhBaoGia' && riskScore < 80,
+        // Breakdown of the two SQL fraud checks for the UI to display
+        scan_details: scanDetails, // { total, firstScan, lastScan, maxPerMinute, hasLocationAnomaly }
     };
 };
 

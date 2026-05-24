@@ -13,8 +13,10 @@ const runBatchProcessing = async () => {
         await pool.query('CALL sp_huy_don_qua_han()');
         console.log('   ✅ Đã dọn dẹp các đơn hàng quá hạn thanh toán.');
 
-        // 3. Xét duyệt lại hạng thành viên (Đồng, Bạc, Vàng, Kim Cương)
-        // Cronjob này đã được thay thế bằng DB Trigger trg_auto_upgrade_tier.
+        // 3. Xác nhận hoàn tất đơn ChoHoanTat quá 7 ngày: chuyển sang HoanThanh + cộng điểm tích lũy
+        // (Việc cộng diem_tich_luy_tong sẽ kích hoạt trigger trg_auto_upgrade_tier để nâng hạng)
+        await pool.query('CALL sp_xac_nhan_hoan_tat_sau_7_ngay()');
+        console.log('   ✅ Đã xác nhận hoàn tất đơn hàng quá 7 ngày và cộng điểm tích lũy.');
 
         console.log('🎉 [CRON JOB] Hoàn tất dọn dẹp hệ thống thành công!\n');
     } catch (error) {

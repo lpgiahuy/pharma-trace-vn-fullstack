@@ -70,3 +70,19 @@ export const fetchTopProducts = async (limit = 5) => {
 export const fetchLowStockAlerts = async () => {
     return await dashboardModel.getLowStockItems();
 };
+
+export const fetchCategoryRevenue = async () => {
+    const rows = await dashboardModel.getCategoryRevenue();
+    return rows.map(r => ({
+        category: r.category,
+        revenue: parseInt(r.revenue),
+    }));
+};
+
+export const fetchCategoryProductCount = async () => {
+    const rows = await dashboardModel.getCategoryProductCount();
+    return rows.map(r => ({
+        category: r.category,
+        count: r.count,
+    }));
+};
