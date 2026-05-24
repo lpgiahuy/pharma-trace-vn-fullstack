@@ -51,7 +51,7 @@ const normalizeProduct = (p) => {
     totalStock:     p.total_stock !== undefined ? Number(p.total_stock) : null,
     rating:         p.diem_danh_gia   ?? p.diemDanhGia ?? chi_tiet?.score ?? p.danh_gia_tb     ?? p.rating      ?? 0,
     reviewCount:    p.so_danh_gia     ?? p.soDanhGia   ?? p.reviewCount  ?? 0,
-    soldCount:      p.so_luong_da_ban ?? p.soLuongDaBan ?? p.da_ban       ?? p.sold ?? 0,
+    soldCount:      p.so_luong_da_ban ?? p.soLuongDaBan ?? p.da_ban       ?? p.sold ?? p.soldCount ?? 0,
     isFavorited:    p.is_favorited    ?? false,
     batchNumber:    p.so_lo           || p.batchNumber  || 'N/A',
     expiryDate:     p.ngay_het_han    || p.expiryDate   || null,

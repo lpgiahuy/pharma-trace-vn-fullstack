@@ -54,86 +54,86 @@ export default function VouchersPage() {
 
       if (editing) await voucherService.update(editing.id, payload)
       else         await voucherService.create(payload)
-      
-      toast.success(editing ? 'Voucher updated' : 'Voucher created')
+
+      toast.success(editing ? 'Đã cập nhật mã giảm giá' : 'Đã tạo mã giảm giá')
       setOpen(false); fetchData()
-    } catch { toast.error('Save failed') }
+    } catch { toast.error('Lưu thất bại') }
     finally { setSaving(false) }
   }
 
   const handleDelete = async (id) => {
-    try { await voucherService.delete(id); toast.success('Voucher deleted'); fetchData() }
-    catch { toast.error('Delete failed') }
+    try { await voucherService.delete(id); toast.success('Đã xóa mã giảm giá'); fetchData() }
+    catch { toast.error('Xóa thất bại') }
   }
 
   const cols = [
-    { 
-      title: 'Voucher Code', 
-      dataIndex: 'code', 
-      key: 'code', 
-      render: v => <span className="font-mono font-bold text-brand-600 bg-brand-50 px-2 py-1 rounded">{v}</span> 
+    {
+      title: 'Mã giảm giá',
+      dataIndex: 'code',
+      key: 'code',
+      render: v => <span className="font-mono font-bold text-brand-600 bg-brand-50 px-2 py-1 rounded">{v}</span>
     },
-    { 
-      title: 'Discount Type', 
-      dataIndex: 'type', 
-      key: 'type', 
+    {
+      title: 'Loại giảm',
+      dataIndex: 'type',
+      key: 'type',
       render: v => (
         <Tag color={v === 'PhanTram' ? 'blue' : 'orange'}>
-          {v === 'PhanTram' ? 'Percentage %' : 'Cash Value ₫'}
+          {v === 'PhanTram' ? 'Phần trăm %' : 'Tiền mặt ₫'}
         </Tag>
-      ) 
+      )
     },
-    { 
-      title: 'Value', 
-      key: 'value', 
-      render: (_, r) => r.type === 'PhanTram' ? `${r.value}%` : formatCurrency(r.value) 
+    {
+      title: 'Giá trị',
+      key: 'value',
+      render: (_, r) => r.type === 'PhanTram' ? `${r.value}%` : formatCurrency(r.value)
     },
-    { 
-      title: 'Requirement', 
-      dataIndex: 'minOrder', 
-      key: 'min', 
-      render: v => v > 0 ? `Min ₫${formatCurrency(v)}` : <span className="text-slate-400 italic">No minimum</span> 
+    {
+      title: 'Điều kiện',
+      dataIndex: 'minOrder',
+      key: 'min',
+      render: v => v > 0 ? `Tối thiểu ${formatCurrency(v)}` : <span className="text-slate-400 italic">Không yêu cầu</span>
     },
-    { 
-      title: 'Redemptions', 
-      key: 'usage', 
+    {
+      title: 'Lượt dùng',
+      key: 'usage',
       render: (_, r) => (
         <div className="flex flex-col">
           <span className="text-sm">{r.usedCount} / {r.usageLimit}</span>
           <div className="w-20 h-1 bg-slate-100 rounded-full overflow-hidden mt-1">
-            <div 
-              className="h-full bg-brand-500" 
-              style={{ width: `${Math.min(100, (r.usedCount / r.usageLimit) * 100)}%` }} 
+            <div
+              className="h-full bg-brand-500"
+              style={{ width: `${Math.min(100, (r.usedCount / r.usageLimit) * 100)}%` }}
             />
           </div>
         </div>
-      ) 
+      )
     },
-    { 
-      title: 'Status', 
-      dataIndex: 'status', 
-      key: 'status', 
-      render: v => <Tag color={v === 'active' ? 'green' : 'red'}>{v.toUpperCase()}</Tag> 
+    {
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
+      render: v => <Tag color={v === 'active' ? 'green' : 'red'}>{v === 'active' ? 'HOẠT ĐỘNG' : 'HẾT HẠN'}</Tag>
     },
-    { 
-      title: 'Validity', 
+    {
+      title: 'Hiệu lực',
       key: 'validity',
       render: (_, r) => (
         <div className="text-xs text-slate-500">
           <div>{formatDate(r.startDate)}</div>
-          <div className="text-slate-300">to</div>
+          <div className="text-slate-300">đến</div>
           <div>{formatDate(r.endDate)}</div>
         </div>
       )
     },
     {
-      title: '', 
-      key: 'actions', 
+      title: '',
+      key: 'actions',
       width: 100,
       render: (_, row) => (
         <div className="flex gap-1">
           <AButton size="small" icon={<EditOutlined />} onClick={() => openModal(row)} />
-          <Popconfirm title="Delete voucher?" onConfirm={() => handleDelete(row.id)} okText="Delete" okButtonProps={{ danger: true }}>
+          <Popconfirm title="Xóa mã giảm giá?" onConfirm={() => handleDelete(row.id)} okText="Xóa" okButtonProps={{ danger: true }}>
             <AButton size="small" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </div>
@@ -145,48 +145,48 @@ export default function VouchersPage() {
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-display font-bold text-slate-900">Vouchers & Promotions</h1>
-          <p className="text-slate-500 text-sm">Manage discount codes and marketing campaigns</p>
+          <h1 className="text-xl font-display font-bold text-slate-900">Mã giảm giá & Khuyến mãi</h1>
+          <p className="text-slate-500 text-sm">Quản lý mã giảm giá và chiến dịch marketing</p>
         </div>
-        <AButton type="primary" icon={<PlusOutlined />} onClick={() => openModal()} size="large">Create Voucher</AButton>
+        <AButton type="primary" icon={<PlusOutlined />} onClick={() => openModal()} size="large">Tạo mã giảm giá</AButton>
       </div>
       <div className="card p-4">
         <Table dataSource={data} columns={cols} rowKey="id" loading={loading} pagination={{ pageSize: 10 }} size="middle" scroll={{ x: 800 }} />
       </div>
 
-      <Modal title={editing ? 'Edit Voucher' : 'New Voucher'} open={open} onCancel={() => setOpen(false)} onOk={() => form.submit()} okText="Save" confirmLoading={saving}>
+      <Modal title={editing ? 'Chỉnh sửa mã giảm giá' : 'Mã giảm giá mới'} open={open} onCancel={() => setOpen(false)} onOk={() => form.submit()} okText="Lưu" confirmLoading={saving}>
         <Form form={form} layout="vertical" onFinish={handleSave} className="mt-4">
-          <Form.Item label="Discount Code" name="ma_code" rules={[{ required: true, message: 'Enter a code' }]}>
-            <Input placeholder="E.g. PHARMA50" style={{ textTransform: 'uppercase' }} />
+          <Form.Item label="Mã giảm giá" name="ma_code" rules={[{ required: true, message: 'Vui lòng nhập mã' }]}>
+            <Input placeholder="VD: PHARMA50" style={{ textTransform: 'uppercase' }} />
           </Form.Item>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item label="Type" name="loai_giam_gia" rules={[{ required: true }]}>
+            <Form.Item label="Loại" name="loai_giam_gia" rules={[{ required: true }]}>
               <Select options={[
-                { value: 'PhanTram', label: 'Percentage (%)' },
-                { value: 'TienMat',  label: 'Cash Value (₫)' },
-                { value: 'FreeShip', label: 'Free Shipping' },
+                { value: 'PhanTram', label: 'Phần trăm (%)' },
+                { value: 'TienMat',  label: 'Tiền mặt (₫)' },
+                { value: 'FreeShip', label: 'Miễn phí vận chuyển' },
               ]} />
             </Form.Item>
-            <Form.Item label="Value" name="gia_tri" rules={[{ required: true }]}>
+            <Form.Item label="Giá trị" name="gia_tri" rules={[{ required: true }]}>
               <InputNumber min={0} style={{ width: '100%' }} />
             </Form.Item>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item label="Minimum Order (₫)" name="don_hang_toi_thieu">
+            <Form.Item label="Đơn hàng tối thiểu (₫)" name="don_hang_toi_thieu">
               <InputNumber min={0} style={{ width: '100%' }} />
             </Form.Item>
-            <Form.Item label="Total Usage Limit" name="so_luong_gioi_han">
+            <Form.Item label="Giới hạn lượt dùng" name="so_luong_gioi_han">
               <InputNumber min={1} style={{ width: '100%' }} />
             </Form.Item>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item label="Start Date" name="ngay_bat_dau" rules={[{ required: true, message: 'Start date required' }]}>
+            <Form.Item label="Ngày bắt đầu" name="ngay_bat_dau" rules={[{ required: true, message: 'Ngày bắt đầu là bắt buộc' }]}>
               <DatePicker showTime style={{ width: '100%' }} />
             </Form.Item>
-            <Form.Item label="End Date" name="ngay_ket_thuc" rules={[{ required: true, message: 'End date required' }]}>
+            <Form.Item label="Ngày kết thúc" name="ngay_ket_thuc" rules={[{ required: true, message: 'Ngày kết thúc là bắt buộc' }]}>
               <DatePicker showTime style={{ width: '100%' }} />
             </Form.Item>
           </div>

@@ -262,7 +262,7 @@ export default function TracePage() {
                     onFocus={() => scanHistory.length && setShowHistory(true)}
                     onBlur={() => setTimeout(() => setShowHistory(false), 200)}
                     placeholder="QR code or UID (e.g. QR-BATCH-0001)"
-                    className="w-full pl-11 pr-4 py-3.5 bg-transparent text-white placeholder:text-slate-500 text-sm rounded-xl focus:outline-none"
+                    className={cn("w-full pl-11 py-3.5 bg-transparent text-white placeholder:text-slate-500 text-sm rounded-xl focus:outline-none", inputCode ? 'pr-9' : 'pr-4')}
                     autoComplete="off"
                     spellCheck={false}
                   />
@@ -435,8 +435,17 @@ function StatusBanner({ result, cfg, onReset, reported, onReport }) {
         <div className={cn('text-xs font-bold uppercase tracking-widest mb-1', cfg.color)}>{cfg.label}</div>
         <h2 className="text-lg font-display font-bold text-slate-900 line-clamp-1">{result.product?.name || 'Unknown Product'}</h2>
         <p className="text-sm text-slate-600 mt-0.5">{cfg.message}</p>
-        {result.verification?.suspiciousReason && (
-          <p className="text-xs text-amber-700 mt-1 bg-amber-50 rounded-lg px-2 py-1">{result.verification.suspiciousReason}</p>
+        {result.status === 'fake' && (
+          <p className="text-xs text-red-700 mt-1 bg-red-100 rounded-lg px-2 py-1 font-medium">
+            {!result.verification?.freqCheckPassed
+              ? 'Phát hiện quét tần suất cao bất thường (≥10 lần/phút).'
+              : 'Phát hiện di chuyển bất khả thi giữa các lần quét (>1000 km/h).'}
+          </p>
+        )}
+        {result.status === 'warning' && (
+          <p className="text-xs text-amber-700 mt-1 bg-amber-50 rounded-lg px-2 py-1">
+            Sản phẩm được đánh dấu nghi ngờ trong hệ thống.
+          </p>
         )}
       </div>
       <div className="flex gap-2 shrink-0">
@@ -628,9 +637,33 @@ function SupplyChainSection({ result }) {
 function VerificationSection({ result, cfg }) {
   const { verification } = result
   const { Icon } = cfg
+
+  const allPassed = verification?.freqCheckPassed && verification?.speedCheckPassed
+
+  const checks = [
+    {
+      id:        'freq',
+      Icon:      Eye,
+      label:     'Kiểm tra tần suất quét',
+      detail:    `Tối đa ${verification?.maxScansPerMinute ?? 0} lần/phút trong 24h qua · Ngưỡng phát hiện giả: ≥ 10 lần/phút`,
+      passed:    verification?.freqCheckPassed ?? true,
+      passLabel: 'Bình thường',
+      failLabel: 'Bất thường — quét quá nhanh',
+    },
+    {
+      id:        'speed',
+      Icon:      MapPin,
+      label:     'Kiểm tra vận tốc di chuyển',
+      detail:    'Vận tốc giữa hai lần quét có tọa độ · Ngưỡng phát hiện giả: > 1000 km/h',
+      passed:    verification?.speedCheckPassed ?? true,
+      passLabel: 'Không bất thường',
+      failLabel: 'Phát hiện di chuyển bất khả thi',
+    },
+  ]
+
   return (
     <div className="space-y-4">
-      {/* Big verification badge */}
+      {/* Overall status badge */}
       <div className={cn('rounded-2xl p-6 border text-center', cfg.bg, cfg.border, cfg.glowClass)}>
         <div className={cn('w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4', cfg.iconBg)}>
           <Icon className={cn('w-10 h-10', cfg.color)} />
@@ -639,52 +672,77 @@ function VerificationSection({ result, cfg }) {
         <p className="text-slate-600 text-sm mt-2">{cfg.message}</p>
       </div>
 
-      <InfoCard title="Verification Details" Icon={Shield} iconColor="text-brand-500" iconBg="bg-brand-50">
-        <Descriptions size="small" column={{ xs: 1, sm: 2 }}>
-          <Descriptions.Item label="MOH Registered">
-            <Tag color={verification?.mohRegistered ? 'green' : 'red'}>{verification?.mohRegistered ? 'YES' : 'NO'}</Tag>
-          </Descriptions.Item>
-          <Descriptions.Item label="Authenticity">
-            <Tag color={verification?.isAuthentic ? 'green' : 'red'}>{verification?.isAuthentic ? 'Authentic' : 'Unverified'}</Tag>
-          </Descriptions.Item>
-          <Descriptions.Item label="Total Scans">{verification?.totalScans}</Descriptions.Item>
-          <Descriptions.Item label="Suspicious Activity">
-            <Tag color={verification?.suspiciousActivity ? 'orange' : 'green'}>{verification?.suspiciousActivity ? 'Detected' : 'None'}</Tag>
-          </Descriptions.Item>
-          <Descriptions.Item label="First Scanned">{verification?.firstScanDate ? formatDateTime(verification.firstScanDate) : '—'}</Descriptions.Item>
-          <Descriptions.Item label="Last Scanned">{verification?.lastScanDate ? formatDateTime(verification.lastScanDate) : '—'}</Descriptions.Item>
-        </Descriptions>
-      </InfoCard>
-
-      {/* Scan count indicator */}
-      <InfoCard title="Scan Activity" Icon={Eye} iconColor="text-indigo-500" iconBg="bg-indigo-50">
-        <div className="flex items-center gap-4">
-          <div className="text-4xl font-display font-bold text-slate-900">{verification?.totalScans || 0}</div>
-          <div>
-            <p className="text-sm font-medium text-slate-700">Total scans recorded</p>
-            <p className="text-xs text-slate-500">
-              {(verification?.totalScans || 0) > 20
-                ? '⚠️ High scan count — verify with pharmacist'
-                : (verification?.totalScans || 0) > 10
-                ? '📊 Moderate activity'
-                : '✓ Normal activity'}
-            </p>
-          </div>
-          {verification?.suspiciousActivity && (
-            <div className="ml-auto p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-xs max-w-xs">
-              {verification.suspiciousReason}
+      {/* SQL fraud detection checks */}
+      <div className="card p-5">
+        <h3 className="font-display font-semibold text-slate-900 mb-4 flex items-center gap-2">
+          <Shield className="w-4 h-4 text-brand-500" />
+          Kết quả kiểm tra chống hàng giả
+          <Tag color={allPassed ? 'green' : 'red'} className="ml-auto">
+            {allPassed ? '✓ Không phát hiện gian lận' : '✗ Phát hiện dấu hiệu giả mạo'}
+          </Tag>
+        </h3>
+        <div className="space-y-3">
+          {checks.map(({ id, Icon: CheckIcon, label, detail, passed, passLabel, failLabel }) => (
+            <div key={id} className={cn(
+              'flex items-center gap-4 p-4 rounded-xl border',
+              passed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+            )}>
+              <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', passed ? 'bg-green-100' : 'bg-red-100')}>
+                <CheckIcon className={cn('w-4.5 h-4.5', passed ? 'text-green-600' : 'text-red-600')} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-800">{label}</p>
+                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{detail}</p>
+              </div>
+              <Tag color={passed ? 'green' : 'red'} className="shrink-0 font-semibold">
+                {passed ? passLabel : failLabel}
+              </Tag>
             </div>
-          )}
+          ))}
         </div>
-        {/* Scan bar */}
-        <div className="mt-4">
+      </div>
+
+      {/* Scan history stats */}
+      <InfoCard title="Lịch sử quét" Icon={Eye} iconColor="text-indigo-500" iconBg="bg-indigo-50">
+        <div className="grid grid-cols-3 gap-4 mb-5">
+          <div className="text-center">
+            <p className="text-3xl font-display font-bold text-slate-900">{verification?.totalScans ?? 0}</p>
+            <p className="text-xs text-slate-500 mt-1">Tổng lần quét</p>
+          </div>
+          <div className="text-center border-x border-surface-border">
+            <p className="text-sm font-semibold text-slate-700 leading-snug">
+              {verification?.firstScanDate ? formatDateTime(verification.firstScanDate) : '—'}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">Lần đầu quét</p>
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-semibold text-slate-700 leading-snug">
+              {verification?.lastScanDate ? formatDateTime(verification.lastScanDate) : '—'}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">Lần gần nhất</p>
+          </div>
+        </div>
+
+        {/* Frequency bar — shows actual maxPerMinute vs threshold 10 */}
+        <div>
+          <div className="flex justify-between text-xs text-slate-500 mb-1.5">
+            <span>Tần suất quét cao nhất (24h qua)</span>
+            <span className={cn('font-mono font-bold', (verification?.maxScansPerMinute ?? 0) >= 10 ? 'text-red-500' : 'text-green-600')}>
+              {verification?.maxScansPerMinute ?? 0} lần/phút
+            </span>
+          </div>
           <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
             <div
-              className={cn('h-full rounded-full transition-all duration-700', verification?.suspiciousActivity ? 'bg-amber-400' : 'bg-brand-500')}
-              style={{ width: `${Math.min(100, ((verification?.totalScans || 0) / 30) * 100)}%` }}
+              className={cn('h-full rounded-full transition-all duration-700',
+                (verification?.maxScansPerMinute ?? 0) >= 10 ? 'bg-red-500' : 'bg-brand-500'
+              )}
+              style={{ width: `${Math.min(100, ((verification?.maxScansPerMinute ?? 0) / 10) * 100)}%` }}
             />
           </div>
-          <div className="flex justify-between text-xs text-slate-400 mt-1"><span>0</span><span>Normal (&lt;10)</span><span>Suspicious (&gt;20)</span><span>30+</span></div>
+          <div className="flex justify-between text-xs text-slate-400 mt-1.5">
+            <span>0</span>
+            <span className="text-red-400 font-medium">Giới hạn: 10 lần/phút</span>
+          </div>
         </div>
       </InfoCard>
     </div>

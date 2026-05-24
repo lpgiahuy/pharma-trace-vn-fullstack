@@ -28,7 +28,7 @@ export default function CategoriesPage() {
 
   useEffect(() => { fetchCategories() }, [])
 
-  const openModal = (cat = null) => { 
+  const openModal = (cat = null) => {
     setEditing(cat)
     if (cat) {
       form.setFieldsValue({
@@ -42,7 +42,7 @@ export default function CategoriesPage() {
       form.resetFields()
       form.setFieldsValue({ trang_thai: true, thu_tu_hien_thi: 0 })
     }
-    setOpen(true) 
+    setOpen(true)
   }
 
   const handleSave = async (vals) => {
@@ -58,12 +58,12 @@ export default function CategoriesPage() {
 
       if (editing) await productService.updateCategory(editing.id || editing._id, payload)
       else         await productService.createCategory(payload)
-      
-      toast.success(editing ? 'Category updated' : 'Category created')
+
+      toast.success(editing ? 'Đã cập nhật danh mục' : 'Đã tạo danh mục')
       setOpen(false)
       fetchCategories()
     } catch {
-      toast.error(editing ? 'Failed to update category' : 'Failed to create category')
+      toast.error(editing ? 'Cập nhật danh mục thất bại' : 'Tạo danh mục thất bại')
     } finally {
       setSaving(false)
     }
@@ -72,57 +72,57 @@ export default function CategoriesPage() {
   const handleDelete = async (id) => {
     try {
       await productService.deleteCategory(id)
-      toast.success('Category deleted')
+      toast.success('Đã xóa danh mục')
       fetchCategories()
     } catch {
-      toast.error('Failed to delete category')
+      toast.error('Xóa danh mục thất bại')
     }
   }
 
   const cols = [
-    { 
-      title: 'Icon', 
-      dataIndex: 'hinh_anh_icon', 
-      key: 'icon', 
+    {
+      title: 'Icon',
+      dataIndex: 'hinh_anh_icon',
+      key: 'icon',
       width: 60,
-      render: v => <span className="material-symbols-outlined text-[20px] text-slate-400">{v || 'category'}</span> 
+      render: v => <span className="material-symbols-outlined text-[20px] text-slate-400">{v || 'category'}</span>
     },
-    { 
-      title: 'Name',  
-      dataIndex: 'name', 
-      key: 'name', 
+    {
+      title: 'Tên',
+      dataIndex: 'name',
+      key: 'name',
       render: (v, row) => (
         <div>
           <span className="font-medium text-slate-700">{v}</span>
           {row.danh_muc_cha_id && (
-            <div className="text-[10px] text-slate-400 uppercase tracking-tighter">Sub-category</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-tighter">Danh mục con</div>
           )}
         </div>
-      ) 
+      )
     },
-    { 
-      title: 'Order', 
-      dataIndex: 'thu_tu_hien_thi', 
-      key: 'order', 
-      width: 80, 
+    {
+      title: 'Thứ tự',
+      dataIndex: 'thu_tu_hien_thi',
+      key: 'order',
+      width: 80,
       align: 'center',
       render: v => <Tag>{v}</Tag>
     },
-    { 
-      title: 'Status', 
-      dataIndex: 'trang_thai', 
-      key: 'status', 
-      width: 100,
-      render: v => <Tag color={v ? 'green' : 'red'}>{v ? 'ACTIVE' : 'INACTIVE'}</Tag>
+    {
+      title: 'Trạng thái',
+      dataIndex: 'trang_thai',
+      key: 'status',
+      width: 120,
+      render: v => <Tag color={v ? 'green' : 'red'}>{v ? 'HOẠT ĐỘNG' : 'ẨN'}</Tag>
     },
-    { 
-      title: 'Actions', 
-      key: 'actions', 
-      width: 100, 
+    {
+      title: 'Thao tác',
+      key: 'actions',
+      width: 100,
       render: (_, row) => (
         <Space size="small">
           <AButton size="small" icon={<EditOutlined />} onClick={() => openModal(row)} />
-          <Popconfirm title="Delete category?" onConfirm={() => handleDelete(row.id || row._id)} okText="Yes" okButtonProps={{ danger: true }}>
+          <Popconfirm title="Xóa danh mục?" onConfirm={() => handleDelete(row.id || row._id)} okText="Xóa" okButtonProps={{ danger: true }}>
             <AButton size="small" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
@@ -134,41 +134,41 @@ export default function CategoriesPage() {
     <div className="space-y-4 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-display font-bold text-slate-900">Categories</h1>
-          <p className="text-slate-500 text-sm">Manage product groups and hierarchy</p>
+          <h1 className="text-xl font-display font-bold text-slate-900">Danh mục</h1>
+          <p className="text-slate-500 text-sm">Quản lý nhóm sản phẩm và danh mục</p>
         </div>
         <AButton type="primary" icon={<PlusOutlined />} onClick={() => openModal()} className="w-full sm:w-auto">
-          Add Category
+          Thêm danh mục
         </AButton>
       </div>
 
       <div className="card p-4">
-        <Table 
-          dataSource={cats} 
-          columns={cols} 
-          rowKey={row => row.id || row._id} 
-          pagination={{ pageSize: 10 }} 
+        <Table
+          dataSource={cats}
+          columns={cols}
+          rowKey={row => row.id || row._id}
+          pagination={{ pageSize: 10 }}
           loading={loading}
           size={isMobile ? 'small' : 'middle'}
         />
       </div>
 
-      <Modal 
-        title={editing ? 'Edit Category' : 'New Category'} 
-        open={open} 
-        onCancel={() => setOpen(false)} 
-        onOk={() => form.submit()} 
-        okText="Save" 
+      <Modal
+        title={editing ? 'Chỉnh sửa danh mục' : 'Danh mục mới'}
+        open={open}
+        onCancel={() => setOpen(false)}
+        onOk={() => form.submit()}
+        okText="Lưu"
         confirmLoading={saving}
         centered
       >
         <Form form={form} layout="vertical" onFinish={handleSave} className="mt-4">
-          <Form.Item label="Category Name" name="ten_danh_muc" rules={[{ required: true, message: 'Please enter category name' }]}>
-            <Input placeholder="E.g. Antibiotics" />
+          <Form.Item label="Tên danh mục" name="ten_danh_muc" rules={[{ required: true, message: 'Vui lòng nhập tên danh mục' }]}>
+            <Input placeholder="VD: Kháng sinh" />
           </Form.Item>
-          
-          <Form.Item label="Parent Category" name="danh_muc_cha_id">
-            <Select placeholder="Select parent (optional)" allowClear>
+
+          <Form.Item label="Danh mục cha" name="danh_muc_cha_id">
+            <Select placeholder="Chọn danh mục cha (tùy chọn)" allowClear>
               {cats.filter(c => !c.danh_muc_cha_id && (!editing || (c.id !== editing.id))).map(c => (
                 <Select.Option key={c.id} value={c.id}>{c.name}</Select.Option>
               ))}
@@ -176,15 +176,15 @@ export default function CategoriesPage() {
           </Form.Item>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item label="Material Icon Name" name="hinh_anh_icon">
-              <Input placeholder="e.g. medication" prefix={<span className="material-symbols-outlined text-[16px]">search</span>} />
+            <Form.Item label="Tên icon" name="hinh_anh_icon">
+              <Input placeholder="VD: medication" prefix={<span className="material-symbols-outlined text-[16px]">search</span>} />
             </Form.Item>
-            <Form.Item label="Display Order" name="thu_tu_hien_thi">
+            <Form.Item label="Thứ tự hiển thị" name="thu_tu_hien_thi">
               <InputNumber min={0} style={{ width: '100%' }} />
             </Form.Item>
           </div>
 
-          <Form.Item label="Active" name="trang_thai" valuePropName="checked">
+          <Form.Item label="Hoạt động" name="trang_thai" valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>

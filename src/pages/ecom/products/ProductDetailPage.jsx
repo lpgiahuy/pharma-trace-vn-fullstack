@@ -204,7 +204,7 @@ export default function ProductDetailPage() {
               ))}
             </div>
             <span className="text-sm text-slate-500">
-              {Number(product.rating).toFixed(1)} ({t('product.reviews_count', { count: product.reviewCount, defaultValue: `${product.reviewCount} reviews` })})
+              {Number(product.rating).toFixed(1)}
             </span>
             <span className="text-slate-300" aria-hidden="true">|</span>
             <span className="text-sm text-slate-500">
