@@ -67,11 +67,11 @@ export const Footer = () => {
                 { label: 'Chính sách đổi trả', en: 'Returns Policy' },
                 { label: 'Giao hàng - Thanh toán', en: 'Shipping & Payment' },
                 { label: 'Blog sức khỏe', en: 'Health Blog' },
-                { label: 'Câu hỏi thường gặp', en: 'FAQs' },
-                { label: 'Tra cứu nguồn gốc', en: 'Product Traceability' }
+                { label: 'Câu hỏi thường gặp', en: 'FAQs', to: '/help' },
+                { label: 'Tra cứu nguồn gốc', en: 'Product Traceability', to: '/trace' }
               ].map(item => (
                 <li key={item.en}>
-                  <Link to={item.label.includes('Tra cứu') ? '/trace' : '#'} className="hover:text-green-300 transition-all flex items-center hover:translate-x-1 duration-300">
+                  <Link to={item.to ?? '#'} className="hover:text-green-300 transition-all flex items-center hover:translate-x-1 duration-300">
                     {i18n.language?.startsWith('en') ? item.en : item.label}
                   </Link>
                 </li>

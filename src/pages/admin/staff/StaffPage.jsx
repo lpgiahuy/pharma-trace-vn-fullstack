@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Table, Button as AButton, Modal, Form, Input, Select, Switch, Popconfirm, Tag } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { userService, unitService } from '@/services/user.service'
+import { useAuthStore } from '@/store/authStore'
 import { Avatar } from '@/components/ui/Avatar'
-import { formatDate } from '@/utils'
 import toast from 'react-hot-toast'
 
 const ROLES = ['SuperAdmin', 'QuanLyKho', 'NhanVienBanHang']
@@ -14,6 +14,7 @@ const ROLE_COLORS = {
 }
 
 export default function StaffPage() {
+  const { user: currentUser } = useAuthStore()
   const [data, setData]       = useState([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen]       = useState(false)
@@ -39,7 +40,7 @@ export default function StaffPage() {
         email: user.email,
         vai_tro: user.role,
         don_vi_id: user.don_vi_id,
-        trang_thai: user.status === 'active'
+        trang_thai: user.status === 'active' || user.status === true || user.status === 1
       })
     } else {
       form.resetFields()
@@ -104,28 +105,32 @@ export default function StaffPage() {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      render: v => (
-        <Badge status={v === 'active' ? 'success' : 'error'} text={v === 'active' ? 'Hoạt động' : 'Vô hiệu hóa'} />
-      )
-    },
-    {
-      title: 'Ngày tham gia',
-      dataIndex: 'createdAt',
-      key: 'joined',
-      render: v => <span className="text-xs text-slate-500">{formatDate(v)}</span>
+      render: v => {
+        const isActive = v === 'active' || v === true || v === 1
+        return <Badge status={isActive ? 'success' : 'error'} text={isActive ? 'Hoạt động' : 'Vô hiệu hóa'} />
+      }
     },
     {
       title: '',
       key: 'actions',
       width: 90,
-      render: (_, row) => (
-        <div className="flex gap-1">
-          <AButton size="small" icon={<EditOutlined />} onClick={() => openModal(row)} />
-          <Popconfirm title="Xóa nhân viên?" onConfirm={() => handleDelete(row.id)} okText="Xóa" okButtonProps={{ danger: true }}>
-            <AButton size="small" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </div>
-      ),
+      render: (_, row) => {
+        const isSelf = row.id === currentUser?.id
+        return (
+          <div className="flex gap-1">
+            <AButton size="small" icon={<EditOutlined />} onClick={() => openModal(row)} />
+            <Popconfirm
+              title="Xóa nhân viên?"
+              onConfirm={() => handleDelete(row.id)}
+              okText="Xóa"
+              okButtonProps={{ danger: true }}
+              disabled={isSelf}
+            >
+              <AButton size="small" danger icon={<DeleteOutlined />} disabled={isSelf} title={isSelf ? 'Không thể xóa tài khoản của chính mình' : ''} />
+            </Popconfirm>
+          </div>
+        )
+      },
     },
   ]
 

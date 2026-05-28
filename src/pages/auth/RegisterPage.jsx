@@ -50,20 +50,31 @@ export default function RegisterPage() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input label={t('account.full_name')}      type="text"  placeholder="Nguyen Van A" error={errors.name?.message}  required {...register('name')} />
-        <Input label={t('auth.phone')}   type="tel"   placeholder="0909 123 456" error={errors.phone?.message} required {...register('phone')} />
-        <Input label={t('auth.email')}  type="email" placeholder="you@example.com" error={errors.email?.message} {...register('email')} />
-        <Input label={t('account.address')}        type="text"  placeholder="123 Nguyen Hue, District 1" error={errors.address?.message} {...register('address')} />
+        <Input label={t('account.full_name')}      type="text"  placeholder="Nguyen Van A"          error={errors.name?.message}  required {...register('name')} />
+        <Input label={t('auth.phone')}             type="tel"   placeholder="0909 123 456"           error={errors.phone?.message} required {...register('phone')} />
+        <Input label={t('auth.email')}             type="email" placeholder="you@example.com"        error={errors.email?.message}          {...register('email')} />
+        <Input label={t('account.address')}        type="text"  placeholder="123 Nguyen Hue, Q1"     error={errors.address?.message}        {...register('address')} />
         <Input
           label={t('auth.password')}
           type={showPw ? 'text' : 'password'}
           placeholder="••••••••"
           error={errors.password?.message}
           required
-          rightIcon={<button type="button" onClick={() => setShowPw(!showPw)}>{showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>}
+          rightIcon={
+            <button type="button" onClick={() => setShowPw(!showPw)} className="cursor-pointer">
+              {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          }
           {...register('password')}
         />
-        <Input label={t('auth.confirm_password')} type={showPw ? 'text' : 'password'} placeholder="••••••••" error={errors.confirmPassword?.message} required {...register('confirmPassword')} />
+        <Input
+          label={t('auth.confirm_password')}
+          type={showPw ? 'text' : 'password'}
+          placeholder="••••••••"
+          error={errors.confirmPassword?.message}
+          required
+          {...register('confirmPassword')}
+        />
 
         <Button type="submit" fullWidth size="lg" loading={isSubmitting} leftIcon={<UserPlus className="w-4 h-4" />}>
           {t('auth.signup')}

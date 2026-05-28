@@ -98,37 +98,36 @@ export default function PrescriptionsPage() {
     {
       title: 'Thao tác',
       key: 'actions',
-      width: 140,
+      width: 100,
       render: (_, row) => (
         <div className="flex gap-1 items-center">
-          <AButton
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => setImgModal({ open: true, src: row.hinh_anh_toa, name: row.ten_khach_hang })}
-            title="Xem ảnh toa thuốc"
-          />
+          <Tooltip title="Xem ảnh toa thuốc">
+            <AButton
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => setImgModal({ open: true, src: row.hinh_anh_toa, name: row.ten_khach_hang })}
+            />
+          </Tooltip>
           {row.trang_thai_duyet === 'ChoDuyet' && (
             <>
-              <AButton
-                size="small"
-                type="primary"
-                icon={<CheckCircleOutlined />}
-                loading={updating === row.id}
-                onClick={() => handleUpdateStatus(row.id, 'HopLe')}
-                title="Duyệt"
-              >
-                Duyệt
-              </AButton>
-              <AButton
-                size="small"
-                danger
-                icon={<CloseCircleOutlined />}
-                loading={updating === row.id}
-                onClick={() => handleUpdateStatus(row.id, 'TuChoi')}
-                title="Từ chối"
-              >
-                Từ chối
-              </AButton>
+              <Tooltip title="Duyệt">
+                <AButton
+                  size="small"
+                  type="primary"
+                  icon={<CheckCircleOutlined />}
+                  loading={updating === row.id}
+                  onClick={() => handleUpdateStatus(row.id, 'HopLe')}
+                />
+              </Tooltip>
+              <Tooltip title="Từ chối">
+                <AButton
+                  size="small"
+                  danger
+                  icon={<CloseCircleOutlined />}
+                  loading={updating === row.id}
+                  onClick={() => handleUpdateStatus(row.id, 'TuChoi')}
+                />
+              </Tooltip>
             </>
           )}
         </div>

@@ -13,26 +13,22 @@ import toast from 'react-hot-toast'
 export default function LoginPage() {
   const { t } = useTranslation()
   const [showPw, setShowPw] = useState(false)
-  const [loginType, setLoginType] = useState('customer') // 'customer' | 'admin'
+  const [loginType, setLoginType] = useState('customer')
   const { login } = useAuthStore()
-  const navigate   = useNavigate()
-  const location   = useLocation()
+  const navigate  = useNavigate()
+  const location  = useLocation()
   const from = location.state?.from?.pathname || '/'
 
   const customerSchema = z.object({
     phone:    z.string().min(9, t('auth.validation.invalid_phone')),
     password: z.string().min(6, t('auth.validation.pw_min')),
   })
-
   const adminSchema = z.object({
     email:    z.string().email(t('auth.validation.invalid_email')),
     password: z.string().min(6, t('auth.validation.pw_min')),
   })
-
-  const schema = loginType === 'admin' ? adminSchema : customerSchema
-  const defaults = loginType === 'admin'
-    ? { email: '', password: '' }
-    : { phone: '', password: '' }
+  const schema   = loginType === 'admin' ? adminSchema : customerSchema
+  const defaults = loginType === 'admin' ? { email: '', password: '' } : { phone: '', password: '' }
 
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm({
     resolver: zodResolver(schema),

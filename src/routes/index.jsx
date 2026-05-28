@@ -28,6 +28,7 @@ const PrescriptionPage = lazy(() => import('@/pages/ecom/account/PrescriptionPag
 const RmaPage          = lazy(() => import('@/pages/ecom/account/RmaPage'))
 const BlogListPage     = lazy(() => import('@/pages/ecom/blog/BlogListPage'))
 const BlogDetailPage   = lazy(() => import('@/pages/ecom/blog/BlogDetailPage'))
+const CustomerHelpPage = lazy(() => import('@/pages/ecom/help/HelpPage'))
 const TracePage        = lazy(() => import('@/pages/trace/TracePage'))
 const NotFoundPage     = lazy(() => import('@/pages/NotFoundPage'))
 const UnauthorizedPage = lazy(() => import('@/pages/UnauthorizedPage'))
@@ -47,17 +48,19 @@ const AdminStaff          = lazy(() => import('@/pages/admin/staff/StaffPage'))
 const AdminCustomers      = lazy(() => import('@/pages/admin/customers/CustomersPage'))
 const AdminPrescriptions  = lazy(() => import('@/pages/admin/prescriptions/PrescriptionsPage'))
 const AdminUnits          = lazy(() => import('@/pages/admin/units/UnitsPage'))
+const AdminHelp           = lazy(() => import('@/pages/admin/help/HelpPage'))
 
 // ── Warehouse ────────────────────────────────────────────────────────────────
-const InboundPage         = lazy(() => import('@/pages/warehouse/inbound/InboundPage'))
-const FulfillmentPage     = lazy(() => import('@/pages/warehouse/fulfillment/FulfillmentPage'))
-const TransferPage        = lazy(() => import('@/pages/warehouse/transfer/TransferPage'))
-const DisposalPage        = lazy(() => import('@/pages/warehouse/disposal/DisposalPage'))
-const RecallPage          = lazy(() => import('@/pages/warehouse/recall/RecallPage'))
-const ScannerPage         = lazy(() => import('@/pages/warehouse/scanner/ScannerPage'))
+const InboundPage           = lazy(() => import('@/pages/warehouse/inbound/InboundPage'))
+const FulfillmentPage       = lazy(() => import('@/pages/warehouse/fulfillment/FulfillmentPage'))
+const TransferPage          = lazy(() => import('@/pages/warehouse/transfer/TransferPage'))
+const DisposalPage          = lazy(() => import('@/pages/warehouse/disposal/DisposalPage'))
+const RecallPage            = lazy(() => import('@/pages/warehouse/recall/RecallPage'))
+const ScannerPage           = lazy(() => import('@/pages/warehouse/scanner/ScannerPage'))
+const WarehouseProfilePage  = lazy(() => import('@/pages/warehouse/profile/WarehouseProfilePage'))
 
 const ADMIN_ROLES     = ['admin', 'manager']
-const WAREHOUSE_ROLES = ['admin', 'manager', 'warehouse']
+const WAREHOUSE_ROLES = ['admin', 'manager', 'staff']
 
 /**
  * Loading component tạm thời trong khi chờ tải file JS
@@ -90,6 +93,7 @@ export const AppRoutes = () => (
         <Route path="/cart"          element={<CartPage />} />
         <Route path="/blog"          element={<BlogListPage />} />
         <Route path="/blog/:slug"    element={<BlogDetailPage />} />
+        <Route path="/help"          element={<CustomerHelpPage />} />
 
         {/* Ecom – protected */}
         <Route path="/checkout"           element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
@@ -120,7 +124,7 @@ export const AppRoutes = () => (
         <Route path="/admin/staff"             element={<AdminStaff />} />
         <Route path="/admin/customers"         element={<AdminCustomers />} />
         <Route path="/admin/prescriptions"     element={<AdminPrescriptions />} />
-        <Route path="/admin/units"             element={<AdminUnits />} />
+        <Route path="/admin/help"              element={<AdminHelp />} />
       </Route>
 
       {/* Warehouse */}
@@ -132,6 +136,7 @@ export const AppRoutes = () => (
         <Route path="/warehouse/disposal"      element={<DisposalPage />} />
         <Route path="/warehouse/recall"        element={<RecallPage />} />
         <Route path="/warehouse/scanner"       element={<ScannerPage />} />
+        <Route path="/warehouse/profile"       element={<WarehouseProfilePage />} />
       </Route>
 
       {/* Traceability — public, standalone dark layout */}

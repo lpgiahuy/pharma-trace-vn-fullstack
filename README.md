@@ -82,8 +82,9 @@ Built with performance and scalability in mind, it utilizes React 18, Vite, and 
 | **UI (Admin)**  | Ant Design v5 (@ant-design/charts, @ant-design/icons)                      |
 | **Forms**       | React Hook Form, Zod (Validation schema)                                   |
 | **Data Viz**    | Recharts                                                                   |
-| **Utilities**   | Day.js (Dates), clsx + tailwind-merge (Classes), jwt-decode                |
+| **Utilities**   | Day.js (Dates), clsx + tailwind-merge (Classes), jwt-decode, DOMPurify     |
 | **Hardware Int.**| qrcode.react (QR Generation), html5-qrcode (Camera scanning)              |
+| **Content**     | React Quill (Rich text editor), react-image-gallery, Swiper (Carousel)     |
 
 ---
 
@@ -151,10 +152,10 @@ src/
 Adjust the `.env` file based on your environment:
 
 ```env
-VITE_API_BASE_URL=http://localhost:5000/api   # Point to your Node.js Backend
-VITE_APP_NAME="PharmaTrace VN"                   # App Name displayed in UI/Title
-VITE_USE_MOCK=true                            # Set to 'false' to connect to real Backend
-VITE_REFRESH_TOKEN_THRESHOLD=300000           # Auto-refresh JWT 5 mins before expiration
+VITE_API_BASE_URL=http://localhost:3002/v1/pharmatrace   # Point to your Node.js Backend
+VITE_APP_NAME="PharmaTrace VN"                           # App Name displayed in UI/Title
+VITE_APP_VERSION=1.0.0                                   # App version
+VITE_REFRESH_TOKEN_THRESHOLD=300000                      # Auto-refresh JWT 5 mins before expiration
 ```
 
 ---
@@ -177,8 +178,7 @@ To integrate with the real `pharmatrace_vn_backend` API:
 
 1. Update your `.env` file:
    ```env
-   VITE_USE_MOCK=false
-   VITE_API_BASE_URL=http://localhost:5000/api
+   VITE_API_BASE_URL=http://localhost:3002/v1/pharmatrace
    ```
 2. The Axios client (`src/services/apiClient.js`) is pre-configured to automatically attach `Authorization: Bearer <token>` to outbound requests.
 3. On a `401 Unauthorized` response, the interceptor will automatically attempt to refresh the session seamlessly.

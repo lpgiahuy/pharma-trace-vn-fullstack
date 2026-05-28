@@ -33,7 +33,7 @@ export const authService = {
         accessToken:  result.token || null,
         refreshToken: result.refreshToken || null,
         expiresAt:    result.expiresAt || (Date.now() + 3600000),
-        user:         adminUser ? { ...adminUser, role: mapRole(adminUser.vai_tro) } : null,
+        user:         adminUser ? { ...adminUser, role: mapRole(adminUser.vai_tro), name: adminUser.ho_ten || adminUser.name || '' } : null,
       }
     }
 

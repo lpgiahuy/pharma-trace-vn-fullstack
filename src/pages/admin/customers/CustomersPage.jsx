@@ -1,17 +1,28 @@
 import { useEffect, useState } from 'react'
-import { Table, Button as AButton, Modal, Tag, Descriptions, Statistic, Popconfirm } from 'antd'
+import { Table, Button as AButton, Modal, Descriptions, Statistic, Popconfirm } from 'antd'
 import { EyeOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons'
 import { customerService } from '@/services/user.service'
 import { Avatar } from '@/components/ui/Avatar'
 import { formatDate, formatCurrency } from '@/utils'
 import toast from 'react-hot-toast'
 
-const TIER_COLORS = {
-  'Đồng':     'orange',
-  'Bạc':      'default',
-  'Vàng':     'gold',
-  'Bạch Kim': 'geekblue',
-  'Kim Cương':'purple',
+const TIER_META = {
+  'Đồng':     { color: '#92400e', bg: '#fef3c7', border: '#d97706' },
+  'Bạc':      { color: '#374151', bg: '#f1f5f9', border: '#94a3b8' },
+  'Vàng':     { color: '#713f12', bg: '#fef08a', border: '#ca8a04' },
+  'Bạch Kim': { color: '#0369a1', bg: '#e0f2fe', border: '#38bdf8' },
+  'Kim Cương':{ color: '#6b21a8', bg: '#f3e8ff', border: '#a855f7' },
+}
+
+const TierTag = ({ tier }) => {
+  const meta = TIER_META[tier]
+  if (!meta) return <span className="text-xs text-slate-400">{tier || '—'}</span>
+  return (
+    <span style={{ color: meta.color, background: meta.bg, border: `1px solid ${meta.border}` }}
+      className="text-xs font-semibold px-3 py-0.5 rounded-full inline-block">
+      {tier}
+    </span>
+  )
 }
 
 const StatusBadge = ({ active }) => (
@@ -85,7 +96,7 @@ export default function CustomersPage() {
       title: 'Hạng thẻ',
       dataIndex: 'hang_thanh_vien',
       key: 'tier',
-      render: v => <Tag color={TIER_COLORS[v] || 'default'} className="rounded-full px-2">{v}</Tag>,
+      render: v => <TierTag tier={v} />,
     },
     {
       title: 'Điểm',
@@ -174,9 +185,7 @@ export default function CustomersPage() {
                 <p className="text-sm text-slate-500">{detail.email}</p>
                 <p className="text-sm text-slate-500">{detail.so_dien_thoai}</p>
               </div>
-              <Tag color={TIER_COLORS[detail.hang_thanh_vien] || 'default'} className="ml-auto rounded-full px-3 self-start">
-                {detail.hang_thanh_vien}
-              </Tag>
+              <div className="ml-auto self-start"><TierTag tier={detail.hang_thanh_vien} /></div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 p-4 bg-slate-50 rounded-xl">

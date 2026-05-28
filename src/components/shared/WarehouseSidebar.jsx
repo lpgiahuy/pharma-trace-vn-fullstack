@@ -2,24 +2,27 @@ import { Link, useLocation } from 'react-router-dom'
 import { Layout, Menu } from 'antd'
 import {
   InboxOutlined, CheckSquareOutlined, SwapOutlined,
-  DeleteOutlined, AlertOutlined, QrcodeOutlined
+  DeleteOutlined, AlertOutlined, QrcodeOutlined, UserOutlined
 } from '@ant-design/icons'
-import { Pill } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 const Logo = 'https://res.cloudinary.com/dc64co0el/image/upload/v1777731026/Logo_ck5ouv.svg'
 
 const { Sider } = Layout
 
-const menuItems = [
-  { key: '/warehouse/inbound',    icon: <InboxOutlined />,       label: <Link to="/warehouse/inbound">Inbound</Link> },
-  { key: '/warehouse/fulfillment',icon: <CheckSquareOutlined />, label: <Link to="/warehouse/fulfillment">Fulfillment</Link> },
-  { key: '/warehouse/transfer',   icon: <SwapOutlined />,        label: <Link to="/warehouse/transfer">Transfer</Link> },
-  { key: '/warehouse/disposal',   icon: <DeleteOutlined />,      label: <Link to="/warehouse/disposal">Disposal</Link> },
-  { key: '/warehouse/recall',     icon: <AlertOutlined />,       label: <Link to="/warehouse/recall">Batch Recall</Link> },
-  { key: '/warehouse/scanner',    icon: <QrcodeOutlined />,      label: <Link to="/warehouse/scanner">QR Scanner</Link> },
-]
-
 export const WarehouseSidebar = ({ collapsed, onCollapse }) => {
   const { pathname } = useLocation()
+  const { t } = useTranslation()
+
+  const menuItems = [
+    { key: '/warehouse/inbound',    icon: <InboxOutlined />,       label: <Link to="/warehouse/inbound">{t('warehouse.inbound')}</Link> },
+    { key: '/warehouse/fulfillment',icon: <CheckSquareOutlined />, label: <Link to="/warehouse/fulfillment">{t('warehouse.fulfillment')}</Link> },
+    { key: '/warehouse/transfer',   icon: <SwapOutlined />,        label: <Link to="/warehouse/transfer">{t('warehouse.transfer')}</Link> },
+    { key: '/warehouse/disposal',   icon: <DeleteOutlined />,      label: <Link to="/warehouse/disposal">{t('warehouse.disposal')}</Link> },
+    { key: '/warehouse/recall',     icon: <AlertOutlined />,       label: <Link to="/warehouse/recall">{t('warehouse.recall')}</Link> },
+    { key: '/warehouse/scanner',    icon: <QrcodeOutlined />,      label: <Link to="/warehouse/scanner">{t('warehouse.scanner')}</Link> },
+    { type: 'divider' },
+    { key: '/warehouse/profile',    icon: <UserOutlined />,        label: <Link to="/warehouse/profile">{t('warehouse.my_profile')}</Link> },
+  ]
 
   return (
     <Sider
@@ -37,7 +40,7 @@ export const WarehouseSidebar = ({ collapsed, onCollapse }) => {
       </div>
       {!collapsed && (
         <div className="px-4 py-2">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">WMS Portal</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('warehouse.wms_portal')}</span>
         </div>
       )}
       <Menu

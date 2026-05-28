@@ -15,8 +15,10 @@ export const AdminHeader = ({ collapsed, onToggle, portal = 'Admin', isMobile })
   const currentLang = i18n.language?.startsWith('vi') ? 'vi' : 'en'
   const toggleLang = () => i18n.changeLanguage(currentLang === 'vi' ? 'en' : 'vi')
 
+  const profilePath = portal === 'Warehouse' ? '/warehouse/profile' : '/account'
+
   const menuItems = [
-    { key: 'profile', label: t('admin.my_profile'), onClick: () => navigate('/account') },
+    { key: 'profile', label: t('admin.my_profile'), onClick: () => navigate(profilePath) },
     { key: 'store',   label: t('admin.back_to_store'), onClick: () => navigate('/') },
     { type: 'divider' },
     { key: 'logout',  label: <span className="text-red-500">{t('admin.sign_out')}</span>, onClick: logout },

@@ -1,8 +1,17 @@
 import { useState } from 'react'
 import { Form, Input, Select, Button as AButton, Card, Alert, Steps, Tag } from 'antd'
-import { AlertOutlined, WarningOutlined } from '@ant-design/icons'
+import { AlertOutlined } from '@ant-design/icons'
 import { warehouseService } from '@/services/warehouse.service'
 import toast from 'react-hot-toast'
+
+const RECALL_REASONS = [
+  { value: 'Nhiễm khuẩn',               label: 'Nhiễm khuẩn' },
+  { value: 'Nhãn sai',                   label: 'Nhãn sai' },
+  { value: 'Không đạt hàm lượng',        label: 'Không đạt hàm lượng' },
+  { value: 'Lỗi bao bì',                 label: 'Lỗi bao bì' },
+  { value: 'Phản ứng có hại',            label: 'Phản ứng có hại' },
+  { value: 'Quyết định cơ quan quản lý', label: 'Quyết định cơ quan quản lý' },
+]
 
 export default function RecallPage() {
   const [form] = Form.useForm()
@@ -16,55 +25,59 @@ export default function RecallPage() {
       const res = await warehouseService.recallBatch(vals)
       setResult(res)
       setCurrentStep(2)
-      toast.success(`Recall initiated — ${res.affectedUnits} units affected`)
-    } catch { toast.error('Recall initiation failed') }
+      toast.success(`Thu hồi đã khởi động — ${res.affectedUnits} đơn vị bị ảnh hưởng`)
+    } catch { toast.error('Khởi động thu hồi thất bại') }
     finally { setLoading(false) }
   }
-
-  const RECALL_REASONS = ['Contamination', 'Mislabeling', 'Potency Failure', 'Packaging Defect', 'Adverse Events', 'Regulatory Order']
 
   return (
     <div className="space-y-6 animate-fade-in max-w-3xl">
       <div>
-        <h1 className="text-xl font-display font-bold text-slate-900 flex items-center gap-2"><AlertOutlined className="text-red-500" /> Batch Recall</h1>
-        <p className="text-slate-500 text-sm mt-1">Initiate an emergency product recall by batch number</p>
+        <h1 className="text-xl font-display font-bold text-slate-900 flex items-center gap-2">
+          <AlertOutlined className="text-red-500" /> Thu hồi lô thuốc
+        </h1>
+        <p className="text-slate-500 text-sm mt-1">Khởi động thu hồi khẩn cấp theo số lô</p>
       </div>
 
       <Alert
-        message="Emergency Action — Recall Protocol"
-        description="Initiating a recall will immediately quarantine all units from the specified batch, notify relevant staff, and create an audit trail. This action is irreversible."
+        message="Hành động khẩn cấp — Quy trình thu hồi"
+        description="Khởi động thu hồi sẽ cách ly ngay lập tức tất cả đơn vị thuộc lô chỉ định, thông báo cho nhân viên liên quan và tạo hồ sơ kiểm toán. Hành động này không thể hoàn tác."
         type="error"
         showIcon
       />
 
       <Steps current={currentStep} size="small" className="mb-4" items={[
-        { title: 'Enter Details' },
-        { title: 'Confirm Recall' },
-        { title: 'Recall Active' },
+        { title: 'Nhập thông tin' },
+        { title: 'Xác nhận thu hồi' },
+        { title: 'Thu hồi đang hiệu lực' },
       ]} />
 
       {currentStep < 2 ? (
-        <Card title="Recall Details">
+        <Card title="Thông tin thu hồi">
           <Form form={form} layout="vertical" onFinish={handleRecall}>
             <div className="grid sm:grid-cols-2 gap-x-4">
-              <Form.Item label="Product Name" name="productName" rules={[{ required: true }]}><Input /></Form.Item>
-              <Form.Item label="Batch Number" name="batchNumber" rules={[{ required: true }]}>
+              <Form.Item label="Tên sản phẩm" name="productName" rules={[{ required: true, message: 'Nhập tên sản phẩm' }]}><Input /></Form.Item>
+              <Form.Item label="Số lô" name="batchNumber" rules={[{ required: true, message: 'Nhập số lô' }]}>
                 <Input placeholder="BATCH-0001" />
               </Form.Item>
-              <Form.Item label="Recall Reason" name="reason" rules={[{ required: true }]}>
-                <Select options={RECALL_REASONS.map(r => ({ value: r, label: r }))} placeholder="Select reason" />
+              <Form.Item label="Lý do thu hồi" name="reason" rules={[{ required: true, message: 'Chọn lý do' }]}>
+                <Select options={RECALL_REASONS} placeholder="Chọn lý do" />
               </Form.Item>
-              <Form.Item label="Severity Level" name="severity" rules={[{ required: true }]}>
+              <Form.Item label="Mức độ nghiêm trọng" name="severity" rules={[{ required: true, message: 'Chọn mức độ' }]}>
                 <Select options={[
-                  { value: 'Class I',   label: '🔴 Class I — Serious health risk' },
-                  { value: 'Class II',  label: '🟠 Class II — Temporary adverse health risk' },
-                  { value: 'Class III', label: '🟡 Class III — Unlikely to cause harm' },
+                  { value: 'Class I',   label: '🔴 Hạng I — Nguy cơ sức khỏe nghiêm trọng' },
+                  { value: 'Class II',  label: '🟠 Hạng II — Nguy cơ sức khỏe tạm thời' },
+                  { value: 'Class III', label: '🟡 Hạng III — Ít có khả năng gây hại' },
                 ]} />
               </Form.Item>
-              <Form.Item label="Initiated By" name="initiatedBy" rules={[{ required: true }]}><Input placeholder="Your name" /></Form.Item>
-              <Form.Item label="Regulatory Reference" name="regulatoryRef"><Input placeholder="MOH order / case number (if any)" /></Form.Item>
-              <Form.Item label="Description" name="description" className="sm:col-span-2">
-                <Input.TextArea rows={3} placeholder="Detailed description of the recall reason…" />
+              <Form.Item label="Người khởi động" name="initiatedBy" rules={[{ required: true, message: 'Nhập tên người thực hiện' }]}>
+                <Input placeholder="Tên của bạn" />
+              </Form.Item>
+              <Form.Item label="Số văn bản cơ quan quản lý" name="regulatoryRef">
+                <Input placeholder="Quyết định Bộ Y tế / mã hồ sơ (nếu có)" />
+              </Form.Item>
+              <Form.Item label="Mô tả chi tiết" name="description" className="sm:col-span-2">
+                <Input.TextArea rows={3} placeholder="Mô tả chi tiết lý do thu hồi…" />
               </Form.Item>
             </div>
             <AButton
@@ -72,7 +85,7 @@ export default function RecallPage() {
               icon={<AlertOutlined />} size="large"
               onClick={() => setCurrentStep(1)}
             >
-              Initiate Batch Recall
+              Khởi động thu hồi lô thuốc
             </AButton>
           </Form>
         </Card>
@@ -82,16 +95,16 @@ export default function RecallPage() {
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertOutlined className="text-3xl text-red-500" />
             </div>
-            <h2 className="text-xl font-display font-bold text-red-700 mb-2">Recall Active</h2>
-            <p className="text-red-600 mb-1">Recall ID: <strong className="font-mono">{result?.id}</strong></p>
-            <p className="text-red-600 mb-4">Affected Units: <strong>{result?.affectedUnits}</strong></p>
+            <h2 className="text-xl font-display font-bold text-red-700 mb-2">Thu hồi đang hiệu lực</h2>
+            <p className="text-red-600 mb-1">Mã thu hồi: <strong className="font-mono">{result?.id}</strong></p>
+            <p className="text-red-600 mb-4">Đơn vị bị ảnh hưởng: <strong>{result?.affectedUnits}</strong></p>
             <div className="flex justify-center gap-2 flex-wrap">
-              <Tag color="red">Status: {result?.status}</Tag>
-              <Tag color="orange">Batch: {form.getFieldValue('batchNumber')}</Tag>
+              <Tag color="red">Trạng thái: {result?.status}</Tag>
+              <Tag color="orange">Số lô: {form.getFieldValue('batchNumber')}</Tag>
             </div>
-            <p className="text-xs text-red-400 mt-4">All relevant staff have been notified. Quarantine is in effect.</p>
+            <p className="text-xs text-red-400 mt-4">Tất cả nhân viên liên quan đã được thông báo. Lệnh cách ly đang có hiệu lực.</p>
             <AButton className="mt-4" onClick={() => { setResult(null); setCurrentStep(0); form.resetFields() }}>
-              Initiate Another Recall
+              Khởi động thu hồi khác
             </AButton>
           </div>
         </Card>

@@ -10,7 +10,7 @@ const normalizeUser = (u) => {
     phone: u.so_dien_thoai || u.phone || '',
     email: u.email || '',
     role: u.vai_tro || u.role || 'staff',
-    status: u.trang_thai || u.status || 'active',
+    status: u.trang_thai !== undefined ? u.trang_thai : (u.status ?? 'active'),
     createdAt: u.ngay_tao || u.createdAt || u.created_at,
   }
 }
@@ -142,7 +142,7 @@ export const customerService = {
 
 export const unitService = {
   async getAll() {
-    const { data } = await apiClient.get('/admin/units')
+    const { data } = await apiClient.get('/logistics/units')
     const result = data.data || data
     const items = Array.isArray(result) ? result : (result.items || result.data || [])
     return items.map(u => ({

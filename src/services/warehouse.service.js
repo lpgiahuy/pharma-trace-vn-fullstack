@@ -92,6 +92,26 @@ export const warehouseService = {
     return data.data || data
   },
 
+  async getUnits() {
+    const { data } = await apiClient.get('/logistics/units')
+    return data.data || []
+  },
+
+  async getProductsInUnit(unitId) {
+    const { data } = await apiClient.get(`/logistics/units/${unitId}/products`)
+    return data.data || []
+  },
+
+  async getBatchesInUnit(unitId, duocPhamId) {
+    const { data } = await apiClient.get(`/logistics/units/${unitId}/batches?duoc_pham_id=${duocPhamId}`)
+    return data.data || []
+  },
+
+  async getUIDsForTransfer(unitId, loThuocId, soLuong) {
+    const { data } = await apiClient.get(`/logistics/units/${unitId}/uids?lo_thuoc_id=${loThuocId}&so_luong=${soLuong}`)
+    return data.data || []
+  },
+
   async fulfillOrder(orderId, payload) {
     const { data } = await apiClient.post(`/admin/orders/${orderId}/fulfill`, payload)
     return data.data || data

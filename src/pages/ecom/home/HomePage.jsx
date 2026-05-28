@@ -76,16 +76,16 @@ export default function HomePage() {
   }
 
   const BG_SLIDES = [
-    { id: 1, image: 'https://wallpapercave.com/wp/wp15262378.jpg' },
-    { id: 2, image: 'https://wallpapercave.com/wp/wp13751014.jpg' },
+    { id: 1, image: 'https://plus.unsplash.com/premium_photo-1681843126728-04eab730febe?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+    { id: 2, image: 'https://plus.unsplash.com/premium_photo-1681843126728-04eab730febe?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
     { id: 3, image: 'https://thumbs.dreamstime.com/z/vitamins-supplements-shelves-different-types-pharmacy-45969522.jpg' },
   ]
 
   const BANNERS = [
     { id: 1, title: 'Thuốc chính hãng, giao nhanh toàn quốc', cta: 'Mua ngay', to: '/products', image: 'https://wallpapercave.com/wp/wp15262378.jpg' },
     { id: 2, title: 'Vitamin & Thực phẩm bổ sung – Giảm đến 30%', cta: 'Xem ưu đãi', to: '/products', image: 'https://thumbs.dreamstime.com/z/vitamins-supplements-shelves-different-types-pharmacy-45969522.jpg' },
-    { id: 3, title: 'Chăm sóc sức khỏe mẹ & bé toàn diện', cta: 'Khám phá ngay', to: '/products', image: 'https://wallpapercave.com/wp/wp13751014.jpg' },
-    { id: 4, title: 'Giao hàng miễn phí – Đơn từ 500.000đ', cta: 'Mua ngay', to: '/products', image: 'https://wallpapercave.com/wp/wp15262378.jpg' },
+    { id: 3, title: 'Chăm sóc sức khỏe mẹ & bé toàn diện', cta: 'Khám phá ngay', to: '/products', image: 'https://www.vermontvisitingnurses.org/wp-content/uploads/2017/11/VNA-Maternal-Child-Health-Program-Vermont.jpg' },
+    { id: 4, title: 'Giao hàng miễn phí – Đơn từ 500.000đ', cta: 'Mua ngay', to: '/products', image: 'https://wallpapercave.com/wp/wp13751014.jpg' },
   ]
   const slideCount = Math.ceil(BANNERS.length / 2)
 
@@ -185,7 +185,7 @@ export default function HomePage() {
               opacity: i === bgSlide ? 1 : 0,
               backgroundImage: `url(${slide.image})`,
               backgroundSize: 'cover',
-              backgroundPosition: 'center',
+              backgroundPosition: 'center 35%',
             }}
           />
         ))}
