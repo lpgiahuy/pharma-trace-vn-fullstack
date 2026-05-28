@@ -45,10 +45,55 @@ const getAllUnits = async () => {
     return result.rows;
 };
 
-export { 
-    callTransferProcedure, 
-    disposeMedicine, 
-    returnMedicine, 
-    recallBatch, 
-    getAllUnits 
+const getProductsInUnit = async (don_vi_id) => {
+    const query = `
+        SELECT DISTINCT d.id, d.ten_thuoc, COUNT(h.uid) AS so_hop_trong_kho
+        FROM HopThuoc h
+        JOIN LoThuoc l ON h.lo_thuoc_id = l.id
+        JOIN DuocPham d ON l.duoc_pham_id = d.id
+        WHERE h.don_vi_hien_tai_id = $1
+          AND h.trang_thai = 'TrongKho'
+        GROUP BY d.id, d.ten_thuoc
+        ORDER BY d.ten_thuoc ASC
+    `;
+    const result = await pool.query(query, [don_vi_id]);
+    return result.rows;
+};
+
+const getBatchesInUnit = async (don_vi_id, duoc_pham_id) => {
+    const query = `
+        SELECT l.id, l.so_lo, l.han_su_dung, COUNT(h.uid) AS so_hop_trong_kho
+        FROM HopThuoc h
+        JOIN LoThuoc l ON h.lo_thuoc_id = l.id
+        WHERE h.don_vi_hien_tai_id = $1
+          AND l.duoc_pham_id = $2
+          AND h.trang_thai = 'TrongKho'
+        GROUP BY l.id, l.so_lo, l.han_su_dung
+        ORDER BY l.han_su_dung ASC
+    `;
+    const result = await pool.query(query, [don_vi_id, duoc_pham_id]);
+    return result.rows;
+};
+
+const getUIDsForTransfer = async (don_vi_id, lo_thuoc_id, so_luong) => {
+    const query = `
+        SELECT uid FROM HopThuoc
+        WHERE don_vi_hien_tai_id = $1
+          AND lo_thuoc_id = $2
+          AND trang_thai = 'TrongKho'
+        LIMIT $3
+    `;
+    const result = await pool.query(query, [don_vi_id, lo_thuoc_id, so_luong]);
+    return result.rows.map(r => r.uid);
+};
+
+export {
+    callTransferProcedure,
+    disposeMedicine,
+    returnMedicine,
+    recallBatch,
+    getAllUnits,
+    getProductsInUnit,
+    getBatchesInUnit,
+    getUIDsForTransfer,
 };

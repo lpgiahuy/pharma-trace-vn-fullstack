@@ -62,10 +62,34 @@ const getAllLogisticsUnits = async (req, res, next) => {
     } catch (error) { next(error); }
 };
 
-export { 
-    transferWarehouse, 
-    handleDisposal, 
-    handleRMA, 
-    handleBatchRecall, 
-    getAllLogisticsUnits 
+const getProductsInUnit = async (req, res, next) => {
+    try {
+        const data = await logisticsService.fetchProductsInUnit(req.params.id);
+        res.status(200).json({ success: true, data });
+    } catch (error) { next(error); }
+};
+
+const getBatchesInUnit = async (req, res, next) => {
+    try {
+        const data = await logisticsService.fetchBatchesInUnit(req.params.id, req.query.duoc_pham_id);
+        res.status(200).json({ success: true, data });
+    } catch (error) { next(error); }
+};
+
+const getUIDsForTransfer = async (req, res, next) => {
+    try {
+        const data = await logisticsService.fetchUIDsForTransfer(req.params.id, req.query.lo_thuoc_id, parseInt(req.query.so_luong));
+        res.status(200).json({ success: true, data });
+    } catch (error) { next(error); }
+};
+
+export {
+    transferWarehouse,
+    handleDisposal,
+    handleRMA,
+    handleBatchRecall,
+    getAllLogisticsUnits,
+    getProductsInUnit,
+    getBatchesInUnit,
+    getUIDsForTransfer,
 };

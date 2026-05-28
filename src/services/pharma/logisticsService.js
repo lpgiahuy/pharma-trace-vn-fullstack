@@ -82,10 +82,40 @@ const fetchAllUnits = async () => {
     return await logisticsModel.getAllUnits();
 };
 
-export { 
-    transferStock, 
-    processDisposal, 
-    processRMA, 
-    processBatchRecall, 
-    fetchAllUnits 
+const fetchProductsInUnit = async (don_vi_id) => {
+    if (!don_vi_id) {
+        const error = new Error('Thiếu ID đơn vị');
+        error.statusCode = 400;
+        throw error;
+    }
+    return await logisticsModel.getProductsInUnit(don_vi_id);
+};
+
+const fetchBatchesInUnit = async (don_vi_id, duoc_pham_id) => {
+    if (!don_vi_id || !duoc_pham_id) {
+        const error = new Error('Thiếu ID đơn vị hoặc ID sản phẩm');
+        error.statusCode = 400;
+        throw error;
+    }
+    return await logisticsModel.getBatchesInUnit(don_vi_id, duoc_pham_id);
+};
+
+const fetchUIDsForTransfer = async (don_vi_id, lo_thuoc_id, so_luong) => {
+    if (!don_vi_id || !lo_thuoc_id || !so_luong) {
+        const error = new Error('Thiếu thông tin để lấy danh sách UID');
+        error.statusCode = 400;
+        throw error;
+    }
+    return await logisticsModel.getUIDsForTransfer(don_vi_id, lo_thuoc_id, so_luong);
+};
+
+export {
+    transferStock,
+    processDisposal,
+    processRMA,
+    processBatchRecall,
+    fetchAllUnits,
+    fetchProductsInUnit,
+    fetchBatchesInUnit,
+    fetchUIDsForTransfer,
 };

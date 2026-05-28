@@ -1,20 +1,37 @@
 import pool from '../../config/db.js';
 
-const callImportProcedure = async (duocPhamId, donViId, soLo, ngaySx, hsd, soLuong) => {
-    // auto insert LoThuoc, auto insert HopThuoc (sinh UUID), auto update TonKho.
-    const query = `CALL sp_nhap_kho_lo_thuoc_moi($1, $2, $3, $4, $5, $6)`;
-    
-    await pool.query(query, [duocPhamId, donViId, soLo, ngaySx, hsd, soLuong]);
-    
-    // after the procedure, fetch the newly created batch info to return to client
-    const fetchQuery = `
-        SELECT id, so_lo, ngay_san_xuat, han_su_dung, trang_thai 
-        FROM LoThuoc 
-        WHERE so_lo = $1 
-        ORDER BY id DESC LIMIT 1;
-    `;
-    const result = await pool.query(fetchQuery, [soLo]);
-    return result.rows[0];
+const callImportProcedure = async (duocPhamId, donViId, soLo, ngaySx, hsd, soLuong, quyCachId = null) => {
+    // Nếu không truyền quy_cach_id, lấy quy cách đầu tiên của sản phẩm (bắt buộc cho TonKho PK)
+    let finalQuyCachId = quyCachId;
+    if (!finalQuyCachId) {
+        const qc = await pool.query(
+            'SELECT id FROM QuyCachDongGoi WHERE duoc_pham_id = $1 ORDER BY id ASC LIMIT 1',
+            [duocPhamId]
+        );
+        if (!qc.rows.length) {
+            const err = new Error(`Thuốc ID ${duocPhamId} chưa có quy cách đóng gói. Vui lòng thêm quy cách trước khi nhập kho.`);
+            err.statusCode = 400;
+            throw err;
+        }
+        finalQuyCachId = qc.rows[0].id;
+    }
+
+    // Bước 1: Tạo bản ghi LoThuoc mới
+    const insertLo = await pool.query(
+        `INSERT INTO LoThuoc (duoc_pham_id, quy_cach_id, so_lo, ngay_san_xuat, han_su_dung)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, so_lo, ngay_san_xuat, han_su_dung, trang_thai`,
+        [duocPhamId, finalQuyCachId, soLo, ngaySx, hsd]
+    );
+    const loThuoc = insertLo.rows[0];
+
+    // Bước 2: Gọi stored procedure để sinh HopThuoc (UID) và cập nhật TonKho
+    await pool.query(
+        `CALL sp_nhap_kho_lo_thuoc_moi($1::INT, $2::INT, $3::INT)`,
+        [loThuoc.id, donViId, soLuong]
+    );
+
+    return loThuoc;
 };
 
 const checkInventory = async (donViId, duocPhamId) => {

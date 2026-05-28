@@ -43,7 +43,12 @@ const updateStaffInfo = async (req, res, next) => {
 
 const disableStaffAccount = async (req, res, next) => {
     try {
-        await adminStaffService.removeStaff(req.params.id);
+        const targetId = parseInt(req.params.id)
+        if (req.user?.id === targetId) {
+            res.status(400)
+            return next(new Error('Không thể xóa tài khoản của chính mình.'))
+        }
+        await adminStaffService.removeStaff(targetId);
         res.status(200).json({ success: true, message: 'Employee account disabled successfully!' });
     } catch (error) {
         if (error.statusCode) res.status(error.statusCode);

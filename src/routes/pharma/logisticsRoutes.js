@@ -1,10 +1,13 @@
 import express from 'express';
-import { 
-    transferWarehouse, 
-    handleDisposal, 
-    handleRMA, 
-    handleBatchRecall, 
-    getAllLogisticsUnits 
+import {
+    transferWarehouse,
+    handleDisposal,
+    handleRMA,
+    handleBatchRecall,
+    getAllLogisticsUnits,
+    getProductsInUnit,
+    getBatchesInUnit,
+    getUIDsForTransfer,
 } from '../../controllers/pharma/logisticsCtrl.js';
 import { protect } from '../../middlewares/authMiddleware.js';
 import { authorizeRoles } from '../../middlewares/roleMiddleware.js';
@@ -18,23 +21,17 @@ const router = express.Router();
  *     description: Warehouse management, stock transfer, returns, and pharmaceutical recall
  */
 
-// Apply authentication and role authorization to all logistics routes
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'QuanLyKho'));
 
-/**
- * @swagger
- * /logistics/units:
- *   get:
- *     summary: Get all available nodes/warehouses/units
- *     tags: [Logistics]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of units retrieved successfully
- */
-router.get('/units', getAllLogisticsUnits);
+// GET read-only: all warehouse staff can view units, products, batches
+const allStaff = authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienBanHang');
+router.get('/units',                   allStaff, getAllLogisticsUnits);
+router.get('/units/:id/products',      allStaff, getProductsInUnit);
+router.get('/units/:id/batches',       allStaff, getBatchesInUnit);
+router.get('/units/:id/uids',          allStaff, getUIDsForTransfer);
+
+// POST write operations: only managers and above
+router.use(authorizeRoles('SuperAdmin', 'QuanLyKho'));
 
 /**
  * @swagger

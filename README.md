@@ -72,6 +72,10 @@ SWAGGER_PASS=your_swagger_password
 
 # Frontend URL (for CORS in production)
 FRONTEND_URL=https://your-frontend-domain.com
+FRONTEND_URL_2=                              # Optional backup origin
+
+# AI Integration (Google Gemini)
+API_GEMINI=your_gemini_api_key
 ```
 
 ### 3. Run the Server
@@ -109,7 +113,11 @@ Authorization: Bearer <your_jwt_token>
 
 ### Rate Limiting
 
-All API endpoints are rate-limited to **100 requests per 15 minutes** per IP address.
+| Limiter | Applies To | Limit |
+|---|---|---|
+| **General API** | All `/v1/pharmatrace` endpoints | 1000 requests / 15 minutes / IP |
+| **Auth** | `/auth/login`, `/auth/register` | 15 requests / 15 minutes / IP |
+| **Checkout** | `/orders/checkout` | 10 requests / 15 minutes / IP |
 
 ---
 
@@ -117,426 +125,29 @@ All API endpoints are rate-limited to **100 requests per 15 minutes** per IP add
 
 **Base URL:** `http://localhost:3002/v1/pharmatrace`
 
-All endpoint URLs below are relative to the base URL.
+The full, interactive API documentation is available via **Swagger UI** once the server is running:
 
----
-
-<details open>
-<summary><h3>1. 🔐 Customer Authentication</h3></summary>
-
-#### `POST /auth/register`
-
-Register a new customer account.
-
-- **Auth Required:** No
-
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `ho_ten` | string | ✅ | Full name |
-| `so_dien_thoai` | string | ✅ | Phone number (used for login) |
-| `email` | string | ❌ | Email address |
-| `mat_khau` | string | ✅ | Password |
-| `dia_chi` | string | ❌ | Delivery address |
-
-
-#### `POST /auth/login`
-
-Customer login — returns a JWT token.
-
-- **Auth Required:** No
-</details>
-
-
----
-
-<details>
-<summary><h3>2. 🛍️ Products (Public)</h3></summary>
-
-#### `GET /products`
-
-Get product list with pagination, filtering, and search.
-
-- **Auth Required:** No
-
-**Query Parameters:**
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `page` | integer | `1` | Page number |
-| `limit` | integer | `20` | Products per page |
-| `category` | integer | — | Filter by category ID |
-| `search` | string | — | Search by product name |
-| `sort` | string | — | Sort: `price_asc`, `price_desc`, `newest` |
-
-**Example:**
-
-```bash
-curl -X GET 'http://localhost:3002/v1/pharmatrace/products?page=1&limit=10&search=paracetamol&sort=price_asc'
+```
+http://localhost:3002/api-docs
 ```
 
----
+> Access requires Basic Auth credentials configured in your `.env` (`SWAGGER_USER` / `SWAGGER_PASS`).
 
-#### `GET /products/categories`
+### API Groups Overview
 
-Get all active product categories.
-
-- **Auth Required:** No
-
----
-
-#### `GET /products/:id`
-
-Get detailed product information by ID or slug.
-
-- **Auth Required:** No
-
-| Parameter | In | Type | Description |
-|---|---|---|---|
-| `id` | path | string | Product ID or slug |
-</details>
-
----
-
-<details>
-<summary><h3>3. 🛒 Cart</h3></summary>
-
-> **All cart endpoints require Customer JWT token.**
-
-#### `GET /cart`
-
-Get the current customer's cart details.
-
-
----
-
-#### `POST /cart/add`
-
-Add a product to the shopping cart.
-
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `duoc_pham_id` | integer | ✅ | Product (medicine) ID |
-| `quy_cach_id` | integer | ✅ | Packaging type ID |
-| `so_luong` | integer | ✅ | Quantity |
-</details>
-
----
-
-<details>
-<summary><h3>4. 📦 Orders</h3></summary>
-
-#### `POST /orders/checkout`
-
-Place an order from the current cart.
-
-- **Auth Required:** Customer JWT
-
-**Request Body:**
-
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `dia_chi_giao_hang` | string | ✅ | Delivery address |
-| `phuong_thuc_thanh_toan` | string | ✅ | Payment method: `COD`, `VNPAY`, `MOMO` |
-| `ghi_chu` | string | ❌ | Note for shipper |
-| `voucher_id" | integer | ❌ | Voucher ID for discount |
-</details>
-
----
-
-<details>
-<summary><h3>5. ⭐ Reviews</h3></summary>
-
-#### `GET /reviews/product/:productId`
-
-Get reviews for a specific product.
-
-- **Auth Required:** No
-
-
-
----
-
-#### `POST /reviews/add`
-
-Submit a product review (one review per product per customer).
-
-- **Auth Required:** Customer JWT
-</details>
-
-
----
-
-<details>
-<summary><h3>6. 💝 Wishlist</h3></summary>
-
-> **All wishlist endpoints require Customer JWT token.**
-
-| Method | Endpoint | Description |
+| Group | Prefix | Description |
 |---|---|---|
-| `GET` | `/wishlist` | Get my wishlist |
-| `POST` | `/wishlist/add` | Add product to wishlist |
-| `DELETE` | `/wishlist/remove/:productId` | Remove product from wishlist |
-</details>
-
-
----
-
-<details>
-<summary><h3>7. 🎟️ Vouchers (Customer)</h3></summary>
-
-#### `POST /vouchers/apply`
-
-Apply a voucher code to the order.
-
-- **Auth Required:** Customer JWT
-</details>
-
-
----
-
-<details>
-<summary><h3>8. 📋 Prescriptions (Customer)</h3></summary>
-
-#### `POST /prescriptions/upload`
-
-Upload a prescription image for pharmacist review.
-
-- **Auth Required:** Customer JWT
-- **Content-Type:** `multipart/form-data`
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `hinh_anh` | file | ✅ | Prescription image (jpg, png) |
-| `ten_bac_si` | string | ❌ | Doctor name |
-| `ten_benh_vien` | string | ❌ | Hospital name |
-| `chuan_doan` | string | ❌ | Diagnosis |
-</details>
-
-
----
-
-<details>
-<summary><h3>9. 🔄 RMA — Returns (Customer)</h3></summary>
-
-#### `POST /rma/request`
-
-Submit a return/refund request (order must be in "Delivered" status).
-
-- **Auth Required:** Customer JWT
-
-
-**Responses:**
-
-| Status | Description |
-|---|---|
-| `201` | Return request submitted successfully |
-| `400` | Order not eligible or missing data |
-| `403` | Attempting to return another user's order |
-| `404` | Order not found |
-</details>
-
----
-
-<details>
-<summary><h3>10. 🔍 Traceability (QR Scan)</h3></summary>
-
-#### `POST /trace/scan-qr`
-
-Scan a QR code to trace a medicine box's full journey.
-
-- **Auth Required:** JWT (any role)
-
-
-**Returns:** Batch info, manufacturer, expiry date, and full warehouse movement history.
-</details>
-
----
-
-<details>
-<summary><h3>11. 🏢 Admin Authentication</h3></summary>
-
-#### `POST /admin/auth/login`
-
-Admin/Staff login.
-
-- **Auth Required:** No
-
----
-
-#### `POST /admin/auth/setup`
-
-Initialize the first SuperAdmin account (first-time deployment only).
-
-- **Auth Required:** No
-</details>
-
----
-
-<details>
-<summary><h3>12. 📦 Admin — Product Management</h3></summary>
-
-> **Auth Required:** JWT with `SuperAdmin` or `QuanLyKho` role.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/admin/products` | List all products (including inactive) |
-| `GET` | `/admin/products/:id` | Get product detail with packaging options |
-| `POST` | `/admin/products/add` | Create a new product |
-| `PUT` | `/admin/products/:id` | Update product & packaging units |
-| `DELETE` | `/admin/products/:id` | Soft delete (set inactive) |
-</details>
-
-
----
-
-<details>
-<summary><h3>13. 📋 Admin — Order Management</h3></summary>
-
-> **Auth Required:** JWT with `SuperAdmin`, `NhanVienBanHang`, or `QuanLyKho` role.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/admin/orders` | List all orders |
-| `GET` | `/admin/orders/:id` | Get order detail with line items |
-| `POST` | `/admin/orders/:id/fulfill` | Fulfill order by assigning scanned UIDs |
-</details>
-
-
----
-
-<details>
-<summary><h3>14. 💊 Admin — Prescription Management</h3></summary>
-
-> **Auth Required:** JWT with `SuperAdmin` or `NhanVienBanHang` role.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/admin/prescriptions` | List prescriptions (filter by `?status=ChoDuyet\|HopLe\|TuChoi`) |
-| `PUT` | `/admin/prescriptions/:id/status` | Approve or reject a prescription |
-</details>
-
-
----
-
-<details>
-<summary><h3>15. 👥 Admin — Staff Management</h3></summary>
-
-> **Auth Required:** JWT with `SuperAdmin` role only.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/admin/staff` | List all staff members |
-| `POST` | `/admin/staff/add` | Create a new staff account |
-| `PUT` | `/admin/staff/:id` | Update staff info/role |
-| `DELETE` | `/admin/staff/:id` | Disable staff account (soft delete) |
-
-
-Available roles: `SuperAdmin`, `QuanLyKho`, `NhanVienBanHang`
-</details>
-
----
-
-<details>
-<summary><h3>16. 🎟️ Admin — Voucher Management</h3></summary>
-
-> **Auth Required:** JWT with `SuperAdmin` or `NhanVienBanHang` role.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/admin/vouchers` | List all vouchers |
-| `POST` | `/admin/vouchers/add` | Create a new voucher |
-| `DELETE` | `/admin/vouchers/:id` | Delete a voucher (hard delete) |
-</details>
-
-
----
-
-<details>
-<summary><h3>17. 📂 Admin — Category Management</h3></summary>
-
-> **Auth Required:** JWT with `SuperAdmin` or `NhanVienBanHang` role (except public endpoint).
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/admin/categories/public` | ❌ None | Get active categories (public) |
-| `GET` | `/admin/categories` | ✅ Admin | Get all categories (including hidden) |
-| `POST` | `/admin/categories/add` | ✅ Admin | Create a category |
-| `PUT` | `/admin/categories/:id` | ✅ Admin | Update a category |
-| `DELETE` | `/admin/categories/:id` | ✅ Admin | Soft delete (hide from customers) |
-</details>
-
----
-
-<details>
-<summary><h3>18. 📝 Admin — Blog Management</h3></summary>
-
-> **Auth Required:** JWT with `SuperAdmin` or `NhanVienBanHang` role (except public endpoints).
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/admin/blogs/public` | ❌ None | Get published blog posts |
-| `GET` | `/admin/blogs/public/:id` | ❌ None | Get blog post detail |
-| `POST` | `/admin/blogs/add` | ✅ Admin | Create a blog post |
-| `PUT` | `/admin/blogs/:id` | ✅ Admin | Update a blog post |
-| `DELETE` | `/admin/blogs/:id` | ✅ Admin | Delete a blog post (hard delete) |
-</details>
-
----
-
-<details>
-<summary><h3>19. 🔄 Admin — RMA Management</h3></summary>
-
-> **Auth Required:** JWT with `SuperAdmin` or `NhanVienBanHang` role.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/admin/rma` | List all return requests |
-| `PUT` | `/admin/rma/:id/status` | Approve (`DaHoanTien`) or reject (`TuChoi`) |
-</details>
-
----
-
-<details>
-<summary><h3>20. 🏭 Inventory Management</h3></summary>
-
-#### `POST /inventory/nhap-kho`
-
-Import a new medicine batch from supplier into warehouse inventory.
-
-- **Auth Required:** JWT with `SuperAdmin` or `QuanLyKho` role
-</details>
-
-
----
-
-<details>
-<summary><h3>21. 📊 Dashboard</h3></summary>
-
-#### `GET /dashboard`
-
-Get comprehensive admin dashboard data.
-
-- **Auth Required:** JWT with `SuperAdmin` role only
-</details>
-
-
----
-
-<details>
-<summary><h3>22. 🚚 Logistics</h3></summary>
-
-> **Auth Required:** JWT with `SuperAdmin` or `QuanLyKho` role.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/logistics/transfer` | Transfer medicine boxes between warehouses |
-| `POST` | `/logistics/dispose` | Dispose of damaged/expired boxes |
-| `POST` | `/logistics/return` | Process customer return to warehouse |
-| `POST` | `/logistics/recall/:loThuocId` | Emergency batch recall |
-</details>
+| **E-commerce — Auth** | `/auth` | Customer register, login, logout, profile, loyalty |
+| **E-commerce — Shop** | `/products`, `/cart`, `/orders` | Catalog, cart, checkout, order history |
+| **E-commerce — Account** | `/prescriptions`, `/reviews`, `/wishlist`, `/rma` | Prescriptions, reviews, wishlist, returns |
+| **E-commerce — Content** | `/blogs`, `/vouchers`, `/chatbot` | Blog, voucher apply, AI chatbot |
+| **Admin — Auth** | `/admin/auth` | Admin/staff login, first-time setup |
+| **Admin — Management** | `/admin/products`, `/admin/orders`, `/admin/customers` | Product, order, customer CRUD |
+| **Admin — Operations** | `/admin/prescriptions`, `/admin/staff`, `/admin/vouchers` | Prescriptions, staff, vouchers |
+| **Admin — Content** | `/admin/categories`, `/admin/blogs`, `/admin/rma` | Categories, blog, RMA approval |
+| **Warehouse — Inventory** | `/inventory`, `/logistics`, `/kien-hang` | Stock import, transfer, disposal, recall, bundles |
+| **Warehouse — Dashboard** | `/dashboard` | Analytics, revenue, low-stock alerts |
+| **Traceability** | `/trace` | QR scan — unit-level supply chain history |
 
 
 ---
@@ -587,10 +198,10 @@ PharmaTrace_VN_BackEnd/
 
 - **Helmet.js** — Hides Express fingerprint and adds security headers
 - **CORS** — Configurable origin whitelist (strict in production)
-- **Rate Limiting** — 100 requests / 15 minutes per IP
+- **Rate Limiting** — 1000 requests / 15 minutes per IP (stricter limits on auth and checkout endpoints)
 - **JWT Authentication** — Stateless, signed tokens with configurable expiration
 - **RBAC** — Granular role-based access control on every protected route
-- **Input Size Limit** — JSON body capped at 10KB to prevent memory overflow attacks
+- **Input Size Limit** — JSON body capped at 50MB (supports blog posts with Base64-encoded images)
 - **Swagger Auth** — API docs protected with Basic Authentication in production
 
 ---

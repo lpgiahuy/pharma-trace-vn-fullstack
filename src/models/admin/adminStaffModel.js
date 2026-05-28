@@ -3,9 +3,10 @@ import pool from '../../config/db.js';
 // get list of all staff members (including their assigned unit)
 const getAllStaff = async () => {
     const query = `
-        SELECT nv.id, nv.ho_ten, nv.email, nv.vai_tro, nv.trang_thai, dv.ten_don_vi 
+        SELECT nv.id, nv.ho_ten, nv.email, nv.vai_tro, nv.trang_thai, dv.ten_don_vi, nv.don_vi_id
         FROM NhanVien nv
         LEFT JOIN DonVi dv ON nv.don_vi_id = dv.id
+        WHERE nv.trang_thai = TRUE
         ORDER BY nv.id DESC;
     `;
     const result = await pool.query(query);
