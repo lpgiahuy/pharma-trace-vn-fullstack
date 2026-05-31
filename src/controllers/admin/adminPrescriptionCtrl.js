@@ -2,8 +2,8 @@ import * as adminPrescriptionService from '../../services/admin/adminPrescriptio
 
 export const getList = async (req, res, next) => {
     try {
-        // Lấy query params từ URL (VD: ?status=ChoDuyet)
-        const { status } = req.query; 
+        // Read query params from URL (e.g. ?status=ChoDuyet)
+        const { status } = req.query;
         const data = await adminPrescriptionService.fetchPrescriptions(status);
         
         res.status(200).json({ success: true, data });
@@ -21,7 +21,7 @@ export const updateStatus = async (req, res, next) => {
         
         res.status(200).json({
             success: true,
-            message: `Đã cập nhật toa thuốc thành công: ${trang_thai_duyet}`,
+            message: `Prescription updated successfully: ${trang_thai_duyet}`,
             data
         });
     } catch (error) {

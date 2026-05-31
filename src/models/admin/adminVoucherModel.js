@@ -18,7 +18,7 @@ export const createVoucher = async (data) => {
 };
 
 export const deleteVoucher = async (id) => {
-    // Bảng này không có soft delete nên ta xóa cứng luôn
+    // This table has no soft delete, so perform a hard delete
     const query = `DELETE FROM KhuyenMai WHERE id = $1 RETURNING id;`;
     const result = await pool.query(query, [id]);
     return result.rowCount > 0;

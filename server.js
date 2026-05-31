@@ -1,8 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import helmet from 'helmet'; // [MỚI] Che Tech Stack
-import rateLimit from 'express-rate-limit'; // [MỚI] Chống Spam
+import helmet from 'helmet'; // Hides server tech stack info
+import rateLimit from 'express-rate-limit'; // Prevents spam / brute-force
 import pool, { connectToDatabase } from './src/config/db.js';
 import rootRoutes from './src/routes/index.js';
 import path from 'path';
@@ -16,20 +16,20 @@ dotenv.config();
 
 const app = express();
 
-// Điều này giúp req.ip lấy đúng IP thật, và express-rate-limit không bị chặn nhầm người.
+// Ensures req.ip returns the real client IP so express-rate-limit works correctly behind a proxy.
 app.set('trust proxy', 1);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 
-// --- 1. LỚP BẢO VỆ CƠ BẢN (MIDDLEWARE BẢO MẬT) ---
+// --- 1. BASIC SECURITY LAYER (SECURITY MIDDLEWARE) ---
 
-// Che giấu Express và thêm các Header bảo mật
+// Hide Express signature and add security headers
 app.use(helmet());
-// Cho phép hiển thị ảnh tĩnh từ domain khác (nếu Front-end khác domain)
+// Allow static images to be loaded cross-origin (e.g. when frontend is on a different domain)
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 
-// Cấu hình CORS chặt chẽ: Chỉ cho phép tên miền Frontend của bạn truy cập
+// Strict CORS: only allow requests from the configured frontend origins
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
@@ -52,12 +52,12 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Giới hạn dung lượng Body JSON gửi lên (Nâng lên 50mb để hỗ trợ đăng bài Blog có kèm ảnh Base64)
+// Raise body size limit to 50mb to support blog posts with Base64-encoded images
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// --- 2. LỚP CHỐNG SPAM (RATE LIMITING) ---
-// Giới hạn tối đa 100 request / 15 phút cho mỗi IP
+// --- 2. ANTI-SPAM LAYER (RATE LIMITING) ---
+// Limit to 1000 requests per 15 minutes per IP
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 1000,
@@ -65,14 +65,14 @@ const apiLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
 });
-// Áp dụng giới hạn này cho toàn bộ API
+// Apply rate limiter to all API routes
 app.use('/v1/pharmatrace', apiLimiter, rootRoutes);
 
 
-// --- 3. TÀI NGUYÊN TĨNH VÀ TÀI LIỆU ---
+// --- 3. STATIC ASSETS & API DOCS ---
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Cấu hình Basic Auth an toàn: Không dùng mật khẩu mặc định
+// Secure Basic Auth config: does not use hardcoded default credentials
 const swaggerUser = process.env.SWAGGER_USER;
 const swaggerPass = process.env.SWAGGER_PASS;
 
@@ -80,36 +80,36 @@ if (swaggerUser && swaggerPass) {
     const swaggerAuth = basicAuth({
         users: { [swaggerUser]: swaggerPass },
         challenge: true,
-        unauthorizedResponse: 'Truy cập bị từ chối!'
+        unauthorizedResponse: 'Access denied!'
     });
     app.use('/api-docs', swaggerAuth, swaggerUi.serve, swaggerUi.setup(specs));
 } else {
-    console.warn("⚠️ Cảnh báo: SWAGGER_USER hoặc SWAGGER_PASS chưa được thiết lập. API Docs đã bị vô hiệu hóa để bảo đảm an toàn.");
+    console.warn("⚠️ Warning: SWAGGER_USER or SWAGGER_PASS is not set. API Docs have been disabled for security.");
 }
 
 
-// --- 4. XỬ LÝ LỖI (ERROR HANDLING) ---
+// --- 4. ERROR HANDLING ---
 
 // 404 handler
 app.use((req, res) => {
-    res.status(404).json({ success: false, message: 'Đường dẫn API không tồn tại!' });
+    res.status(404).json({ success: false, message: 'API endpoint not found!' });
 });
 
-// [MỚI] 500 Global Error Handler: Bắt mọi lỗi sập server để không lộ Stack Trace
+// 500 Global Error Handler: catches all unhandled errors without leaking stack traces
 app.use((err, req, res, next) => {
-    // Ưu tiên: status đã set bởi res.status() > err.statusCode > mặc định 500
+    // Priority: status set by res.status() > err.statusCode > default 500
     const statusCode = (res.statusCode && res.statusCode !== 200)
         ? res.statusCode
         : (err.statusCode || 500);
 
-    console.error(`[Lỗi ${statusCode}]: ${err.message}`);
+    console.error(`[Error ${statusCode}]: ${err.message}`);
     res.status(statusCode).json({
         success: false,
-        message: process.env.NODE_ENV === 'production' ? 'Đã có lỗi máy chủ nội bộ xảy ra!' : err.message
+        message: process.env.NODE_ENV === 'production' ? 'An internal server error occurred!' : err.message
     });
 });
 
-// --- 5. KHỞI ĐỘNG SERVER ---
+// --- 5. START SERVER ---
 const PORT = process.env.PORT || 3002;
 const HOST = process.env.DB_HOST || '0.0.0.0';
 

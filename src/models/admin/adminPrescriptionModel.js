@@ -1,6 +1,6 @@
 import pool from '../../config/db.js';
 
-// Lấy danh sách toa thuốc (Có thể lọc theo trạng thái: ChoDuyet, HopLe, TuChoi)
+// Get list of prescriptions (optionally filtered by status: ChoDuyet, HopLe, TuChoi)
 export const getPrescriptions = async (status) => {
     let query = `
         SELECT t.id, t.hinh_anh_toa, t.ten_bac_si, t.ten_benh_vien, t.chuan_doan, t.ngay_tao, t.trang_thai_duyet,
@@ -10,7 +10,7 @@ export const getPrescriptions = async (status) => {
     `;
     const params = [];
     
-    // Nếu có truyền status vào thì lọc, không thì lấy hết
+    // Filter by status if provided, otherwise return all
     if (status) {
         query += ` WHERE t.trang_thai_duyet = $1`;
         params.push(status);
@@ -21,7 +21,7 @@ export const getPrescriptions = async (status) => {
     return result.rows;
 };
 
-// Dược sĩ cập nhật trạng thái toa thuốc
+// Pharmacist updates prescription approval status
 export const updatePrescriptionStatus = async (id, trang_thai) => {
     const query = `
         UPDATE ToaThuoc

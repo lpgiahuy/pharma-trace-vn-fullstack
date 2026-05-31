@@ -15,7 +15,7 @@ const callTransferProcedure = async (tu_don_vi_id, den_don_vi_id, mang_uid) => {
 
 // dispose of damaged or expired medicine boxes - will mark the boxes as "to be disposed" in the system and remove them from available stock
 const disposeMedicine = async (don_vi_id, mang_uid, ly_do) => {
-    // Ép kiểu mảng thành chuỗi chuẩn của Postgres
+    // Cast JS array to PostgreSQL array string format
     const pgArrayString = `{${mang_uid.join(',')}}`;
     const query = `CALL sp_xuat_huy_thuoc($1::INT, $2::UUID[], $3::TEXT)`;
 

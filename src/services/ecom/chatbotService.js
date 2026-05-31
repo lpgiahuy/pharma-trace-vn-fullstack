@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { searchProductsForContext } from '../../models/ecom/chatbotModel.js';
 
-// Stop words tiếng Việt thông dụng, không có giá trị tìm kiếm thuốc
+// Common Vietnamese stop words that have no value for medicine search
 const STOP_WORDS = new Set([
     'tôi', 'mình', 'bị', 'thì', 'nên', 'sử', 'dụng', 'là', 'và', 'có', 'cho',
     'với', 'của', 'được', 'các', 'những', 'một', 'trong', 'hay', 'hoặc', 'muốn',
@@ -18,13 +18,13 @@ const extractKeywords = (message) => {
         .split(/\s+/)
         .filter(w => w.length >= 2 && !STOP_WORDS.has(w));
 
-    // Giữ cả bigram (2 từ liền nhau) để khớp cụm như "thiếu máu", "đau đầu"
+    // Keep bigrams (2 consecutive words) to match phrases like "thieu mau", "dau dau"
     const bigrams = [];
     for (let i = 0; i < words.length - 1; i++) {
         bigrams.push(`${words[i]} ${words[i + 1]}`);
     }
 
-    // Unique, tối đa 8 terms để tránh query quá dài
+    // Deduplicate, max 8 terms to avoid overly long queries
     return [...new Set([...bigrams, ...words])].slice(0, 8);
 };
 
@@ -84,28 +84,28 @@ const formatProductContext = (products) => {
 };
 
 const sendMessage = async (message, history = []) => {
-    // 1. Tách từ khóa → tìm sản phẩm liên quan từ DB
+    // 1. Extract keywords → find related products from DB
     const keywords = extractKeywords(message);
     const products = await searchProductsForContext(keywords);
     const productContext = formatProductContext(products);
 
-    // 2. Chuyển định dạng history: { role, content } → { role: 'user'|'model', parts: [{text}] }
-    // Giới hạn 10 lượt gần nhất để tránh vượt context window
+    // 2. Convert history format: { role, content } → { role: 'user'|'model', parts: [{text}] }
+    // Limit to last 10 turns to stay within context window
     const recentHistory = history.slice(-10);
     const geminiHistory = recentHistory.map(msg => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: msg.content }]
     }));
 
-    // 3. Ghép dữ liệu sản phẩm vào tin nhắn hiện tại
+    // 3. Inject product data into the current message
     const enrichedMessage = `${message}\n\n[DỮ LIỆU SẢN PHẨM TỪ HỆ THỐNG PHARMATRACE]\n${productContext}`;
 
-    // 4. Khởi tạo phiên chat với history
+    // 4. Start a chat session with existing history
     const chat = model.startChat({
         history: geminiHistory,
     });
 
-    // 5. Ghép system prompt vào tin nhắn và gửi
+    // 5. Prepend system prompt to the message and send
     const messageWithSystem = `${SYSTEM_PROMPT}\n\n---\n\n${enrichedMessage}`;
     const result = await chat.sendMessage(messageWithSystem);
     const replyText = result.response.text();

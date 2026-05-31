@@ -1,7 +1,7 @@
 import * as traceModel from '../../models/pharma/traceModel.js';
 
 const processQRScan = async (uid, lat, lng, ip) => {
-    // 1. Kiểm tra UID tồn tại
+    // 1. Check if UID exists
     let boxInfo = await traceModel.getBoxInfo(uid);
     if (!boxInfo) {
         const error = new Error('Invalid QR code or not recognized by Pharma-Chain system');
@@ -9,13 +9,13 @@ const processQRScan = async (uid, lat, lng, ip) => {
         throw error;
     }
 
-    // 2. Ghi nhật ký quét
+    // 2. Log the scan event
     await traceModel.insertScanLog(uid, lat, lng, ip);
 
-    // 3. Lấy lại thông tin mới nhất (kiểm tra trạng thái CanhBaoGia sau khi log)
+    // 3. Re-fetch latest box info (to check CanhBaoGia status after logging)
     boxInfo = await traceModel.getBoxInfo(uid);
 
-    // 4. Lấy lịch sử phân phối + điểm rủi ro + chi tiết scan song song
+    // 4. Fetch distribution history + risk score + scan details in parallel
     const [history, riskScore, scanDetails] = await Promise.all([
         traceModel.getDistributionHistory(uid),
         traceModel.getQRRiskScore(uid),

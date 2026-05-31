@@ -18,7 +18,7 @@ export const getShippingFee = async (distance) => {
 };
 
 export const addLoyaltyPoints = async (userId, amount) => {
-    const pointsToEarn = Math.floor(amount * 0.005); // Tích 0.5%
+    const pointsToEarn = Math.floor(amount * 0.005); // Earn 0.5% of order value as points
     const res = await pool.query(
         `UPDATE KhachHang SET diem_tich_luy = diem_tich_luy + $2 WHERE id = $1 RETURNING diem_tich_luy, hang_thanh_vien`,
         [userId, pointsToEarn]
@@ -41,7 +41,7 @@ export const getOrdersByUserId = async (userId, limit = 10, offset = 0) => {
 };
 
 export const cancelOrder = async (orderId, userId) => {
-    // Gọi Procedure: sẽ tự kiểm tra trạng thái 'ChoXacNhan' và throw nếu không hợp lệ
+    // Calls stored procedure: validates 'ChoXacNhan' status and throws if invalid
     await pool.query(`CALL sp_huy_don_hang_khach($1::INT, $2::INT)`, [orderId, userId]);
     return true;
 };

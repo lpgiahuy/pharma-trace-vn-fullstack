@@ -1,7 +1,7 @@
 const generateSlug = (text) => {
     let slug = text.toString().toLowerCase();
 
-    // Đổi ký tự có dấu thành không dấu
+    // Replace accented characters with their ASCII equivalents
     slug = slug.replace(/á|à|ả|ạ|ã|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/gi, 'a');
     slug = slug.replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/gi, 'e');
     slug = slug.replace(/i|í|ì|ỉ|ĩ|ị/gi, 'i');
@@ -10,19 +10,19 @@ const generateSlug = (text) => {
     slug = slug.replace(/ý|ỳ|ỷ|ỹ|ỵ/gi, 'y');
     slug = slug.replace(/đ/gi, 'd');
 
-    // Xóa các ký tự đặc biệt
+    // Remove special characters
     slug = slug.replace(/\`|\~|\!|\@|\#|\||\$|\%|\^|\&|\*|\(|\)|\+|\=|\,|\.|\/|\?|\>|\<|\'|\"|\:|\;|_/gi, '');
 
-    // Đổi khoảng trắng thành ký tự gạch ngang
+    // Replace spaces with hyphens
     slug = slug.replace(/ /gi, "-");
 
-    // Xóa các ký tự gạch ngang liền nhau
+    // Collapse consecutive hyphens
     slug = slug.replace(/\-\-\-\-\-/gi, '-');
     slug = slug.replace(/\-\-\-\-/gi, '-');
     slug = slug.replace(/\-\-\-/gi, '-');
     slug = slug.replace(/\-\-/gi, '-');
 
-    // Xóa các khoảng trắng/gạch ngang ở đầu và cuối
+    // Trim leading and trailing hyphens
     slug = '@' + slug + '@';
     slug = slug.replace(/\@\-|\-\@|\@/gi, '');
 

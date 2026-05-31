@@ -9,10 +9,10 @@ const router = express.Router();
  * @swagger
  * tags:
  *   - name: Admin - Prescriptions
- *     description: Quản lý và xét duyệt toa thuốc do khách hàng tải lên (Dành cho Dược sĩ, Admin, Bán hàng)
+ *     description: Manage and review customer-uploaded prescriptions (for Pharmacists, Admins, and Sales staff)
  */
 
-// BẢO MẬT: Phải đăng nhập và có Role Dược sĩ (hoặc Admin/Bán hàng) mới được xem và duyệt toa
+// SECURITY: Must be logged in with Pharmacist, Admin, or Sales role to view and approve prescriptions
 router.use(protect);
 router.use(authorizeRoles('SuperAdmin', 'NhanVienBanHang'));
 
@@ -20,8 +20,8 @@ router.use(authorizeRoles('SuperAdmin', 'NhanVienBanHang'));
  * @swagger
  * /admin/prescriptions:
  *   get:
- *     summary: Lấy danh sách toa thuốc
- *     description: Yêu cầu Token (SuperAdmin, DuocSi, BanHang). Trả về danh sách toa thuốc kèm thông tin khách hàng. Hỗ trợ lọc theo trạng thái duyệt.
+ *     summary: Get list of prescriptions
+ *     description: Requires Token (SuperAdmin, DuocSi, BanHang). Returns prescriptions with customer info. Supports filtering by approval status.
  *     tags:
  *       - Admin - Prescriptions
  *     security:
@@ -32,10 +32,10 @@ router.use(authorizeRoles('SuperAdmin', 'NhanVienBanHang'));
  *         schema:
  *           type: string
  *           enum: [ChoDuyet, HopLe, TuChoi]
- *         description: Lọc danh sách theo trạng thái (Để trống nếu muốn lấy toàn bộ)
+ *         description: Filter by status (leave empty to retrieve all)
  *     responses:
  *       200:
- *         description: Lấy danh sách thành công
+ *         description: Successfully retrieved list
  *         content:
  *           application/json:
  *             example:
@@ -51,9 +51,9 @@ router.use(authorizeRoles('SuperAdmin', 'NhanVienBanHang'));
  *                   ten_khach_hang: "Nguyễn Văn Khách"
  *                   so_dien_thoai: "0901234567"
  *       401:
- *         description: Chưa đăng nhập hoặc Token hết hạn
+ *         description: Not logged in or token expired
  *       403:
- *         description: Không có quyền truy cập (Role không hợp lệ)
+ *         description: Access denied (invalid role)
  */
 router.get('/', getList);
 
@@ -61,8 +61,8 @@ router.get('/', getList);
  * @swagger
  * /admin/prescriptions/{id}/status:
  *   put:
- *     summary: Xét duyệt toa thuốc (Hợp lệ / Từ chối)
- *     description: Yêu cầu Token (SuperAdmin, DuocSi, BanHang). Dược sĩ kiểm tra hình ảnh toa thuốc và quyết định duyệt hay từ chối.
+ *     summary: Review a prescription (Approve / Reject)
+ *     description: Requires Token (SuperAdmin, DuocSi, BanHang). Pharmacist reviews the prescription image and approves or rejects it.
  *     tags:
  *       - Admin - Prescriptions
  *     security:
@@ -73,7 +73,7 @@ router.get('/', getList);
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID của toa thuốc cần xét duyệt
+ *         description: ID of the prescription to review
  *     requestBody:
  *       required: true
  *       content:
@@ -87,27 +87,27 @@ router.get('/', getList);
  *                 type: string
  *                 enum: [ChoDuyet, HopLe, TuChoi]
  *                 example: "HopLe"
- *                 description: Trạng thái duyệt mới
+ *                 description: New approval status
  *     responses:
  *       200:
- *         description: Cập nhật trạng thái thành công
+ *         description: Status updated successfully
  *         content:
  *           application/json:
  *             example:
  *               success: true
- *               message: "Đã cập nhật toa thuốc thành công: HopLe"
+ *               message: "Prescription updated successfully: HopLe"
  *               data:
  *                 id: 1
  *                 trang_thai_duyet: "HopLe"
  *       400:
- *         description: Trạng thái truyền lên không hợp lệ
+ *         description: Invalid status value provided
  *         content:
  *           application/json:
  *             example:
  *               success: false
- *               message: "Trạng thái không hợp lệ! Chỉ nhận: ChoDuyet, HopLe, TuChoi."
+ *               message: "Invalid status! Accepted values: ChoDuyet, HopLe, TuChoi."
  *       404:
- *         description: Không tìm thấy toa thuốc
+ *         description: Prescription not found
  */
 router.put('/:id/status', updateStatus);
 

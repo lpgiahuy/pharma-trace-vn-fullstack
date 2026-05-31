@@ -5,22 +5,22 @@ const addProduct = async (payload) => {
 
     // Validate input data basic
     if (!thong_tin_thuoc || !quy_cach_dong_goi || quy_cach_dong_goi.length === 0) {
-        const error = new Error('Dữ liệu không hợp lệ. Phải có thông tin thuốc và ít nhất 1 quy cách đóng gói.');
+        const error = new Error('Invalid data. Product info and at least 1 packaging unit are required.');
         error.statusCode = 400;
         throw error;
     }
 
-    // [NEW] Validate chi_tiet_thuoc phải là JSON Object chuẩn
+    // [NEW] Validate that chi_tiet_thuoc is a proper JSON Object
     if (thong_tin_thuoc.chi_tiet_thuoc && (typeof thong_tin_thuoc.chi_tiet_thuoc !== 'object' || Array.isArray(thong_tin_thuoc.chi_tiet_thuoc))) {
-        const error = new Error('Trường chi_tiet_thuoc phải là một định dạng JSON Object hợp lệ.');
+        const error = new Error('The chi_tiet_thuoc field must be a valid JSON Object.');
         error.statusCode = 400;
         throw error;
     }
 
-    // Validate mỗi quy cách phải có ten_don_vi và gia_ban
+    // Each packaging variant must have a unit name and a positive price
     const isValidVariants = quy_cach_dong_goi.every(v => v.ten_don_vi && v.gia_ban > 0);
     if (!isValidVariants) {
-        const error = new Error('Mỗi quy cách đóng gói phải có tên đơn vị và giá bán hợp lệ.');
+        const error = new Error('Each packaging variant must have a unit name and a valid price.');
         error.statusCode = 400;
         throw error;
     }
@@ -76,21 +76,21 @@ const editProduct = async (id, payload) => {
     const { thong_tin_thuoc, quy_cach_dong_goi } = payload;
 
     if (!thong_tin_thuoc || !quy_cach_dong_goi || quy_cach_dong_goi.length === 0) {
-        const error = new Error('Thiếu thông tin thuốc hoặc quy cách đóng gói!');
+        const error = new Error('Missing product info or packaging variants!');
         error.statusCode = 400;
         throw error;
     }
 
-    // [NEW] Validate chi_tiet_thuoc phải là JSON Object chuẩn
+    // [NEW] Validate that chi_tiet_thuoc is a proper JSON Object
     if (thong_tin_thuoc.chi_tiet_thuoc && (typeof thong_tin_thuoc.chi_tiet_thuoc !== 'object' || Array.isArray(thong_tin_thuoc.chi_tiet_thuoc))) {
-        const error = new Error('Trường chi_tiet_thuoc phải là một định dạng JSON Object hợp lệ.');
+        const error = new Error('The chi_tiet_thuoc field must be a valid JSON Object.');
         error.statusCode = 400;
         throw error;
     }
 
     const isValidVariants = quy_cach_dong_goi.every(v => v.ten_don_vi && v.gia_ban > 0);
     if (!isValidVariants) {
-        const error = new Error('Mỗi quy cách đóng gói phải có tên đơn vị và giá bán hợp lệ.');
+        const error = new Error('Each packaging variant must have a unit name and a valid price.');
         error.statusCode = 400;
         throw error;
     }
@@ -100,7 +100,7 @@ const editProduct = async (id, payload) => {
         return true;
     } catch (error) {
         if (error.message === 'NOT_FOUND') {
-            const err = new Error('Không tìm thấy sản phẩm!');
+            const err = new Error('Product not found!');
             err.statusCode = 404;
             throw err;
         }

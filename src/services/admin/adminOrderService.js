@@ -56,7 +56,7 @@ const shipOrder = async (orderId) => {
     }
 
     if (order.trang_thai_don !== 'DaDongGoi') {
-        const error = new Error(`Không thể bắt đầu giao hàng. Đơn hàng đang ở trạng thái: "${order.trang_thai_don}". Chỉ đơn "DaDongGoi" mới được chuyển sang giao hàng.`);
+        const error = new Error(`Cannot start shipping. Current order status: "${order.trang_thai_don}". Only "DaDongGoi" orders can be moved to shipping.`);
         error.statusCode = 400;
         throw error;
     }
@@ -84,7 +84,7 @@ const confirmDelivery = async (orderId) => {
         throw error;
     }
     if (order.trang_thai_don !== 'DangGiao') {
-        const error = new Error(`Không thể hoàn thành. Đơn hàng đang ở trạng thái: "${order.trang_thai_don}". Chỉ đơn "DangGiao" mới được xác nhận hoàn thành.`);
+        const error = new Error(`Cannot complete order. Current status: "${order.trang_thai_don}". Only "DangGiao" orders can be confirmed as delivered.`);
         error.statusCode = 400;
         throw error;
     }
@@ -96,7 +96,7 @@ const confirmDelivery = async (orderId) => {
 // Update payment status (Manual admin update or webhook callback)
 const processPaymentUpdate = async (orderId, trang_thai_thanh_toan, ma_giao_dich) => {
     if (!VALID_PAYMENT_STATUSES.includes(trang_thai_thanh_toan)) {
-        const error = new Error(`Trạng thái thanh toán không hợp lệ. Các giá trị được phép: ${VALID_PAYMENT_STATUSES.join(', ')}`);
+        const error = new Error(`Invalid payment status. Allowed values: ${VALID_PAYMENT_STATUSES.join(', ')}`);
         error.statusCode = 400;
         throw error;
     }
@@ -108,9 +108,9 @@ const processPaymentUpdate = async (orderId, trang_thai_thanh_toan, ma_giao_dich
         throw error;
     }
 
-    // Không cho cập nhật đơn đã hủy
+    // Cancelled orders cannot have their payment status updated
     if (order.trang_thai_don === 'DaHuy') {
-        const error = new Error('Không thể cập nhật thanh toán cho đơn hàng đã hủy.');
+        const error = new Error('Cannot update payment for a cancelled order.');
         error.statusCode = 400;
         throw error;
     }

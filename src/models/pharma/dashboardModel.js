@@ -16,7 +16,7 @@ const getNearExpiredDrugs = async () => {
 
 // get daily revenue data for revenue trend chart
 const getDailyRevenue = async () => {
-    const query = 'SELECT * FROM View_DoanhThu_Theo_Ngay LIMIT 30;'; // Lấy 30 ngày gần nhất
+    const query = 'SELECT * FROM View_DoanhThu_Theo_Ngay LIMIT 30;'; // Fetch last 30 days
     const result = await pool.query(query);
     return result.rows;
 };

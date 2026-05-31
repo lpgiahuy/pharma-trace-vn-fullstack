@@ -22,7 +22,7 @@ const getCustomerDetail = async (id) => {
     const customerRes = await pool.query(customerQuery, [id]);
     if (customerRes.rowCount === 0) return null;
 
-    // Thống kê đơn hàng của khách
+    // Order statistics for this customer
     const statsQuery = `
         SELECT 
             COUNT(*) AS tong_don_hang,

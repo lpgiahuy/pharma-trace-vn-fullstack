@@ -19,7 +19,7 @@ const getPublicBlogDetail = async (req, res, next) => {
 
 const createNewBlog = async (req, res, next) => {
     try {
-        // req.user.id chính là ID của Nhân viên đang đăng nhập (nhờ middleware protect)
+        // req.user.id is the ID of the currently logged-in staff member (set by the protect middleware)
         const data = await adminBlogService.addBlog(req.body, req.user.id);
         res.status(201).json({ success: true, message: 'Blog created successfully!', data });
     } catch (error) {

@@ -1,39 +1,39 @@
 import cron from 'node-cron';
 import pool from '../config/db.js';
 
-// Hàm gánh vác việc gọi 3 Stored Procedures dưới Database
+// Calls 3 stored procedures in the database for scheduled maintenance
 const runBatchProcessing = async () => {
-    console.log('\n⏳ [CRON JOB] Đang khởi chạy trình dọn dẹp hệ thống (Batch Processing)...');
+    console.log('\n⏳ [CRON JOB] Starting system cleanup (Batch Processing)...');
     try {
-        // 1. Cập nhật lô thuốc hết hạn sang trạng thái 'HetHan'
+        // 1. Mark expired medicine batches as 'HetHan'
         await pool.query('CALL sp_cap_nhat_lo_het_han()');
-        console.log('   ✅ Đã quét và cập nhật trạng thái thuốc hết hạn.');
+        console.log('   ✅ Scanned and updated expired medicine statuses.');
 
-        // 2. Hủy các đơn hàng treo (Chưa thanh toán) quá 3 ngày
+        // 2. Cancel pending orders (unpaid) older than 3 days
         await pool.query('CALL sp_huy_don_qua_han()');
-        console.log('   ✅ Đã dọn dẹp các đơn hàng quá hạn thanh toán.');
+        console.log('   ✅ Cleaned up overdue unpaid orders.');
 
-        // 3. Xác nhận hoàn tất đơn ChoHoanTat quá 7 ngày: chuyển sang HoanThanh + cộng điểm tích lũy
-        // (Việc cộng diem_tich_luy_tong sẽ kích hoạt trigger trg_auto_upgrade_tier để nâng hạng)
+        // 3. Auto-complete orders in 'ChoHoanTat' status older than 7 days: move to HoanThanh + add loyalty points
+        // (Updating diem_tich_luy_tong triggers trg_auto_upgrade_tier to upgrade membership tier)
         await pool.query('CALL sp_xac_nhan_hoan_tat_sau_7_ngay()');
-        console.log('   ✅ Đã xác nhận hoàn tất đơn hàng quá 7 ngày và cộng điểm tích lũy.');
+        console.log('   ✅ Auto-completed orders older than 7 days and credited loyalty points.');
 
-        console.log('🎉 [CRON JOB] Hoàn tất dọn dẹp hệ thống thành công!\n');
+        console.log('🎉 [CRON JOB] System cleanup completed successfully!\n');
     } catch (error) {
-        console.error('❌ [CRON JOB] Có lỗi xảy ra trong quá trình chạy ngầm:', error.message);
+        console.error('❌ [CRON JOB] Error during background processing:', error.message);
     }
 };
 
-// Hàm kích hoạt bộ đếm thời gian
+// Registers all scheduled cron jobs and starts the scheduler
 export const startCronJobs = () => {
-    // Cú pháp '0 0 * * *' nghĩa là: Chạy vào lúc 00:00 (Nửa đêm) mỗi ngày
-    // MẸO: Nếu bạn muốn test ngay bây giờ, hãy đổi thành '* * * * *' (Chạy mỗi 1 phút)
+    // '0 0 * * *' means: run at 00:00 (midnight) every day
+    // TIP: To test immediately, change to '* * * * *' (runs every 1 minute)
     cron.schedule('0 0 * * *', () => {
         runBatchProcessing();
     }, {
         scheduled: true,
-        timezone: "Asia/Ho_Chi_Minh" // Set chuẩn giờ Việt Nam
+        timezone: "Asia/Ho_Chi_Minh" // Vietnam timezone
     });
-    
-    console.log('🕒 Hệ thống Cron Job đã được kích hoạt (Lịch trình: 00:00 mỗi ngày).');
+
+    console.log('🕒 Cron Job system activated (Schedule: 00:00 daily).');
 };

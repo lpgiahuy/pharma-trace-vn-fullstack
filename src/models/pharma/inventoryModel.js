@@ -1,7 +1,7 @@
 import pool from '../../config/db.js';
 
 const callImportProcedure = async (duocPhamId, donViId, soLo, ngaySx, hsd, soLuong, quyCachId = null) => {
-    // Nếu không truyền quy_cach_id, lấy quy cách đầu tiên của sản phẩm (bắt buộc cho TonKho PK)
+    // If quy_cach_id is not provided, default to the first packaging unit of the product (required for TonKho PK)
     let finalQuyCachId = quyCachId;
     if (!finalQuyCachId) {
         const qc = await pool.query(
@@ -16,7 +16,7 @@ const callImportProcedure = async (duocPhamId, donViId, soLo, ngaySx, hsd, soLuo
         finalQuyCachId = qc.rows[0].id;
     }
 
-    // Bước 1: Tạo bản ghi LoThuoc mới
+    // Step 1: Create a new LoThuoc record
     const insertLo = await pool.query(
         `INSERT INTO LoThuoc (duoc_pham_id, quy_cach_id, so_lo, ngay_san_xuat, han_su_dung)
          VALUES ($1, $2, $3, $4, $5)
@@ -25,7 +25,7 @@ const callImportProcedure = async (duocPhamId, donViId, soLo, ngaySx, hsd, soLuo
     );
     const loThuoc = insertLo.rows[0];
 
-    // Bước 2: Gọi stored procedure để sinh HopThuoc (UID) và cập nhật TonKho
+    // Step 2: Call stored procedure to generate HopThuoc (UID) and update TonKho
     await pool.query(
         `CALL sp_nhap_kho_lo_thuoc_moi($1::INT, $2::INT, $3::INT)`,
         [loThuoc.id, donViId, soLuong]

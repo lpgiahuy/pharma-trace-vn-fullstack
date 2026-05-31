@@ -1,10 +1,10 @@
 import pool from '../../config/db.js';
 
-// keywords: mảng từ khóa, mỗi từ là một điều kiện OR riêng
+// keywords: array of search terms, each producing a separate OR condition
 const searchProductsForContext = async (keywords) => {
     if (!keywords || keywords.length === 0) return [];
 
-    // Mỗi keyword tạo ra 1 nhóm điều kiện ILIKE
+    // Each keyword generates one group of ILIKE conditions
     const conditions = keywords
         .map((_, i) => `(
             dp.ten_thuoc ILIKE $${i + 1}

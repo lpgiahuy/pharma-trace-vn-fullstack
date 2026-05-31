@@ -65,11 +65,11 @@ const getProductByIdOrSlug = async (identifier, userId = null) => {
     if (!product) return null;
 
     const variantQuery = `
-        -- SỬA Ở ĐÂY: Chỉ lấy id, ten_don_vi và gia_ban
+        -- Only fetch id, ten_don_vi, and gia_ban
         SELECT id AS quy_cach_id, ten_don_vi, gia_ban, gia_goc, phan_tram_giam
         FROM QuyCachDongGoi
         WHERE duoc_pham_id = $1
-        ORDER BY id ASC; -- Sắp xếp theo ID cho ổn định
+        ORDER BY id ASC; -- Order by ID for stable results
     `;
     const variantResult = await pool.query(variantQuery, [product.id]);
 
@@ -89,10 +89,10 @@ const getNearestPharmacy = async (productId, lat, lng, quantity = 1) => {
           AND tk.so_luong_ton >= $4
         ORDER BY khoang_cach ASC LIMIT 1
     `;
-    // Lưu ý: Thứ tự tham số trong SQL là (lat, lng, productId, quantity)
+    // Note: SQL parameter order is (lat, lng, productId, quantity)
     const result = await pool.query(query, [lat, lng, productId, quantity]);
 
-    // Trả về nhà thuốc gần nhất nếu có, hoặc null nếu không tìm thấy
+    // Return the nearest pharmacy if found, otherwise null
     return result.rows[0] || null;
 };
 

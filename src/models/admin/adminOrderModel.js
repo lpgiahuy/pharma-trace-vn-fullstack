@@ -64,7 +64,7 @@ const completeOrder = async (orderId) => {
     const query = `CALL sp_hoan_thanh_don_hang($1::INT)`;
     await pool.query(query, [orderId]);
 
-    // Lấy lại thông tin đơn hàng sau khi hoàn thành để trả về cho frontend
+    // Re-fetch order info after completion to return to the frontend
     const result = await pool.query(
         `SELECT id, trang_thai_don, trang_thai_thanh_toan FROM DonHang WHERE id = $1`,
         [orderId]
