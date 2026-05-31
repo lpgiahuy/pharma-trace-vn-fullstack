@@ -26,7 +26,7 @@ export default function TransferPage() {
     warehouseService.getUnits().then(setUnits).catch(() => {})
   }, [])
 
-  // Load thuốc có trong đơn vị của nhân viên ngay khi vào trang
+  // Load medicines available in the staff's unit when the page mounts
   useEffect(() => {
     if (!sourceUnitId) return
     setLoadingProducts(true)
@@ -87,7 +87,7 @@ export default function TransferPage() {
       form.resetFields()
       setBatches([])
       setSelectedBatch(null)
-      // Reload lại danh sách thuốc sau khi chuyển
+      // Refresh medicine list after transfer
       warehouseService.getProductsInUnit(sourceUnitId).then(setProducts).catch(() => {})
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Chuyển kho thất bại')
@@ -129,7 +129,7 @@ export default function TransferPage() {
       </div>
 
       <Card title="Tạo lệnh chuyển kho mới">
-        {/* Thông tin đơn vị nguồn (chỉ đọc) */}
+        {/* Source unit info (read-only) */}
         <div className="mb-5 flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 w-fit">
           <span className="text-slate-500 text-sm">Đơn vị của bạn:</span>
           <Tag color="orange" className="m-0 font-medium">
@@ -140,12 +140,12 @@ export default function TransferPage() {
         <Form form={form} layout="vertical" onFinish={handleTransfer}>
           <div className="grid sm:grid-cols-2 gap-x-4">
 
-            {/* Đơn vị đích */}
+            {/* Destination unit */}
             <Form.Item label="Đơn vị đích" name="den_don_vi_id" rules={[{ required: true, message: 'Chọn đơn vị nhận' }]}>
               <Select showSearch placeholder="Chọn đơn vị nhận" optionFilterProp="label" options={destUnitOptions} />
             </Form.Item>
 
-            {/* Thuốc */}
+            {/* Medicine */}
             <Form.Item label="Thuốc" name="duoc_pham_id" rules={[{ required: true, message: 'Chọn thuốc' }]}>
               <Select
                 showSearch
@@ -160,7 +160,7 @@ export default function TransferPage() {
               />
             </Form.Item>
 
-            {/* Số lô */}
+            {/* Batch number */}
             <Form.Item label="Số lô" name="lo_thuoc_id" rules={[{ required: true, message: 'Chọn số lô' }]}>
               <Select
                 loading={loadingBatches}
@@ -174,7 +174,7 @@ export default function TransferPage() {
               />
             </Form.Item>
 
-            {/* Số lượng */}
+            {/* Quantity */}
             <Form.Item
               label={selectedBatch ? `Số lượng hộp (tối đa ${selectedBatch.so_hop_trong_kho})` : 'Số lượng hộp'}
               name="so_luong"
@@ -189,7 +189,7 @@ export default function TransferPage() {
               />
             </Form.Item>
 
-            {/* Lý do */}
+            {/* Reason */}
             <Form.Item label="Lý do chuyển kho" name="ly_do">
               <Select
                 allowClear

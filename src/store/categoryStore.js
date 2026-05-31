@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { productService } from '@/services/product.service'
 
 const ICON_MAPPING = {
-  // Tủ thuốc gia đình
+  // Household medicine cabinet
   'tủ thuốc': 'Pill',
   'giảm đau': 'Thermometer',
   'hạ sốt': 'Thermometer',
@@ -13,8 +13,8 @@ const ICON_MAPPING = {
   'kháng viêm': 'ShieldCheck',
   'mắt/tai/mũi': 'Eye',
   'dầu, cao': 'Zap',
-  
-  // Thuốc đặc trị
+
+  // Prescription / specialty drugs
   'đặc trị': 'Stethoscope',
   'tim mạch': 'HeartPulse',
   'huyết áp': 'Activity',
@@ -25,17 +25,17 @@ const ICON_MAPPING = {
   'ung thư': 'Radiation',
   'kháng sinh': 'Bacteriophage',
 
-  // Vitamin & TPCN
+  // Vitamins & functional foods
   'vitamin': 'Leaf',
   'thực phẩm chức năng': 'Milk',
   'giảm cân': 'Scale',
 
-  // Sức khỏe giới tính
+  // Sexual health
   'nam': 'UserPlus',
   'nữ': 'User',
   'giới tính': 'Heart',
   'ngừa thai': 'ShieldAlert',
-  
+
   // Default keywords
   'y tế': 'PlusCircle',
   'khác': 'Grid'

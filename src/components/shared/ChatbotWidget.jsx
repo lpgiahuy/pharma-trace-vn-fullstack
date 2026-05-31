@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { chatbotService } from '@/services/chatbot.service'
 
 const STORAGE_KEY = 'pharmatrace_chat_history'
-const TTL_MS = 24 * 60 * 60 * 1000 // 1 ngày
+const TTL_MS = 24 * 60 * 60 * 1000 // 1 day
 
 const WELCOME_MESSAGE = {
   role: 'assistant',
@@ -30,7 +30,7 @@ const saveMessages = (messages) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ messages, savedAt: Date.now() }))
   } catch {
-    // localStorage đầy hoặc bị chặn — bỏ qua
+    // localStorage is full or blocked — ignore silently
   }
 }
 
@@ -66,7 +66,7 @@ export const ChatbotWidget = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading])
 
-  // Lưu vào localStorage mỗi khi messages thay đổi
+  // Persist messages to localStorage whenever they change
   useEffect(() => {
     saveMessages(messages)
   }, [messages])
@@ -85,7 +85,7 @@ export const ChatbotWidget = () => {
     setIsLoading(true)
 
     try {
-      // Gửi history (bỏ tin nhắn chào mừng đầu tiên, giữ tối đa 10 lượt)
+      // Send history (skip the first welcome message, keep at most last 10 turns)
       const history = messages.slice(1).slice(-10)
       const { reply } = await chatbotService.sendMessage(text, history)
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
@@ -109,7 +109,7 @@ export const ChatbotWidget = () => {
 
   return (
     <>
-      {/* Cửa sổ chat */}
+      {/* Chat window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -146,7 +146,7 @@ export const ChatbotWidget = () => {
               </button>
             </div>
 
-            {/* Danh sách tin nhắn */}
+            {/* Message list */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.map((msg, idx) => (
                 <div
@@ -174,7 +174,7 @@ export const ChatbotWidget = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
+            {/* Message input */}
             <div className="p-3 border-t border-slate-100 flex gap-2 items-end flex-shrink-0">
               <textarea
                 ref={inputRef}
@@ -198,7 +198,7 @@ export const ChatbotWidget = () => {
         )}
       </AnimatePresence>
 
-      {/* Nút mở/đóng */}
+      {/* Toggle button */}
       <motion.button
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.94 }}
