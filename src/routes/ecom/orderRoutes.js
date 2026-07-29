@@ -250,6 +250,7 @@ router.get('/:id', ...customerOnly, getMyOrderDetail);
  *       404:
  *         description: Không tìm thấy đơn hàng.
  */
-router.delete('/:id/cancel', ...customerOnly, cancelMyOrder);
+router.patch('/:id/cancel', ...customerOnly, cancelMyOrder);
+router.delete('/:id/cancel', ...customerOnly, cancelMyOrder); // Alias for backward compatibility
 
 export default router;

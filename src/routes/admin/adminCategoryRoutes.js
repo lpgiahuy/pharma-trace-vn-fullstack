@@ -68,7 +68,7 @@ router.get('/', getAllCategoriesAdmin);
 
 /**
  * @swagger
- * /admin/categories/add:
+ * /admin/categories:
  *   post:
  *     summary: Create a new product category
  *     tags: [Admin - Categories]
@@ -104,7 +104,7 @@ router.get('/', getAllCategoriesAdmin);
  *       400:
  *         description: Category name already exists or missing required information
  */
-router.post('/add', createCategory);
+router.post('/', createCategory);
 
 /**
  * @swagger

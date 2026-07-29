@@ -32,9 +32,9 @@ router.get('/', getCart);
 
 /**
  * @swagger
- * /cart/add:
+ * /cart/items:
  *   post:
- *     summary: Add a product to the shopping cart
+ *     summary: Add a product item to the shopping cart
  *     tags: [E-com - Cart]
  *     security:
  *       - bearerAuth: []
@@ -59,11 +59,12 @@ router.get('/', getCart);
  *       200:
  *         description: Product added to cart successfully
  */
-router.post('/add', addCartItem);
+router.post('/items', addCartItem);
+router.post('/add', addCartItem); // Alias for backward compatibility
 
 /**
  * @swagger
- * /cart/update:
+ * /cart/items:
  *   put:
  *     summary: Update quantity of a cart item
  *     tags: [E-com - Cart]
@@ -83,11 +84,12 @@ router.post('/add', addCartItem);
  *               so_luong:
  *                 type: integer
  */
-router.put('/update', updateCartItem);
+router.put('/items', updateCartItem);
+router.put('/update', updateCartItem); // Alias for backward compatibility
 
 /**
  * @swagger
- * /cart/remove/{duoc_pham_id}:
+ * /cart/items/{duoc_pham_id}:
  *   delete:
  *     summary: Remove a product from the cart
  *     tags: [E-com - Cart]
@@ -104,6 +106,7 @@ router.put('/update', updateCartItem);
  *         schema:
  *           type: integer
  */
-router.delete('/remove/:duoc_pham_id', removeCartItem);
+router.delete('/items/:duoc_pham_id', removeCartItem);
+router.delete('/remove/:duoc_pham_id', removeCartItem); // Alias for backward compatibility
 
 export default router;

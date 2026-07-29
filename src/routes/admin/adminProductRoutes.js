@@ -67,7 +67,7 @@ router.get('/:id', getProductDetailAdmin);
 
 /**
  * @swagger
- * /admin/products/add:
+ * /admin/products:
  *   post:
  *     summary: Add a new pharmaceutical product with packaging units
  *     description: Create a new product including detailed drug information and multiple packaging options.
@@ -154,7 +154,7 @@ router.get('/:id', getProductDetailAdmin);
  *       400:
  *         description: Duplicate registration number or missing packaging unit
  */
-router.post('/add', createProduct);
+router.post('/', createProduct);
 
 /**
  * @swagger

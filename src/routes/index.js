@@ -55,7 +55,8 @@ router.use('/trace', traceRoutes); // traceability routes (trace product by QR c
 router.use('/inventory', inventoryRoutes); // inventory management routes (view stock, update stock) - auth required for pharma staff
 router.use('/dashboard', dashboardRoutes); // dashboard routes (sales stats, inventory stats) - auth required for pharma staff
 router.use('/logistics', logisticsRoutes); // logistics routes (manage shipments, view delivery status) - auth required for pharma staff
-router.use('/kien-hang', kienHangRoutes); // bundle/pallet management (create, transfer, inspect) - QuanLyKho & SuperAdmin
+router.use('/kien-hang', kienHangRoutes); // bundle/pallet management (legacy endpoint)
+router.use('/pallets', kienHangRoutes); // bundle/pallet management (RESTful standard)
 
 // ==========================================
 // 3. E-COMMERCE ROUTES
