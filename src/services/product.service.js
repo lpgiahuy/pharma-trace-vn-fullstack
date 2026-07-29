@@ -138,7 +138,7 @@ export const productService = {
   },
 
   async create(payload) {
-    const { data } = await apiClient.post('/admin/products/add', payload)
+    const { data } = await apiClient.post('/admin/products', payload)
     return data.data || data
   },
 
@@ -216,7 +216,7 @@ export const productService = {
   },
 
   async createCategory(payload) {
-    const { data } = await apiClient.post('/admin/categories/add', payload)
+    const { data } = await apiClient.post('/admin/categories', payload)
     return data.data || data
   },
 

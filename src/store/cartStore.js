@@ -30,7 +30,7 @@ export const useCartStore = create(
 
         // Sync to server for authenticated users (fire-and-forget)
         if (accessToken) {
-          apiClient.post('/cart/add', { 
+          apiClient.post('/cart/items', { 
             duoc_pham_id: product.id, 
             so_luong: quantity,
             quy_cach_id: product.unitId || 1 // Fallback since frontend doesn't strictly track packaging variants yet
@@ -43,7 +43,7 @@ export const useCartStore = create(
         
         const accessToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
         if (accessToken) {
-          apiClient.delete(`/cart/remove/${productId}`, { params: { quy_cach_id: unitId } }).catch(() => {})
+          apiClient.delete(`/cart/items/${productId}`, { params: { quy_cach_id: unitId } }).catch(() => {})
         }
       },
 
@@ -58,7 +58,7 @@ export const useCartStore = create(
 
         const accessToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
         if (accessToken) {
-          apiClient.put('/cart/update', { 
+          apiClient.put('/cart/items', { 
             duoc_pham_id: productId, 
             so_luong: quantity,
             quy_cach_id: unitId || 1 

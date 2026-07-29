@@ -110,7 +110,7 @@ export const orderService = {
   },
 
   async cancel(id, reason) {
-    const { data } = await apiClient.post(`/orders/${id}/cancel`, { reason })
+    const { data } = await apiClient.patch(`/orders/${id}/cancel`, { reason })
     return data.data || data
   },
 
