@@ -123,7 +123,7 @@ src/
 
 1. **Clone the repository** (if you haven't already):
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/lpgiahuy/pharmatrace-vn-frontend.git
    cd pharmatrace-vn-frontend
    ```
 
@@ -137,7 +137,7 @@ src/
    ```bash
    cp .env.example .env
    ```
-   *(By default, Mock mode is ON; you do not need the backend running to preview the UI)*
+   *(Make sure your Node.js backend server is running at `http://localhost:3002/v1/pharmatrace`)*
 
 4. **Start the Development Server:**
    ```bash
