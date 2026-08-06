@@ -1,0 +1,5 @@
+# Exclude database dumps and setup scripts from language statistics
+database/** linguist-generated=true
+database/** linguist-documentation=true
+init-db/** linguist-generated=true
+init-db/** linguist-documentation=true
