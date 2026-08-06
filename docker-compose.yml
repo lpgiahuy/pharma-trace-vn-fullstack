@@ -1,0 +1,70 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: pharmatrace-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-your_password}
+      POSTGRES_DB: ${DB_NAME:-pharmatrace_vn_db}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database:/docker-entrypoint-initdb.d # Directory containing database initialization SQL scripts
+    networks:
+      - pharmatrace-network
+
+  backend:
+    build:
+      context: ./pharmatrace-vn-backend
+      dockerfile: Dockerfile
+    container_name: pharmatrace-backend
+    restart: always
+    environment:
+      - PORT=3002
+      - HOST=0.0.0.0
+      - NODE_ENV=development
+      - DB_HOST=db # Use the db service name of Docker Compose as database host
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-your_password}
+      - DB_NAME=${DB_NAME:-pharmatrace_vn_db}
+      - JWT_SECRET=${JWT_SECRET:-your_secret_key}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - SWAGGER_USER=${SWAGGER_USER:-admin}
+      - SWAGGER_PASS=${SWAGGER_PASS:-your_swagger_password}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
+      - API_GEMINI=${API_GEMINI:-your_gemini_api_key}
+    ports:
+      - "3002:3002"
+    volumes:
+      - backend_uploads:/app/uploads
+    depends_on:
+      - db
+    networks:
+      - pharmatrace-network
+
+  frontend:
+    build:
+      context: ./pharmatrace-vn-frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:3002/v1/pharmatrace}
+        - VITE_APP_NAME=${VITE_APP_NAME:-PharmaTrace VN}
+    container_name: pharmatrace-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - pharmatrace-network
+
+volumes:
+  postgres_data:
+  backend_uploads:
+
+networks:
+  pharmatrace-network:
+    driver: bridge
