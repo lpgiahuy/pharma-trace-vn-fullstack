@@ -84,7 +84,7 @@ if (swaggerUser && swaggerPass) {
     });
     app.use('/api-docs', swaggerAuth, swaggerUi.serve, swaggerUi.setup(specs));
 } else {
-    console.warn("⚠️ Warning: SWAGGER_USER or SWAGGER_PASS is not set. API Docs have been disabled for security.");
+    console.warn("Warning: SWAGGER_USER or SWAGGER_PASS is not set. API Docs have been disabled for security.");
 }
 
 
@@ -111,7 +111,7 @@ app.use((err, req, res, next) => {
 
 // --- 5. START SERVER ---
 const PORT = process.env.PORT || 3002;
-const HOST = process.env.DB_HOST || '0.0.0.0';
+const HOST = process.env.HOST || '0.0.0.0';
 
 (async () => {
     try {
@@ -119,10 +119,10 @@ const HOST = process.env.DB_HOST || '0.0.0.0';
         startCronJobs();
 
         app.listen(PORT, HOST, () => {
-            console.log(`🚀 Server Pharma-Chain running on http://${HOST}:${PORT}`);
+            console.log(`Server Pharma-Chain running on http://${HOST}:${PORT}`);
         });
     } catch (error) {
-        console.error("❌ Cannot start server:", error.message);
+        console.error("Cannot start server:", error.message);
         process.exit(1);
     }
 })();

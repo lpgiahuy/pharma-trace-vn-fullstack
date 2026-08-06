@@ -41,8 +41,8 @@ PharmaTrace VN Backend API is a production-ready RESTful service built with **No
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/huyle44/PharmaTrace_VN_BackEnd.git
-cd PharmaTrace_VN_BackEnd
+git clone https://github.com/lpgiahuy/pharmatrace-vn-backend.git
+cd pharmatrace-vn-backend
 npm install
 ```
 
@@ -145,7 +145,7 @@ http://localhost:3002/api-docs
 | **Admin — Management** | `/admin/products`, `/admin/orders`, `/admin/customers` | Product, order, customer CRUD |
 | **Admin — Operations** | `/admin/prescriptions`, `/admin/staff`, `/admin/vouchers` | Prescriptions, staff, vouchers |
 | **Admin — Content** | `/admin/categories`, `/admin/blogs`, `/admin/rma` | Categories, blog, RMA approval |
-| **Warehouse — Inventory** | `/inventory`, `/logistics`, `/kien-hang` | Stock import, transfer, disposal, recall, bundles |
+| **Warehouse — Inventory** | `/inventory`, `/logistics`, `/pallets` | Stock import, transfer, disposal, recall, bundles |
 | **Warehouse — Dashboard** | `/dashboard` | Analytics, revenue, low-stock alerts |
 | **Traceability** | `/trace` | QR scan — unit-level supply chain history |
 
@@ -155,7 +155,7 @@ http://localhost:3002/api-docs
 ## 📂 Project Structure
 
 ```
-PharmaTrace_VN_BackEnd/
+pharmatrace-vn-backend/
 ├── server.js               # Application entry point
 ├── package.json
 ├── .env                    # Environment variables (not committed)
