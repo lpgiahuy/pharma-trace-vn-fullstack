@@ -205,6 +205,22 @@ export const productService = {
     }
   },
 
+  async getCategoriesAdmin() {
+    try {
+      const { data } = await apiClient.get('/admin/categories')
+      const result = data.data || data
+      const cats = Array.isArray(result) ? result : (result.items || result.data || [])
+      return cats.map(c => ({
+        ...c,
+        id: c.id,
+        name: c.ten_danh_muc || c.name,
+      }))
+    } catch (error) {
+      console.error('[productService.getCategoriesAdmin]', error.response?.data || error.message)
+      return []
+    }
+  },
+
   async getBrands() {
     try {
       const { data } = await apiClient.get('/products/brands')

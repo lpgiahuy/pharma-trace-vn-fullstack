@@ -24,8 +24,22 @@ const __dirname = path.dirname(__filename);
 
 // --- 1. BASIC SECURITY LAYER (SECURITY MIDDLEWARE) ---
 
-// Hide Express signature and add security headers
-app.use(helmet());
+// Hide Express signature and add security headers (disable COEP/COOP to allow cross-origin actions like payment redirects)
+app.use(helmet({
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            imgSrc: ["'self'", "data:", "blob:", "*"], // Allow images from any source
+            connectSrc: ["'self'", "*"],              // Allow API calls (through proxy)
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+            styleSrc: ["'self'", "https:", "'unsafe-inline'"],
+            fontSrc: ["'self'", "https:", "data:"],
+            mediaSrc: ["'self'", "*"],
+        }
+    }
+}));
 // Allow static images to be loaded cross-origin (e.g. when frontend is on a different domain)
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 

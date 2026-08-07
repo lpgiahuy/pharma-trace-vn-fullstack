@@ -1,49 +1,74 @@
-import pool from '../../config/db.js';
+import prisma from '../../config/prisma.js';
 
 // get list of all staff members (including their assigned unit)
 const getAllStaff = async () => {
-    const query = `
-        SELECT nv.id, nv.ho_ten, nv.email, nv.vai_tro, nv.trang_thai, dv.ten_don_vi, nv.don_vi_id
-        FROM NhanVien nv
-        LEFT JOIN DonVi dv ON nv.don_vi_id = dv.id
-        WHERE nv.trang_thai = TRUE
-        ORDER BY nv.id DESC;
-    `;
-    const result = await pool.query(query);
-    return result.rows;
+    const staff = await prisma.nhanvien.findMany({
+        where: { trang_thai: true },
+        include: {
+            donvi: {
+                select: { ten_don_vi: true }
+            }
+        },
+        orderBy: { id: 'desc' }
+    });
+    
+    return staff.map(nv => ({
+        id: nv.id,
+        ho_ten: nv.ho_ten,
+        email: nv.email,
+        vai_tro: nv.vai_tro,
+        trang_thai: nv.trang_thai,
+        don_vi_id: nv.don_vi_id,
+        ten_don_vi: nv.donvi?.ten_don_vi || null
+    }));
 };
 
 // create new staff account
 const createStaff = async (don_vi_id, ho_ten, email, mat_khau_hash, vai_tro) => {
-    const query = `
-        INSERT INTO NhanVien (don_vi_id, ho_ten, email, mat_khau_hash, vai_tro)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, ho_ten, email, vai_tro;
-    `;
-    const result = await pool.query(query, [don_vi_id, ho_ten, email, mat_khau_hash, vai_tro]);
-    return result.rows[0];
+    return await prisma.nhanvien.create({
+        data: {
+            don_vi_id,
+            ho_ten,
+            email,
+            mat_khau_hash,
+            vai_tro
+        },
+        select: {
+            id: true,
+            ho_ten: true,
+            email: true,
+            vai_tro: true
+        }
+    });
 };
 
 // update staff information (except password)
 const updateStaff = async (id, don_vi_id, ho_ten, vai_tro, trang_thai) => {
-    const query = `
-        UPDATE NhanVien 
-        SET don_vi_id = COALESCE($1, don_vi_id),
-            ho_ten = COALESCE($2, ho_ten),
-            vai_tro = COALESCE($3, vai_tro),
-            trang_thai = COALESCE($4, trang_thai)
-        WHERE id = $5
-        RETURNING id, ho_ten, vai_tro, trang_thai;
-    `;
-    const result = await pool.query(query, [don_vi_id, ho_ten, vai_tro, trang_thai, id]);
-    return result.rows[0];
+    const data = {};
+    if (don_vi_id !== undefined) data.don_vi_id = don_vi_id;
+    if (ho_ten !== undefined) data.ho_ten = ho_ten;
+    if (vai_tro !== undefined) data.vai_tro = vai_tro;
+    if (trang_thai !== undefined) data.trang_thai = trang_thai;
+
+    return await prisma.nhanvien.update({
+        where: { id: Number(id) },
+        data,
+        select: {
+            id: true,
+            ho_ten: true,
+            vai_tro: true,
+            trang_thai: true
+        }
+    });
 };
 
 // disable staff account (soft delete)
 const softDeleteStaff = async (id) => {
-    const query = `UPDATE NhanVien SET trang_thai = FALSE WHERE id = $1 RETURNING id;`;
-    const result = await pool.query(query, [id]);
-    return result.rowCount > 0;
+    const updated = await prisma.nhanvien.update({
+        where: { id: Number(id) },
+        data: { trang_thai: false }
+    });
+    return !!updated;
 };
 
 export { getAllStaff, createStaff, updateStaff, softDeleteStaff };

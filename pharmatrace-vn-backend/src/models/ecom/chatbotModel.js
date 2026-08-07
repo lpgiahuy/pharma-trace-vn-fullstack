@@ -1,10 +1,10 @@
-import pool from '../../config/db.js';
+import prisma, { serializeBigInt } from '../../config/prisma.js';
 
 // keywords: array of search terms, each producing a separate OR condition
 const searchProductsForContext = async (keywords) => {
     if (!keywords || keywords.length === 0) return [];
 
-    // Each keyword generates one group of ILIKE conditions
+    // Build dynamic SQL conditions for each keyword
     const conditions = keywords
         .map((_, i) => `(
             dp.ten_thuoc ILIKE $${i + 1}
@@ -41,8 +41,8 @@ const searchProductsForContext = async (keywords) => {
         LIMIT 5;
     `;
 
-    const result = await pool.query(query, params);
-    return result.rows;
+    const result = await prisma.$queryRawUnsafe(query, ...params);
+    return serializeBigInt(result);
 };
 
 export { searchProductsForContext };

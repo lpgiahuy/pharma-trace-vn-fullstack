@@ -10,6 +10,18 @@ scraper.js
 test.js
 craw_data.js
 parse_html_to_json.js
+node_modules/
+
+.env
+.env.*
+
+uploads/*
+!uploads/.gitkeep
+
+scraper.js
+test.js
+craw_data.js
+parse_html_to_json.js
 
 *.log
 npm-debug.log*
@@ -18,3 +30,8 @@ Thumbs.db
 
 .vscode/
 .idea/
+/src/generated/prisma
+.agents/
+.claude/
+.windsurf/
+skills-lock.json

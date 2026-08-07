@@ -1,0 +1,373 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["partialIndexes"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model baiviet {
+  id                Int       @id @default(autoincrement())
+  tieu_de           String    @db.VarChar(255)
+  anh_bia           String?
+  noi_dung          String
+  ngay_dang         DateTime? @default(now()) @db.Timestamp(6)
+  nhan_vien_dang_id Int?
+  nhanvien          nhanvien? @relation(fields: [nhan_vien_dang_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model chitietdonhang {
+  id                     Int             @id @default(autoincrement())
+  don_hang_id            Int?
+  duoc_pham_id           Int?
+  quy_cach_id            Int?
+  so_luong               Int
+  don_gia                Decimal         @db.Decimal(12, 2)
+  don_vi_xuat_id         Int?
+  gia_goc_luc_mua        Decimal?        @default(0) @db.Decimal(12, 2)
+  phan_tram_giam_luc_mua Int?            @default(0)
+  donhang                donhang?        @relation(fields: [don_hang_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  donvi                  donvi?          @relation(fields: [don_vi_xuat_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  duocpham               duocpham?       @relation(fields: [duoc_pham_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  quycachdonggoi         quycachdonggoi? @relation(fields: [quy_cach_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([duoc_pham_id], map: "idx_chitietdonhang_duocpham")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model chitietgiohang {
+  id             Int             @id @default(autoincrement())
+  khach_hang_id  Int?
+  duoc_pham_id   Int?
+  quy_cach_id    Int?
+  so_luong       Int
+  ngay_them      DateTime?       @default(now()) @db.Timestamp(6)
+  duocpham       duocpham?       @relation(fields: [duoc_pham_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  quycachdonggoi quycachdonggoi? @relation(fields: [quy_cach_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  khachhang      khachhang?      @relation(fields: [khach_hang_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_chitiet_khachhang")
+
+  @@unique([khach_hang_id, duoc_pham_id, quy_cach_id])
+}
+
+model chitietphieutrahang {
+  id                Int             @id @default(autoincrement())
+  phieu_tra_hang_id Int?
+  duoc_pham_id      Int?
+  quy_cach_id       Int?
+  so_luong          Int
+  duocpham          duocpham?       @relation(fields: [duoc_pham_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  phieutrahang      phieutrahang?   @relation(fields: [phieu_tra_hang_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  quycachdonggoi    quycachdonggoi? @relation(fields: [quy_cach_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model danhgiasanpham {
+  id            Int        @id @default(autoincrement())
+  duoc_pham_id  Int?
+  khach_hang_id Int?
+  so_sao        Int
+  noi_dung      String?
+  ngay_danh_gia DateTime?  @default(now()) @db.Timestamp(6)
+  duocpham      duocpham?  @relation(fields: [duoc_pham_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  khachhang     khachhang? @relation(fields: [khach_hang_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([khach_hang_id, duoc_pham_id], map: "uq_khachhang_duocpham_danhgia")
+}
+
+model danhmuc {
+  id              Int        @id @default(autoincrement())
+  ten_danh_muc    String     @unique @db.VarChar(255)
+  danh_muc_cha_id Int?
+  hinh_anh_icon   String?
+  thu_tu_hien_thi Int?       @default(0)
+  trang_thai      Boolean?   @default(true)
+  danhmuc         danhmuc?   @relation("danhmucTodanhmuc", fields: [danh_muc_cha_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_danhmuc   danhmuc[]  @relation("danhmucTodanhmuc")
+  duocpham        duocpham[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model donhang {
+  id                     Int              @id @default(autoincrement())
+  khach_hang_id          Int?
+  ngay_dat_hang          DateTime?        @default(now()) @db.Timestamp(6)
+  tong_tien              Decimal          @db.Decimal(12, 2)
+  phi_van_chuyen         Decimal?         @default(0) @db.Decimal(12, 2)
+  ma_giam_gia            String?          @db.VarChar(50)
+  diem_su_dung           Int?             @default(0)
+  tien_giam_tu_diem      Decimal?         @default(0) @db.Decimal(12, 2)
+  dia_chi_giao_hang      String
+  ma_giao_dich_ngan_hang String?          @unique(map: "uq_ma_giao_dich_ngan_hang", where: raw("(ma_giao_dich_ngan_hang IS NOT NULL)")) @db.VarChar(100)
+  trang_thai_don         String?          @default("ChoXacNhan") @db.VarChar(50)
+  phuong_thuc_thanh_toan String?          @default("COD") @db.VarChar(50)
+  trang_thai_thanh_toan  String?          @default("ChuaThanhToan") @db.VarChar(50)
+  tien_giam_tu_voucher   Decimal?         @default(0) @db.Decimal(12, 2)
+  chitietdonhang         chitietdonhang[]
+  khachhang              khachhang?       @relation(fields: [khach_hang_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  hopthuoc               hopthuoc[]
+  phieutrahang           phieutrahang[]
+  toathuoc               toathuoc[]
+
+  @@index([ngay_dat_hang], map: "idx_donhang_choxacnhan_ngay", where: raw("((trang_thai_don)::text = 'ChoXacNhan'::text)"))
+  @@index([ngay_dat_hang], map: "idx_donhang_doanhthu_thucte", where: raw("((trang_thai_don)::text = 'HoanThanh'::text)"))
+  @@index([khach_hang_id], map: "idx_donhang_khachhang")
+  @@index([khach_hang_id, trang_thai_don], map: "idx_donhang_khachhang_trangthai")
+  @@index([ngay_dat_hang], map: "idx_donhang_ngaydat")
+  @@index([trang_thai_don, ngay_dat_hang(sort: Desc)], map: "idx_donhang_trangthai_ngay")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model donvi {
+  id                                                 Int              @id @default(autoincrement())
+  ten_don_vi                                         String           @unique @db.VarChar(255)
+  loai_don_vi                                        String?          @db.VarChar(50)
+  dia_chi                                            String?
+  toa_do_lat                                         Decimal?         @db.Decimal(10, 8)
+  toa_do_lng                                         Decimal?         @db.Decimal(11, 8)
+  chitietdonhang                                     chitietdonhang[]
+  duocpham                                           duocpham[]
+  hopthuoc                                           hopthuoc[]
+  kienhang                                           kienhang[]
+  lichsuphanphoi_lichsuphanphoi_den_don_vi_idTodonvi lichsuphanphoi[] @relation("lichsuphanphoi_den_don_vi_idTodonvi")
+  lichsuphanphoi_lichsuphanphoi_tu_don_vi_idTodonvi  lichsuphanphoi[] @relation("lichsuphanphoi_tu_don_vi_idTodonvi")
+  nhanvien                                           nhanvien[]
+  tonkho                                             tonkho[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model duocpham {
+  id                  Int                   @id @default(autoincrement())
+  ten_thuoc           String                @db.VarChar(255)
+  so_dang_ky          String?               @unique @db.VarChar(100)
+  danh_muc_id         Int?
+  don_vi_san_xuat_id  Int?
+  hinh_anh_url        String?
+  la_thuoc_ke_don     Boolean?              @default(false)
+  mo_ta_ngan          String?
+  chi_tiet_thuoc      Json?
+  trang_thai          Boolean?              @default(true)
+  slug                String?               @unique(map: "uq_duocpham_slug") @db.VarChar(255)
+  so_luong_da_ban     Int?                  @default(0)
+  diem_danh_gia       Decimal?              @default(0.0) @db.Decimal(2, 1)
+  ngay_cap_nhat_moi   DateTime?             @db.Timestamp(6)
+  trang_thai_duyet    String?               @default("ChoDuyet") @db.VarChar(20)
+  chitietdonhang      chitietdonhang[]
+  chitietgiohang      chitietgiohang[]
+  chitietphieutrahang chitietphieutrahang[]
+  danhgiasanpham      danhgiasanpham[]
+  danhmuc             danhmuc?              @relation(fields: [danh_muc_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  donvi               donvi?                @relation(fields: [don_vi_san_xuat_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lothuoc             lothuoc[]
+  quycachdonggoi      quycachdonggoi[]
+  sanphamyeuthich     sanphamyeuthich[]
+  tonkho              tonkho[]
+
+  @@index([danh_muc_id], map: "idx_duocpham_danhmuc")
+  @@index([chi_tiet_thuoc], map: "idx_duocpham_jsonb", type: Gin)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model hopthuoc {
+  uid                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lo_thuoc_id        Int?
+  don_vi_hien_tai_id Int?
+  don_hang_id        Int?
+  trang_thai         String?          @default("TrongKho") @db.VarChar(50)
+  kien_hang_id       Int?
+  donhang            donhang?         @relation(fields: [don_hang_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  donvi              donvi?           @relation(fields: [don_vi_hien_tai_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  kienhang           kienhang?        @relation(fields: [kien_hang_id], references: [id], onUpdate: NoAction)
+  lothuoc            lothuoc?         @relation(fields: [lo_thuoc_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lichsuphanphoi     lichsuphanphoi[]
+  nhatkyxacthuc      nhatkyxacthuc[]
+
+  @@index([don_hang_id], map: "idx_hopthuoc_donhang")
+  @@index([kien_hang_id], map: "idx_hopthuoc_kienhang")
+  @@index([lo_thuoc_id], map: "idx_hopthuoc_lothuoc")
+  @@index([trang_thai], map: "idx_hopthuoc_trangthai")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model khachhang {
+  id                 Int               @id @default(autoincrement())
+  ho_ten             String            @db.VarChar(255)
+  so_dien_thoai      String            @unique @db.VarChar(20)
+  email              String?           @unique @db.VarChar(255)
+  mat_khau_hash      String            @db.VarChar(255)
+  dia_chi_mac_dinh   String?
+  diem_tich_luy      Int?              @default(0)
+  hang_thanh_vien    String?           @default("Đồng") @db.VarChar(50)
+  ngay_tao           DateTime?         @default(now()) @db.Timestamp(6)
+  trang_thai         Boolean?          @default(true)
+  diem_tich_luy_tong Int?              @default(0)
+  chitietgiohang     chitietgiohang[]
+  danhgiasanpham     danhgiasanpham[]
+  donhang            donhang[]
+  phieutrahang       phieutrahang[]
+  sanphamyeuthich    sanphamyeuthich[]
+  toathuoc           toathuoc[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model khuyenmai {
+  id                 Int      @id @default(autoincrement())
+  ma_code            String   @unique @db.VarChar(50)
+  loai_giam_gia      String?  @db.VarChar(50)
+  gia_tri            Decimal  @db.Decimal(12, 2)
+  don_hang_toi_thieu Decimal? @default(0) @db.Decimal(12, 2)
+  ngay_bat_dau       DateTime @db.Timestamp(6)
+  ngay_ket_thuc      DateTime @db.Timestamp(6)
+  so_luong_gioi_han  Int?
+  so_luong_da_dung   Int?     @default(0)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model kienhang {
+  id               Int        @id @default(autoincrement())
+  ma_sscc          String     @unique @db.VarChar(100)
+  loai_kien        String?    @db.VarChar(50)
+  don_vi_so_huu_id Int?
+  ngay_tao         DateTime?  @default(now()) @db.Timestamp(6)
+  trang_thai       String?    @default("SanSang") @db.VarChar(50)
+  hopthuoc         hopthuoc[]
+  donvi            donvi?     @relation(fields: [don_vi_so_huu_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model lichsuphanphoi {
+  id                                        Int       @id @default(autoincrement())
+  hop_thuoc_uid                             String?   @db.Uuid
+  tu_don_vi_id                              Int?
+  den_don_vi_id                             Int?
+  loai_giao_dich                            String?   @db.VarChar(50)
+  thoi_gian                                 DateTime? @default(now()) @db.Timestamp(6)
+  ghi_chu                                   String?
+  donvi_lichsuphanphoi_den_don_vi_idTodonvi donvi?    @relation("lichsuphanphoi_den_don_vi_idTodonvi", fields: [den_don_vi_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  hopthuoc                                  hopthuoc? @relation(fields: [hop_thuoc_uid], references: [uid], onDelete: NoAction, onUpdate: NoAction)
+  donvi_lichsuphanphoi_tu_don_vi_idTodonvi  donvi?    @relation("lichsuphanphoi_tu_don_vi_idTodonvi", fields: [tu_don_vi_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([thoi_gian], map: "idx_lichsu_thoigian")
+  @@index([hop_thuoc_uid], map: "idx_lichsu_uid")
+  @@index([hop_thuoc_uid, thoi_gian(sort: Desc), id(sort: Desc)], map: "idx_lichsu_uid_thoigian")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model lothuoc {
+  id             Int             @id @default(autoincrement())
+  duoc_pham_id   Int?
+  so_lo          String          @db.VarChar(100)
+  ngay_san_xuat  DateTime        @db.Date
+  han_su_dung    DateTime        @db.Date
+  trang_thai     String?         @default("HopLe") @db.VarChar(50)
+  quy_cach_id    Int?
+  hopthuoc       hopthuoc[]
+  duocpham       duocpham?       @relation(fields: [duoc_pham_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  quycachdonggoi quycachdonggoi? @relation(fields: [quy_cach_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([han_su_dung], map: "idx_lothuoc_hsd")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model nhanvien {
+  id            Int       @id @default(autoincrement())
+  don_vi_id     Int
+  ho_ten        String    @db.VarChar(255)
+  email         String    @unique @db.VarChar(255)
+  mat_khau_hash String    @db.VarChar(255)
+  vai_tro       String?   @db.VarChar(50)
+  trang_thai    Boolean?  @default(true)
+  baiviet       baiviet[]
+  donvi         donvi     @relation(fields: [don_vi_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model nhatkyxacthuc {
+  id                  Int       @id @default(autoincrement())
+  hop_thuoc_uid       String?   @db.Uuid
+  thoi_gian_quet      DateTime? @default(now()) @db.Timestamp(6)
+  toa_do_lat          Decimal?  @db.Decimal(10, 8)
+  toa_do_lng          Decimal?  @db.Decimal(11, 8)
+  ip_address          String?   @db.VarChar(45)
+  trang_thai_canh_bao Boolean?  @default(false)
+  hopthuoc            hopthuoc? @relation(fields: [hop_thuoc_uid], references: [uid], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([trang_thai_canh_bao], map: "idx_nhatky_canh_bao", where: raw("(trang_thai_canh_bao = true)"))
+  @@index([hop_thuoc_uid], map: "idx_nhatky_uid")
+  @@index([hop_thuoc_uid, thoi_gian_quet(sort: Desc)], map: "idx_nhatky_uid_thoigian")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model phieutrahang {
+  id                  Int                   @id @default(autoincrement())
+  don_hang_id         Int?
+  khach_hang_id       Int?
+  ly_do_tra           String
+  ngay_yeu_cau        DateTime?             @default(now()) @db.Timestamp(6)
+  trang_thai_duyet    String?               @default("ChoDuyet") @db.VarChar(50)
+  chitietphieutrahang chitietphieutrahang[]
+  donhang             donhang?              @relation(fields: [don_hang_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  khachhang           khachhang?            @relation(fields: [khach_hang_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([don_hang_id], map: "idx_phieutrahang_donhang")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model quycachdonggoi {
+  id                      Int                   @id @default(autoincrement())
+  duoc_pham_id            Int?
+  ten_don_vi              String                @db.VarChar(50)
+  gia_ban                 Decimal               @db.Decimal(12, 2)
+  gia_goc                 Decimal?              @db.Decimal(12, 2)
+  phan_tram_giam          Int?                  @default(0)
+  thoi_gian_bat_dau_sale  DateTime?             @db.Timestamp(6)
+  thoi_gian_ket_thuc_sale DateTime?             @db.Timestamp(6)
+  chitietdonhang          chitietdonhang[]
+  chitietgiohang          chitietgiohang[]
+  chitietphieutrahang     chitietphieutrahang[]
+  lothuoc                 lothuoc[]
+  duocpham                duocpham?             @relation(fields: [duoc_pham_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tonkho                  tonkho[]
+}
+
+model sanphamyeuthich {
+  khach_hang_id Int
+  duoc_pham_id  Int
+  ngay_them     DateTime? @default(now()) @db.Timestamp(6)
+  duocpham      duocpham  @relation(fields: [duoc_pham_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  khachhang     khachhang @relation(fields: [khach_hang_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([khach_hang_id, duoc_pham_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model toathuoc {
+  id               Int        @id @default(autoincrement())
+  khach_hang_id    Int?
+  don_hang_id      Int?
+  hinh_anh_toa     String
+  ten_bac_si       String?    @db.VarChar(255)
+  ten_benh_vien    String?    @db.VarChar(255)
+  chuan_doan       String?
+  ngay_tao         DateTime?  @default(now()) @db.Timestamp(6)
+  trang_thai_duyet String?    @default("ChoDuyet") @db.VarChar(50)
+  donhang          donhang?   @relation(fields: [don_hang_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  khachhang        khachhang? @relation(fields: [khach_hang_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model tonkho {
+  don_vi_id      Int
+  duoc_pham_id   Int
+  so_luong_ton   Int?           @default(0)
+  ngay_cap_nhat  DateTime?      @default(now()) @db.Timestamp(6)
+  quy_cach_id    Int
+  donvi          donvi          @relation(fields: [don_vi_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  duocpham       duocpham       @relation(fields: [duoc_pham_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  quycachdonggoi quycachdonggoi @relation(fields: [quy_cach_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([don_vi_id, duoc_pham_id, quy_cach_id])
+  @@index([don_vi_id], map: "idx_tonkho_donvi")
+  @@index([duoc_pham_id], map: "idx_tonkho_duocpham")
+}

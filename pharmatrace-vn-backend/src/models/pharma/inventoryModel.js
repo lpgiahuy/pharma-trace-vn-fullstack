@@ -1,108 +1,99 @@
-import pool from '../../config/db.js';
+import prisma, { serializeBigInt } from '../../config/prisma.js';
 
 const callImportProcedure = async (duocPhamId, donViId, soLo, ngaySx, hsd, soLuong, quyCachId = null) => {
-    // If quy_cach_id is not provided, default to the first packaging unit of the product (required for TonKho PK)
-    let finalQuyCachId = quyCachId;
+    // If quy_cach_id is not provided, default to the first packaging unit of the product
+    let finalQuyCachId = quyCachId ? Number(quyCachId) : null;
     if (!finalQuyCachId) {
-        const qc = await pool.query(
-            'SELECT id FROM QuyCachDongGoi WHERE duoc_pham_id = $1 ORDER BY id ASC LIMIT 1',
-            [duocPhamId]
-        );
-        if (!qc.rows.length) {
+        const qc = await prisma.quycachdonggoi.findFirst({
+            where: { duoc_pham_id: Number(duocPhamId) },
+            orderBy: { id: 'asc' },
+            select: { id: true }
+        });
+        if (!qc) {
             const err = new Error(`Thuốc ID ${duocPhamId} chưa có quy cách đóng gói. Vui lòng thêm quy cách trước khi nhập kho.`);
             err.statusCode = 400;
             throw err;
         }
-        finalQuyCachId = qc.rows[0].id;
+        finalQuyCachId = qc.id;
     }
 
     // Step 1: Create a new LoThuoc record
-    const insertLo = await pool.query(
-        `INSERT INTO LoThuoc (duoc_pham_id, quy_cach_id, so_lo, ngay_san_xuat, han_su_dung)
-         VALUES ($1, $2, $3, $4, $5)
-         RETURNING id, so_lo, ngay_san_xuat, han_su_dung, trang_thai`,
-        [duocPhamId, finalQuyCachId, soLo, ngaySx, hsd]
-    );
-    const loThuoc = insertLo.rows[0];
+    const loThuoc = await prisma.lothuoc.create({
+        data: {
+            duoc_pham_id: Number(duocPhamId),
+            quy_cach_id: finalQuyCachId,
+            so_lo: soLo,
+            ngay_san_xuat: new Date(ngaySx),
+            han_su_dung: new Date(hsd)
+        },
+        select: { id: true, so_lo: true, ngay_san_xuat: true, han_su_dung: true, trang_thai: true }
+    });
 
     // Step 2: Call stored procedure to generate HopThuoc (UID) and update TonKho
-    await pool.query(
+    await prisma.$queryRawUnsafe(
         `CALL sp_nhap_kho_lo_thuoc_moi($1::INT, $2::INT, $3::INT)`,
-        [loThuoc.id, donViId, soLuong]
+        loThuoc.id, Number(donViId), Number(soLuong)
     );
 
     return loThuoc;
 };
 
 const checkInventory = async (donViId, duocPhamId) => {
-    const query = `
-        SELECT so_luong_ton FROM TonKho 
-        WHERE don_vi_id = $1 AND duoc_pham_id = $2;
-    `;
-    const result = await pool.query(query, [donViId, duocPhamId]);
-    return result.rows[0];
+    const result = await prisma.tonkho.findFirst({
+        where: { don_vi_id: Number(donViId), duoc_pham_id: Number(duocPhamId) },
+        select: { so_luong_ton: true }
+    });
+    return result;
 };
 
 const getTotalProductStock = async (duocPhamId) => {
-    const query = `
-        SELECT COALESCE(SUM(so_luong_ton), 0) AS total_stock 
-        FROM TonKho 
-        WHERE duoc_pham_id = $1;
-    `;
-    const result = await pool.query(query, [duocPhamId]);
-    return parseInt(result.rows[0]?.total_stock || 0);
+    const result = await prisma.tonkho.aggregate({
+        where: { duoc_pham_id: Number(duocPhamId) },
+        _sum: { so_luong_ton: true }
+    });
+    return Number(result._sum.so_luong_ton || 0);
 };
 
 /**
  * @deprecated THIS FUNCTION IS DEPRECATED.
- * Do NOT use this function to deduct stock anymore. 
- * Inventory deduction is now automatically handled by the database trigger `trg_tru_ton_kho` 
+ * Do NOT use this function to deduct stock anymore.
+ * Inventory deduction is now automatically handled by the database trigger `trg_tru_ton_kho`
  * when an order item is inserted into `ChiTietDonHang`.
  */
 const deductStock = async (duocPhamId, baseQuantity) => {
-    // Get units with stock for this product, descending so we take from the biggest source first (or ascending if we want to clear small batches)
-    const query = `
-        SELECT don_vi_id, so_luong_ton 
-        FROM TonKho 
-        WHERE duoc_pham_id = $1 AND so_luong_ton > 0
-        ORDER BY so_luong_ton DESC;
-    `;
-    const result = await pool.query(query, [duocPhamId]);
-    const units = result.rows;
-    
+    const units = await prisma.tonkho.findMany({
+        where: { duoc_pham_id: Number(duocPhamId), so_luong_ton: { gt: 0 } },
+        orderBy: { so_luong_ton: 'desc' }
+    });
+
     let remaining = baseQuantity;
     for (const unit of units) {
         if (remaining <= 0) break;
-        
-        const deductAmount = Math.min(unit.so_luong_ton, remaining);
-        await pool.query(
-            'UPDATE TonKho SET so_luong_ton = so_luong_ton - $3, ngay_cap_nhat = CURRENT_TIMESTAMP WHERE don_vi_id = $1 AND duoc_pham_id = $2',
-            [unit.don_vi_id, duocPhamId, deductAmount]
-        );
+        const deductAmount = Math.min(Number(unit.so_luong_ton), remaining);
+        await prisma.tonkho.update({
+            where: { don_vi_id_duoc_pham_id: { don_vi_id: unit.don_vi_id, duoc_pham_id: unit.duoc_pham_id } },
+            data: { so_luong_ton: { decrement: deductAmount }, ngay_cap_nhat: new Date() }
+        });
         remaining -= deductAmount;
     }
-    
+
     if (remaining > 0) {
-        // Technically this shouldn't happen if we checked before
         throw new Error(`Insufficient stock for product ID ${duocPhamId}. Still need ${remaining} units.`);
     }
-    
     return true;
 };
 
 const getBoxesByBatch = async (batchId) => {
-    const query = `
-        SELECT uid, trang_thai 
-        FROM HopThuoc 
-        WHERE lo_thuoc_id = $1
-        ORDER BY uid ASC;
-    `;
-    const result = await pool.query(query, [batchId]);
-    return result.rows;
+    const boxes = await prisma.hopthuoc.findMany({
+        where: { lo_thuoc_id: Number(batchId) },
+        orderBy: { uid: 'asc' },
+        select: { uid: true, trang_thai: true }
+    });
+    return boxes;
 };
 
 const getAllBatches = async () => {
-    const query = `
+    const batches = await prisma.$queryRawUnsafe(`
         SELECT 
             l.id,
             l.so_lo AS "batchNumber",
@@ -113,9 +104,8 @@ const getAllBatches = async () => {
         FROM LoThuoc l
         JOIN DuocPham d ON l.duoc_pham_id = d.id
         ORDER BY l.id DESC;
-    `;
-    const result = await pool.query(query);
-    return result.rows;
+    `);
+    return serializeBigInt(batches);
 };
 
 export { callImportProcedure, checkInventory, getTotalProductStock, deductStock, getBoxesByBatch, getAllBatches };

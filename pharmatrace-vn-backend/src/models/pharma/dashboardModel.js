@@ -1,39 +1,33 @@
-import pool from '../../config/db.js';
+import prisma, { serializeBigInt } from '../../config/prisma.js';
 
 // get coordinates of suspicious QR code scans for heatmap visualization
 const getHeatmapData = async () => {
-    const query = 'SELECT * FROM View_DiemNong_HangGia LIMIT 100;';
-    const result = await pool.query(query);
-    return result.rows;
+    const result = await prisma.$queryRawUnsafe('SELECT * FROM View_DiemNong_HangGia LIMIT 100;');
+    return serializeBigInt(result);
 };
 
 // get list of medicines nearing expiry (within 60 days)
 const getNearExpiredDrugs = async () => {
-    const query = 'SELECT * FROM View_Thuoc_Can_Date;';
-    const result = await pool.query(query);
-    return result.rows;
+    const result = await prisma.$queryRawUnsafe('SELECT * FROM View_Thuoc_Can_Date;');
+    return serializeBigInt(result);
 };
 
 // get daily revenue data for revenue trend chart
 const getDailyRevenue = async () => {
-    const query = 'SELECT * FROM View_DoanhThu_Theo_Ngay LIMIT 30;'; // Fetch last 30 days
-    const result = await pool.query(query);
-    return result.rows;
+    const result = await prisma.$queryRawUnsafe('SELECT * FROM View_DoanhThu_Theo_Ngay LIMIT 30;');
+    return serializeBigInt(result);
 };
 
-// get overall inventory summary by warehouse (total products in stock, etc.)
+// get overall inventory summary by warehouse
 const getInventorySummary = async () => {
-    const query = 'SELECT * FROM View_TonKho_ChiTiet;';
-    const result = await pool.query(query);
-    return result.rows;
+    const result = await prisma.$queryRawUnsafe('SELECT * FROM View_TonKho_ChiTiet;');
+    return serializeBigInt(result);
 };
 
 export { getHeatmapData, getNearExpiredDrugs, getDailyRevenue, getInventorySummary };
 
-// --- NEW QUERIES FOR FRONTEND REACT DASHBOARD ---
-
 export const getOverallStats = async () => {
-    const query = `
+    const result = await prisma.$queryRawUnsafe(`
     SELECT 
         (SELECT COALESCE(SUM(tong_tien), 0) FROM DonHang WHERE trang_thai_don = 'HoanThanh' AND ngay_dat_hang >= (CURRENT_DATE - INTERVAL '30 days')) as rev_current,
         (SELECT COALESCE(SUM(tong_tien), 0) FROM DonHang WHERE trang_thai_don = 'HoanThanh' AND ngay_dat_hang >= (CURRENT_DATE - INTERVAL '60 days') AND ngay_dat_hang < (CURRENT_DATE - INTERVAL '30 days')) as rev_prev,
@@ -42,13 +36,12 @@ export const getOverallStats = async () => {
         (SELECT COUNT(*) FROM KhachHang WHERE ngay_tao >= (CURRENT_DATE - INTERVAL '30 days')) as cust_current,
         (SELECT COUNT(*) FROM KhachHang WHERE ngay_tao >= (CURRENT_DATE - INTERVAL '60 days') AND ngay_tao < (CURRENT_DATE - INTERVAL '30 days')) as cust_prev,
         (SELECT COUNT(DISTINCT duoc_pham_id) FROM TonKho WHERE so_luong_ton < 20) as low_stock_count
-    `;
-    const res = await pool.query(query);
-    return res.rows[0];
+    `);
+    return serializeBigInt(result[0]);
 };
 
 export const getMonthlyRevenueChart = async () => {
-    const query = `
+    const result = await prisma.$queryRawUnsafe(`
         WITH months AS (
             SELECT generate_series(
                 date_trunc('month', CURRENT_DATE - INTERVAL '5 months'), 
@@ -69,13 +62,12 @@ export const getMonthlyRevenueChart = async () => {
             ON date_trunc('month', dh.ngay_dat_hang) = m.month_start
         GROUP BY m.month_start
         ORDER BY m.month_start ASC;
-    `;
-    const res = await pool.query(query);
-    return res.rows;
+    `);
+    return serializeBigInt(result);
 };
 
 export const getTopSellingProducts = async (limit) => {
-    const query = `
+    const result = await prisma.$queryRawUnsafe(`
         SELECT 
             dp.id,
             dp.ten_thuoc as name,
@@ -86,13 +78,12 @@ export const getTopSellingProducts = async (limit) => {
         LEFT JOIN DanhMuc dm ON dp.danh_muc_id = dm.id
         ORDER BY dp.so_luong_da_ban DESC NULLS LAST
         LIMIT $1;
-    `;
-    const res = await pool.query(query, [limit]);
-    return res.rows;
+    `, Number(limit));
+    return serializeBigInt(result);
 };
 
 export const getCategoryRevenue = async () => {
-    const query = `
+    const result = await prisma.$queryRawUnsafe(`
         SELECT
             COALESCE(dm.ten_danh_muc, 'Khác') AS category,
             COALESCE(SUM(ct.so_luong * ct.don_gia), 0)::bigint AS revenue
@@ -103,13 +94,12 @@ export const getCategoryRevenue = async () => {
         WHERE dh.trang_thai_don = 'HoanThanh'
         GROUP BY dm.ten_danh_muc
         ORDER BY revenue DESC;
-    `;
-    const res = await pool.query(query);
-    return res.rows;
+    `);
+    return serializeBigInt(result);
 };
 
 export const getCategoryProductCount = async () => {
-    const query = `
+    const result = await prisma.$queryRawUnsafe(`
         SELECT
             COALESCE(parent.ten_danh_muc, dm.ten_danh_muc, 'Khác') AS category,
             COUNT(dp.id)::int                                         AS count
@@ -119,13 +109,12 @@ export const getCategoryProductCount = async () => {
         WHERE dp.trang_thai = TRUE
         GROUP BY COALESCE(parent.ten_danh_muc, dm.ten_danh_muc, 'Khác')
         ORDER BY count DESC;
-    `;
-    const res = await pool.query(query);
-    return res.rows;
+    `);
+    return serializeBigInt(result);
 };
 
 export const getLowStockItems = async () => {
-    const query = `
+    const result = await prisma.$queryRawUnsafe(`
         SELECT 
             tk.duoc_pham_id as id,
             dp.ten_thuoc as "productName",
@@ -138,7 +127,6 @@ export const getLowStockItems = async () => {
         WHERE tk.so_luong_ton < 50
         ORDER BY tk.so_luong_ton ASC
         LIMIT 10;
-    `;
-    const res = await pool.query(query);
-    return res.rows;
+    `);
+    return serializeBigInt(result);
 };

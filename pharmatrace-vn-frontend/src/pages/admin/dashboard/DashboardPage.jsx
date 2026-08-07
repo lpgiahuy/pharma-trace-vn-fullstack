@@ -117,10 +117,10 @@ export default function DashboardPage() {
 
       {/* KPI cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard loading={loading} title={t('admin.total_revenue')}   value={stats?.revenue?.value || 0}   change={Number(stats?.revenue?.change || 0)}   trend={stats?.revenue?.trend}   icon={DollarSign}    color="blue"   prefix="₫" />
-        <StatCard loading={loading} title={t('admin.total_orders')}    value={stats?.orders?.value || 0}    change={Number(stats?.orders?.change || 0)}    trend={stats?.orders?.trend}    icon={ShoppingBag}   color="green"  />
-        <StatCard loading={loading} title={t('admin.total_customers')} value={stats?.customers?.value || 0} change={Number(stats?.customers?.change || 0)} trend={stats?.customers?.trend} icon={Users}         color="purple" />
-        <StatCard loading={loading} title={t('admin.low_stock_items')} value={stats?.lowStock?.value || 0}  change={Number(stats?.lowStock?.change || 0)}  trend={stats?.lowStock?.trend}  icon={AlertTriangle} color="orange" />
+        <StatCard loading={loading} title={t('admin.total_revenue')}   value={stats?.revenue?.value || 0}   change={parseFloat(String(stats?.revenue?.change || 0))}   trend={stats?.revenue?.trend}   icon={DollarSign}    color="blue"   prefix="₫" />
+        <StatCard loading={loading} title={t('admin.total_orders')}    value={stats?.orders?.value || 0}    change={parseFloat(String(stats?.orders?.change || 0))}    trend={stats?.orders?.trend}    icon={ShoppingBag}   color="green"  />
+        <StatCard loading={loading} title={t('admin.total_customers')} value={stats?.customers?.value || 0} change={parseFloat(String(stats?.customers?.change || 0))} trend={stats?.customers?.trend} icon={Users}         color="purple" />
+        <StatCard loading={loading} title={t('admin.low_stock_items')} value={stats?.lowStock?.value || 0}  change={parseFloat(String(stats?.lowStock?.change || 0))}  trend={stats?.lowStock?.trend}  icon={AlertTriangle} color="orange" />
       </div>
 
       {/* Charts row: Revenue Overview (2/3) + Monthly Orders (1/3) */}

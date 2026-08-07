@@ -52,7 +52,7 @@ services:
       context: ./pharmatrace-vn-frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:3002/v1/pharmatrace}
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-/v1/pharmatrace}
         - VITE_APP_NAME=${VITE_APP_NAME:-PharmaTrace VN}
     container_name: pharmatrace-frontend
     restart: always
