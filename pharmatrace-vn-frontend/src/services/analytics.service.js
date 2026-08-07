@@ -95,20 +95,20 @@ export const blogService = {
 
   async create(payload) {
     const { data } = await apiClient.post('/admin/blogs/add', {
-      tieu_de: payload.title,
-      anh_bia: payload.coverImage || payload.image,
-      noi_dung: payload.content || payload.excerpt || '',
-      chuyen_muc: payload.category
+      tieu_de:    payload.tieu_de || payload.title,
+      anh_bia:    payload.anh_bia || payload.coverImage || payload.image || '',
+      noi_dung:   payload.noi_dung || payload.content || payload.excerpt || '',
+      chuyen_muc: payload.chuyen_muc || payload.category || ''
     })
     return data.data || data
   },
 
   async update(id, payload) {
     const { data } = await apiClient.put(`/admin/blogs/${id}`, {
-      tieu_de: payload.title,
-      anh_bia: payload.coverImage || payload.image,
-      noi_dung: payload.content || payload.excerpt || '',
-      chuyen_muc: payload.category
+      tieu_de:    payload.tieu_de || payload.title,
+      anh_bia:    payload.anh_bia || payload.coverImage || payload.image || '',
+      noi_dung:   payload.noi_dung || payload.content || payload.excerpt || '',
+      chuyen_muc: payload.chuyen_muc || payload.category || ''
     })
     return data.data || data
   },

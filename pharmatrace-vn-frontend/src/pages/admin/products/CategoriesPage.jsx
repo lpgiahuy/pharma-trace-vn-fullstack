@@ -6,6 +6,42 @@ import toast from 'react-hot-toast'
 
 const { useBreakpoint } = Grid
 
+const buildCategoryTree = (flatList) => {
+  const map = {};
+  const tree = [];
+
+  flatList.forEach(item => {
+    map[item.id] = { ...item, children: [] };
+  });
+
+  flatList.forEach(item => {
+    const mappedItem = map[item.id];
+    if (item.danh_muc_cha_id) {
+      const parent = map[item.danh_muc_cha_id];
+      if (parent) {
+        parent.children.push(mappedItem);
+      } else {
+        tree.push(mappedItem);
+      }
+    } else {
+      tree.push(mappedItem);
+    }
+  });
+
+  const cleanEmptyChildren = (nodes) => {
+    nodes.forEach(node => {
+      if (node.children.length === 0) {
+        delete node.children;
+      } else {
+        cleanEmptyChildren(node.children);
+      }
+    });
+  };
+  cleanEmptyChildren(tree);
+
+  return tree;
+};
+
 export default function CategoriesPage() {
   const [cats, setCats] = useState([])
   const [loading, setLoading] = useState(true)
@@ -19,8 +55,9 @@ export default function CategoriesPage() {
   const fetchCategories = async () => {
     setLoading(true)
     try {
-      const data = await productService.getCategories()
-      setCats(data)
+      const data = await productService.getCategoriesAdmin()
+      const treeData = buildCategoryTree(data)
+      setCats(treeData)
     } finally {
       setLoading(false)
     }

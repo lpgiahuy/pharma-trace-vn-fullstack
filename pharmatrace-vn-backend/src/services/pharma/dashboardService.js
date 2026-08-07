@@ -2,13 +2,19 @@ import * as dashboardModel from '../../models/pharma/dashboardModel.js';
 
 // Helper function to calculate percentage change
 const calculateChange = (current, previous) => {
-    if (previous === 0) return current > 0 ? '+100%' : '0%';
-    const change = ((current - previous) / previous) * 100;
-    const sign = change > 0 ? '+' : '';
-    return `${sign}${change.toFixed(1)}%`;
+    const cur = Number(current) || 0;
+    const prev = Number(previous) || 0;
+    if (prev === 0) return cur > 0 ? 100 : 0;
+    const change = ((cur - prev) / prev) * 100;
+    if (isNaN(change)) return 0;
+    return parseFloat(change.toFixed(1));
 };
 
-const getTrend = (current, previous) => current >= previous ? 'up' : 'down';
+const getTrend = (current, previous) => {
+    const cur = Number(current) || 0;
+    const prev = Number(previous) || 0;
+    return cur >= prev ? 'up' : 'down';
+};
 
 export const fetchAdminDashboard = async () => {
     // Legacy endpoint: Keep it for compatibility if needed
@@ -27,27 +33,35 @@ export const fetchAdminDashboard = async () => {
 };
 
 export const fetchDashboardStats = async () => {
-    const rawData = await dashboardModel.getOverallStats();
+    const rawData = (await dashboardModel.getOverallStats()) || {};
     
+    const revCurrent = Number(rawData.rev_current) || 0;
+    const revPrev = Number(rawData.rev_prev) || 0;
+    const ordersCurrent = Number(rawData.orders_current) || 0;
+    const ordersPrev = Number(rawData.orders_prev) || 0;
+    const custCurrent = Number(rawData.cust_current) || 0;
+    const custPrev = Number(rawData.cust_prev) || 0;
+    const lowStockCount = Number(rawData.low_stock_count) || 0;
+
     return {
         revenue: {
-            value: parseInt(rawData.rev_current || 0),
-            change: calculateChange(parseInt(rawData.rev_current || 0), parseInt(rawData.rev_prev || 0)),
-            trend: getTrend(parseInt(rawData.rev_current || 0), parseInt(rawData.rev_prev || 0))
+            value: revCurrent,
+            change: calculateChange(revCurrent, revPrev),
+            trend: getTrend(revCurrent, revPrev)
         },
         orders: {
-            value: parseInt(rawData.orders_current || 0),
-            change: calculateChange(parseInt(rawData.orders_current || 0), parseInt(rawData.orders_prev || 0)),
-            trend: getTrend(parseInt(rawData.orders_current || 0), parseInt(rawData.orders_prev || 0))
+            value: ordersCurrent,
+            change: calculateChange(ordersCurrent, ordersPrev),
+            trend: getTrend(ordersCurrent, ordersPrev)
         },
         customers: {
-            value: parseInt(rawData.cust_current || 0),
-            change: calculateChange(parseInt(rawData.cust_current || 0), parseInt(rawData.cust_prev || 0)),
-            trend: getTrend(parseInt(rawData.cust_current || 0), parseInt(rawData.cust_prev || 0))
+            value: custCurrent,
+            change: calculateChange(custCurrent, custPrev),
+            trend: getTrend(custCurrent, custPrev)
         },
         lowStock: {
-            value: parseInt(rawData.low_stock_count || 0),
-            change: '', // Low stock doesn't really need a month-over-month trend in this UI
+            value: lowStockCount,
+            change: '0%', // Low stock doesn't really need a month-over-month trend in this UI
             trend: 'down' // Just default
         }
     };

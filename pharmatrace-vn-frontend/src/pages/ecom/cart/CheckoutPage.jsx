@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/authStore'
 import { orderService } from '@/services/order.service'
 import { voucherService } from '@/services/voucher.service'
 import { userService } from '@/services/user.service'
+import { authService } from '@/services/auth.service'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { formatCurrency } from '@/utils'
@@ -18,11 +19,11 @@ export default function CheckoutPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { items, getTotal, getSubtotal, getDiscount, shippingFee, voucher, applyVoucher, removeVoucher, clearCart, fetchCart } = useCartStore()
-  const { user, isAuthenticated } = useAuthStore()
+  const { user, isAuthenticated, updateUser } = useAuthStore()
   const [payMethod, setPayMethod] = useState('cod')
   const [voucherCode, setVoucherCode] = useState('')
   const [applyingVoucher, setApplyingVoucher] = useState(false)
-  const [pointsToUse, setPointsToUse] = useState(0)
+  const [pointsToUse, setPointsToUse] = useState('')
   const [prescriptions, setPrescriptions] = useState([])
   const [selectedPrescription, setSelectedPrescription] = useState(null)
 
@@ -40,8 +41,14 @@ export default function CheckoutPage() {
     if (!isAuthenticated) {
       toast.error('Vui lòng đăng nhập để thanh toán')
       navigate('/login', { state: { from: { pathname: '/checkout' } } })
+    } else {
+      authService.getProfile()
+        .then(profile => {
+          updateUser(profile)
+        })
+        .catch(() => {})
     }
-  }, [isAuthenticated, navigate, fetchCart])
+  }, [isAuthenticated, navigate, fetchCart, updateUser])
 
   useEffect(() => {
     if (hasPrescriptionItem) {
@@ -78,7 +85,7 @@ export default function CheckoutPage() {
   }
 
   const availablePoints = user?.diem_tich_luy || 0
-  const pointsValue = pointsToUse * 100
+  const pointsValue = (Number(pointsToUse) || 0) * 100
 
   const onSubmit = async (formData) => {
     if (hasPrescriptionItem && !selectedPrescription) {
@@ -93,7 +100,7 @@ export default function CheckoutPage() {
         ghi_chu:                formData.note,
         voucher_id:             voucher?.id,
         ma_giam_gia:            voucher?.code,
-        diem_su_dung:           pointsToUse || 0,
+        diem_su_dung:           Number(pointsToUse) || 0,
         toa_thuoc_id:           selectedPrescription || null,
       })
       clearCart()
@@ -205,7 +212,15 @@ export default function CheckoutPage() {
                     min="0"
                     max={availablePoints}
                     value={pointsToUse}
-                    onChange={(e) => setPointsToUse(Math.max(0, Math.min(availablePoints, parseInt(e.target.value) || 0)))}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      if (val === '') {
+                        setPointsToUse('')
+                        return
+                      }
+                      const num = parseInt(val) || 0
+                      setPointsToUse(Math.max(0, Math.min(availablePoints, num)))
+                    }}
                     className="w-full px-4 py-2 border border-surface-border rounded-lg focus:outline-none focus:border-brand-500"
                     placeholder={t('checkout.enter_points')}
                   />

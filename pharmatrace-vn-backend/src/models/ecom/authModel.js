@@ -1,57 +1,93 @@
-import pool from '../../config/db.js';
+import prisma, { serializeBigInt } from '../../config/prisma.js';
 
 // Check if user exists by phone number
 const findUserByPhone = async (phone) => {
-    const query = 'SELECT * FROM KhachHang WHERE so_dien_thoai = $1';
-    const result = await pool.query(query, [phone]);
-    return result.rows[0];
+    return await prisma.khachhang.findUnique({
+        where: { so_dien_thoai: phone }
+    });
 };
 
 const createUser = async (name, phone, hashedPassword) => {
-    const query = `
-        INSERT INTO KhachHang (ho_ten, so_dien_thoai, mat_khau_hash) 
-        VALUES ($1, $2, $3) RETURNING id, ho_ten, so_dien_thoai, hang_thanh_vien, diem_tich_luy;
-    `;
-    const result = await pool.query(query, [name, phone, hashedPassword]);
-    return result.rows[0];
+    return await prisma.khachhang.create({
+        data: {
+            ho_ten: name,
+            so_dien_thoai: phone,
+            mat_khau_hash: hashedPassword
+        },
+        select: {
+            id: true,
+            ho_ten: true,
+            so_dien_thoai: true,
+            hang_thanh_vien: true,
+            diem_tich_luy: true
+        }
+    });
 };
 
 const findUserById = async (id) => {
-    const query = 'SELECT id, ho_ten, so_dien_thoai, email, dia_chi_mac_dinh AS dia_chi, hang_thanh_vien, diem_tich_luy FROM KhachHang WHERE id = $1';
-    const result = await pool.query(query, [id]);
-    return result.rows[0];
+    const user = await prisma.khachhang.findUnique({
+        where: { id: Number(id) },
+        select: {
+            id: true,
+            ho_ten: true,
+            so_dien_thoai: true,
+            email: true,
+            dia_chi_mac_dinh: true,
+            hang_thanh_vien: true,
+            diem_tich_luy: true
+        }
+    });
+    if (!user) return null;
+    return {
+        ...user,
+        dia_chi: user.dia_chi_mac_dinh
+    };
 };
 
 // Find full user record (including password hash) for password change verification
 const findFullUserById = async (id) => {
-    const query = 'SELECT * FROM KhachHang WHERE id = $1';
-    const result = await pool.query(query, [id]);
-    return result.rows[0];
+    return await prisma.khachhang.findUnique({
+        where: { id: Number(id) }
+    });
 };
 
 const updateUserProfile = async (id, { ho_ten, email, dia_chi_mac_dinh }) => {
-    const query = `
-        UPDATE KhachHang 
-        SET ho_ten           = COALESCE($2, ho_ten),
-            email            = COALESCE($3, email),
-            dia_chi_mac_dinh = COALESCE($4, dia_chi_mac_dinh)
-        WHERE id = $1
-        RETURNING id, ho_ten, so_dien_thoai, email, dia_chi_mac_dinh AS dia_chi, hang_thanh_vien, diem_tich_luy;
-    `;
-    const result = await pool.query(query, [id, ho_ten || null, email || null, dia_chi_mac_dinh || null]);
-    return result.rows[0];
+    const data = {};
+    if (ho_ten !== undefined) data.ho_ten = ho_ten || null;
+    if (email !== undefined) data.email = email || null;
+    if (dia_chi_mac_dinh !== undefined) data.dia_chi_mac_dinh = dia_chi_mac_dinh || null;
+
+    const user = await prisma.khachhang.update({
+        where: { id: Number(id) },
+        data,
+        select: {
+            id: true,
+            ho_ten: true,
+            so_dien_thoai: true,
+            email: true,
+            dia_chi_mac_dinh: true,
+            hang_thanh_vien: true,
+            diem_tich_luy: true
+        }
+    });
+    if (!user) return null;
+    return {
+        ...user,
+        dia_chi: user.dia_chi_mac_dinh
+    };
 };
 
 const updateUserPassword = async (id, newHashedPassword) => {
-    const query = `UPDATE KhachHang SET mat_khau_hash = $2 WHERE id = $1`;
-    await pool.query(query, [id, newHashedPassword]);
+    await prisma.khachhang.update({
+        where: { id: Number(id) },
+        data: { mat_khau_hash: newHashedPassword }
+    });
     return true;
 };
 
 const getLoyaltyUpgradeProgress = async (id) => {
-    const query = 'SELECT * FROM fn_get_loyalty_upgrade_progress($1)';
-    const result = await pool.query(query, [id]);
-    return result.rows[0];
+    const result = await prisma.$queryRaw`SELECT * FROM fn_get_loyalty_upgrade_progress(${Number(id)})`;
+    return serializeBigInt(result[0]);
 };
 
 export { findUserByPhone, createUser, findUserById, findFullUserById, updateUserProfile, updateUserPassword, getLoyaltyUpgradeProgress };

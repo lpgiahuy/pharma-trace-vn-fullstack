@@ -15,7 +15,10 @@ const fetchBlogDetail = async (id) => {
 };
 
 const addBlog = async (payload, nhan_vien_id) => {
-    const { tieu_de, anh_bia, noi_dung, chuyen_muc } = payload;
+    const tieu_de = payload.tieu_de || payload.title;
+    const anh_bia = payload.anh_bia || payload.coverImage || payload.image || null;
+    const noi_dung = payload.noi_dung || payload.content || payload.excerpt;
+    const chuyen_muc = payload.chuyen_muc || payload.category || null;
     
     if (!tieu_de || !noi_dung) {
         const error = new Error('Title and content are required!');
@@ -27,7 +30,11 @@ const addBlog = async (payload, nhan_vien_id) => {
 };
 
 const editBlog = async (id, payload) => {
-    const { tieu_de, anh_bia, noi_dung, chuyen_muc } = payload;
+    const tieu_de = payload.tieu_de || payload.title;
+    const anh_bia = payload.anh_bia || payload.coverImage || payload.image;
+    const noi_dung = payload.noi_dung || payload.content || payload.excerpt;
+    const chuyen_muc = payload.chuyen_muc || payload.category;
+    
     const updated = await adminBlogModel.updateBlog(id, tieu_de, anh_bia, noi_dung, chuyen_muc);
     
     if (!updated) {

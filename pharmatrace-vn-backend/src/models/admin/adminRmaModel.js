@@ -1,23 +1,24 @@
-import pool from '../../config/db.js';
+import prisma, { serializeBigInt } from '../../config/prisma.js';
 
 export const getAllRmaRequests = async () => {
-    const query = `
-        SELECT p.*, k.ho_ten, k.so_dien_thoai 
-        FROM PhieuTraHang p
-        JOIN KhachHang k ON p.khach_hang_id = k.id
-        ORDER BY p.ngay_yeu_cau DESC;
-    `;
-    const result = await pool.query(query);
-    return result.rows;
+    const requests = await prisma.phieutrahang.findMany({
+        orderBy: { ngay_yeu_cau: 'desc' },
+        include: {
+            khachhang: { select: { ho_ten: true, so_dien_thoai: true } }
+        }
+    });
+    return serializeBigInt(requests.map(p => ({
+        ...p,
+        ho_ten: p.khachhang?.ho_ten || null,
+        so_dien_thoai: p.khachhang?.so_dien_thoai || null,
+        khachhang: undefined
+    })));
 };
 
 export const updateRmaStatus = async (id, trang_thai_duyet) => {
-    const query = `
-        UPDATE PhieuTraHang 
-        SET trang_thai_duyet = $1 
-        WHERE id = $2 
-        RETURNING *;
-    `;
-    const result = await pool.query(query, [trang_thai_duyet, id]);
-    return result.rows[0];
+    const result = await prisma.phieutrahang.update({
+        where: { id: Number(id) },
+        data: { trang_thai_duyet }
+    });
+    return serializeBigInt(result);
 };

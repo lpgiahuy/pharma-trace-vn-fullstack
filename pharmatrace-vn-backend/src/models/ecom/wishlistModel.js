@@ -1,4 +1,4 @@
-import pool from '../../config/db.js';
+import prisma, { serializeBigInt } from '../../config/prisma.js';
 
 // get wishlist of a customer
 const getWishlist = async (khach_hang_id) => {
@@ -21,8 +21,8 @@ const getWishlist = async (khach_hang_id) => {
         WHERE spy.khach_hang_id = $1
         ORDER BY spy.ngay_them DESC;
     `;
-    const result = await pool.query(query, [khach_hang_id]);
-    return result.rows;
+    const result = await prisma.$queryRawUnsafe(query, Number(khach_hang_id));
+    return serializeBigInt(result);
 };
 
 // add product to wishlist (using ON CONFLICT to avoid duplicates)
@@ -33,26 +33,38 @@ const addToWishlist = async (khach_hang_id, duoc_pham_id) => {
         ON CONFLICT (khach_hang_id, duoc_pham_id) DO NOTHING
         RETURNING *;
     `;
-    const result = await pool.query(query, [khach_hang_id, duoc_pham_id]);
-    return result.rowCount > 0;
+    const result = await prisma.$queryRawUnsafe(query, Number(khach_hang_id), Number(duoc_pham_id));
+    return result.length > 0;
 };
 
 // remove product from wishlist 
 const removeFromWishlist = async (khach_hang_id, duoc_pham_id) => {
-    const query = `
-        DELETE FROM SanPhamYeuThich
-        WHERE khach_hang_id = $1 AND duoc_pham_id = $2
-        RETURNING *;
-    `;
-    const result = await pool.query(query, [khach_hang_id, duoc_pham_id]);
-    return result.rowCount > 0;
+    try {
+        const deleted = await prisma.sanphamyeuthich.delete({
+            where: {
+                khach_hang_id_duoc_pham_id: {
+                    khach_hang_id: Number(khach_hang_id),
+                    duoc_pham_id: Number(duoc_pham_id)
+                }
+            }
+        });
+        return !!deleted;
+    } catch (e) {
+        return false;
+    }
 };
 
 // check if a product is in wishlist
 const checkIfFavorited = async (khach_hang_id, duoc_pham_id) => {
-    const query = `SELECT 1 FROM SanPhamYeuThich WHERE khach_hang_id = $1 AND duoc_pham_id = $2`;
-    const result = await pool.query(query, [khach_hang_id, duoc_pham_id]);
-    return result.rowCount > 0;
+    const fav = await prisma.sanphamyeuthich.findUnique({
+        where: {
+            khach_hang_id_duoc_pham_id: {
+                khach_hang_id: Number(khach_hang_id),
+                duoc_pham_id: Number(duoc_pham_id)
+            }
+        }
+    });
+    return !!fav;
 };
 
 export { getWishlist, addToWishlist, removeFromWishlist, checkIfFavorited };
