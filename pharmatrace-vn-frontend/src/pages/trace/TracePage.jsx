@@ -19,6 +19,9 @@ import { traceService, DEMO_CODES } from '@/services/trace.service'
 import { formatDate, formatDateTime, cn } from '@/utils'
 import { Spinner } from '@/components/ui/Spinner'
 import { Button } from '@/components/ui/Button'
+import toast from 'react-hot-toast'
+import { scanQRFromFile } from '@/utils/scanQRFromFile'
+
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -96,6 +99,21 @@ const pushScanHistory = (entry) => {
   localStorage.setItem(HISTORY_KEY, JSON.stringify(hist))
 }
 
+const parseQRText = (text) => {
+  try {
+    const trimmed = (text || '').trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      const url = new URL(trimmed);
+      const uid = url.searchParams.get('uid') || '';
+      const sig = url.searchParams.get('sig') || '';
+      return { uid, sig };
+    }
+  } catch (e) {
+    // Ignore URL parse error, fallback to raw text
+  }
+  return { uid: text, sig: '' };
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function TracePage() {
   const [inputCode,     setInputCode]     = useState('')
@@ -124,10 +142,21 @@ export default function TracePage() {
       handleTrace(stateUid)
       // Clear state after reading to avoid re-triggering on refresh if undesired
       window.history.replaceState({}, document.title)
+    } else {
+      // Check for UID and sig in URL query parameters (scanned from external cameras)
+      const params = new URLSearchParams(location.search)
+      const urlUid = params.get('uid')
+      const urlSig = params.get('sig')
+      if (urlUid) {
+        setInputCode(urlUid)
+        handleTrace(urlUid, urlSig)
+        // Clear query parameters to keep the URL clean
+        window.history.replaceState({}, document.title, location.pathname)
+      }
     }
 
     return () => stopCamera()
-  }, [location.state])
+  }, [location.state, location.search])
 
   useEffect(() => {
     if (result && resultsRef.current) {
@@ -165,10 +194,34 @@ export default function TracePage() {
     setScanning(false)
   }, [])
 
+  // ── File upload QR scanner (for testing) ──────────────────────────────────
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setLoading(true)
+    setError(null)
+    setResult(null)
+    setReported(false)
+
+    try {
+      const decodedText = await scanQRFromFile(file)
+      toast.success('Giải mã ảnh QR thành công!')
+      handleTrace(decodedText)
+    } catch (err) {
+      console.error('[QR File Scan Error]', err)
+      setError({ type: 'invalid', msg: 'Không thể tìm thấy mã QR hợp lệ trong ảnh này. Vui lòng chọn ảnh khác.' })
+      toast.error('Quét ảnh thất bại')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // ── Trace lookup ──────────────────────────────────────────────────────────
-  const handleTrace = async (code = inputCode) => {
+  const handleTrace = async (code = inputCode, explicitSig = '') => {
     const trimmed = (code || '').trim()
-    if (!trimmed) { inputRef.current?.focus(); return }
+    const { uid, sig } = parseQRText(trimmed)
+    if (!uid) { inputRef.current?.focus(); return }
 
     setLoading(true)
     setResult(null)
@@ -177,18 +230,20 @@ export default function TracePage() {
     setActiveSection('overview')
 
     try {
-      const data = await traceService.traceCode(trimmed)
+      const finalSig = explicitSig || sig
+      const data = await traceService.traceCode(uid, finalSig)
       setResult(data)
-      pushScanHistory({ code: trimmed, status: data.status, product: data.product?.name, scannedAt: new Date().toISOString() })
+      pushScanHistory({ code: uid, status: data.status, product: data.product?.name, scannedAt: new Date().toISOString() })
       setScanHistory(getScanHistory())
     } catch (err) {
       console.error('[Trace Error]', err)
-      if (err.response?.status === 404 || err.message === 'CODE_NOT_FOUND') {
-        setError({ type: 'not_found', code: trimmed })
-      } else if (err.message === 'INVALID_CODE') {
-        setError({ type: 'invalid', code: trimmed })
+      const errorMsg = err.response?.data?.message || err.message
+      if (err.response?.status === 404 || errorMsg === 'CODE_NOT_FOUND') {
+        setError({ type: 'not_found', code: uid })
+      } else if (err.response?.status === 400 || errorMsg?.includes('signature') || errorMsg === 'INVALID_CODE') {
+        setError({ type: 'invalid', code: uid, msg: errorMsg })
       } else {
-        setError({ type: 'network', msg: err.message })
+        setError({ type: 'network', msg: errorMsg })
       }
     } finally {
       setLoading(false)
@@ -316,6 +371,21 @@ export default function TracePage() {
                   {loading ? <Spinner size="sm" className="text-white" /> : <SearchOutlined />}
                   <span className="hidden sm:inline">Trace</span>
                 </button>
+              </div>
+
+              {/* Image upload scanning option */}
+              <div className="mt-4 text-center">
+                <span className="text-xs text-slate-500">Hoặc: </span>
+                <label className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white transition-all cursor-pointer">
+                  <span className="material-symbols-outlined text-[14px]">upload_file</span>
+                  Tải ảnh QR lên để quét
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
               </div>
 
               {/* Demo codes */}

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Form, Input, InputNumber, Select, AutoComplete, Button as AButton, Card, Table, Tag, DatePicker } from 'antd'
-import { InboxOutlined } from '@ant-design/icons'
+import { Form, Input, InputNumber, Select, AutoComplete, Button as AButton, Card, Table, Tag, DatePicker, Modal, Spin } from 'antd'
+import { InboxOutlined, PrinterOutlined } from '@ant-design/icons'
 import { warehouseService } from '@/services/warehouse.service'
 import { productService } from '@/services/product.service'
 import { formatDateTime } from '@/utils'
 import toast from 'react-hot-toast'
+import { QRCodeSVG } from 'qrcode.react'
 
 const SUPPLIERS = [
   'Dược Hậu Giang (DHG Pharma)',
@@ -36,6 +37,36 @@ export default function InboundPage() {
   const [units, setUnits] = useState([])
   const [loadingProducts, setLoadingProducts] = useState(false)
   const [loadingVariants, setLoadingVariants] = useState(false)
+  const [loadingHistory, setLoadingHistory] = useState(false)
+
+  // QR Code Print Modal States
+  const [printModalVisible, setPrintModalVisible] = useState(false)
+  const [printBatchNumber, setPrintBatchNumber] = useState('')
+  const [printQRs, setPrintQRs] = useState([])
+  const [loadingQRs, setLoadingQRs] = useState(false)
+
+  const fetchHistory = async () => {
+    setLoadingHistory(true)
+    try {
+      const response = await warehouseService.getInventory()
+      const normalized = (response.data || []).map(item => ({
+        key: item.id || item.key || Date.now() + Math.random(),
+        productName: item.productName || 'Unknown',
+        batchNumber: item.batchNumber || '',
+        quantity: item.quantity || 0,
+        qrCode: item.batchNumber || '',
+        receivedAt: item.receivedAt || item.createdAt || new Date().toISOString(),
+        location: item.location || '',
+        batchId: item.id || item.batchId
+      }))
+      setReceived(normalized)
+    } catch (err) {
+      console.error(err)
+      toast.error('Không thể tải lịch sử nhập kho')
+    } finally {
+      setLoadingHistory(false)
+    }
+  }
 
   useEffect(() => {
     setLoadingProducts(true)
@@ -47,6 +78,8 @@ export default function InboundPage() {
     warehouseService.getUnits()
       .then(data => setUnits(data))
       .catch(() => {})
+
+    fetchHistory()
   }, [])
 
   const handleProductChange = async (productId) => {
@@ -79,34 +112,88 @@ export default function InboundPage() {
         nha_cung_cap:  vals.nha_cung_cap || '',
       }
       const result = await warehouseService.receiveStock(payload)
-      const loThuoc = result.lo_thuoc_moi || result
-      const product = products.find(p => p.id === vals.duoc_pham_id)
-      const unit = units.find(u => u.id === vals.don_vi_id)
-      const soLoValue = loThuoc.so_lo || vals.so_lo
-      const historyEntry = {
-        key: Date.now(),
-        productName: product?.name || `Thuốc #${vals.duoc_pham_id}`,
-        batchNumber: soLoValue,
-        quantity: result.so_luong_da_sinh_qr || vals.so_luong_hop,
-        qrCode: soLoValue,
-        receivedAt: new Date().toISOString(),
-        location: unit?.ten_don_vi || '',
-      }
-      setReceived(prev => [historyEntry, ...prev])
       toast.success(`Nhập kho thành công — đã sinh ${result.so_luong_da_sinh_qr || vals.so_luong_hop} QR code`)
       form.resetFields()
       setVariants([])
+      fetchHistory()
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Nhập kho thất bại')
     }
     finally { setLoading(false) }
   }
 
+  const handleOpenPrintModal = async (batchId, batchNumber) => {
+    setPrintBatchNumber(batchNumber)
+    setPrintModalVisible(true)
+    setLoadingQRs(true)
+    try {
+      const qrs = await warehouseService.getBatchQRs(batchId)
+      setPrintQRs(qrs)
+    } catch {
+      toast.error('Không thể tải danh sách mã QR')
+      setPrintModalVisible(false)
+    } finally {
+      setLoadingQRs(false)
+    }
+  }
+
+  const handlePrint = () => {
+    const win = window.open('', '_blank')
+    win.document.write(`
+      <html>
+        <head>
+          <title>In mã QR - Lô ${printBatchNumber}</title>
+          <style>
+            body { font-family: sans-serif; padding: 20px; text-align: center; }
+            .grid-print { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; justify-items: center; }
+            .qr-card { border: 1px solid #ccc; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; page-break-inside: avoid; border-radius: 8px; width: 140px; }
+            .qr-text { font-size: 8px; font-family: monospace; margin-top: 5px; word-break: break-all; }
+            .qr-batch { font-size: 9px; color: #333; font-weight: bold; margin-top: 2px; }
+            @media print {
+              .qr-card { border: 1px solid #000; }
+            }
+          </style>
+        </head>
+        <body>
+          <h2 style="margin-bottom: 20px;">Mã QR xác thực - Lô thuốc: ${printBatchNumber}</h2>
+          <div class="grid-print">
+            ${printQRs.map(qr => {
+              const svgEl = document.getElementById('qr-svg-' + qr.uid)
+              const svgHtml = svgEl ? svgEl.outerHTML : ''
+              return '<div class="qr-card">' +
+                svgHtml +
+                '<div class="qr-text">' + qr.uid + '</div>' +
+                '<div class="qr-batch">Lô: ' + printBatchNumber + '</div>' +
+                '</div>'
+            }).join('')}
+          </div>
+        </body>
+      </html>
+    `)
+    win.document.close()
+    
+    // Trigger print after window document closes
+    setTimeout(() => {
+      win.print()
+      win.close()
+    }, 500)
+  }
+
+
   const cols = [
     { title: 'Sản phẩm',  dataIndex: 'productName', key: 'product', ellipsis: true },
     { title: 'Số lô',     dataIndex: 'batchNumber', key: 'batch',   render: v => <span className="font-mono text-xs">{v}</span> },
     { title: 'Số lượng',  dataIndex: 'quantity',    key: 'qty' },
     { title: 'Thời gian', dataIndex: 'receivedAt',  key: 'time',    render: v => v ? formatDateTime(v) : 'Vừa xong' },
+    {
+      title: 'Hành động',
+      key: 'action',
+      render: (_, record) => record.batchId ? (
+        <AButton size="small" type="primary" icon={<PrinterOutlined />} onClick={() => handleOpenPrintModal(record.batchId, record.batchNumber)}>
+          In mã QR
+        </AButton>
+      ) : null
+    },
   ]
 
   return (
@@ -211,11 +298,60 @@ export default function InboundPage() {
 
       </div>
 
-      {received.length > 0 && (
-        <Card title="Lô hàng vừa nhập (phiên này)">
-          <Table dataSource={received} columns={cols} rowKey="key" pagination={false} size="small" />
-        </Card>
-      )}
+      <Card title="Lịch sử nhập kho (Tất cả)">
+        <Table 
+          dataSource={received} 
+          columns={cols} 
+          rowKey="key" 
+          pagination={{ pageSize: 10 }} 
+          size="small" 
+          loading={loadingHistory}
+        />
+      </Card>
+
+      {/* Print QR Modal */}
+      <Modal
+        title={`Xem danh sách nhãn QR - Lô ${printBatchNumber}`}
+        open={printModalVisible}
+        onCancel={() => setPrintModalVisible(false)}
+        width={750}
+        footer={[
+          <AButton key="close" onClick={() => setPrintModalVisible(false)}>
+            Đóng
+          </AButton>,
+          <AButton key="print" type="primary" icon={<PrinterOutlined />} onClick={handlePrint} disabled={printQRs.length === 0}>
+            In nhãn hàng loạt
+          </AButton>,
+        ]}
+      >
+        {loadingQRs ? (
+          <div className="py-12 text-center">
+            <Spin size="large" tip="Đang tải UIDs từ hệ thống..." />
+            <p className="text-slate-400 mt-2 text-sm">Vui lòng đợi trong giây lát</p>
+          </div>
+        ) : (
+          <div>
+            <div className="bg-slate-50 border p-3 rounded-lg text-slate-600 text-xs mb-4">
+              Hệ thống tự động liên kết mã QR với URL xác thực. Chữ ký số (Signature) được nhúng sẵn để đảm bảo tính xác thực khi quét công khai.
+            </div>
+            
+            {/* Grid of QR Codes */}
+            <div id="qr-print-area" className="grid grid-cols-3 gap-4 max-h-[400px] overflow-y-auto p-2 border rounded-lg bg-white">
+              {printQRs.map(qr => {
+                const traceUrl = `${window.location.origin}/trace?uid=${qr.uid}&sig=${qr.sig}`;
+                return (
+                  <div key={qr.uid} className="border p-3 flex flex-col items-center justify-center bg-white rounded-lg text-center">
+                    <QRCodeSVG id={`qr-svg-${qr.uid}`} value={traceUrl} size={110} level="M" includeMargin={true} />
+                    <div className="text-[9px] font-mono mt-1 text-slate-500 truncate w-full">{qr.uid}</div>
+                    <div className="text-[10px] font-semibold text-slate-700 mt-0.5">Lô: {printBatchNumber}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
+
