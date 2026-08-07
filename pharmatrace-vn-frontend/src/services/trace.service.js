@@ -98,12 +98,13 @@ const normalizeTraceData = (data) => {
 }
 
 export const traceService = {
-  async traceCode(code) {
-    // Backend uses POST /trace/scan-qr with { uid } body
-    const { data } = await apiClient.post('/trace/scan-qr', { uid: code.trim() })
+  async traceCode(code, sig = '') {
+    // Backend uses POST /trace/scan-qr with { uid, sig } body
+    const { data } = await apiClient.post('/trace/scan-qr', { uid: code.trim(), sig: sig.trim() })
     const result = data.data || data
     return normalizeTraceData(result)
   },
+
 
   async reportSuspicious(code, reason) {
     const { data } = await apiClient.post('/trace/report', { code, reason })

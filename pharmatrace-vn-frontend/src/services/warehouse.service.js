@@ -92,6 +92,12 @@ export const warehouseService = {
     return data.data || data
   },
 
+  async getBatchQRs(batchId) {
+    const { data } = await apiClient.get(`/inventory/batch/${batchId}/qrs`)
+    return data.data || data
+  },
+
+
   async getUnits() {
     const { data } = await apiClient.get('/logistics/units')
     return data.data || []

@@ -90,4 +90,32 @@ const deductStock = async (duocPhamId, baseQuantity) => {
     return true;
 };
 
-export { callImportProcedure, checkInventory, getTotalProductStock, deductStock };
+const getBoxesByBatch = async (batchId) => {
+    const query = `
+        SELECT uid, trang_thai 
+        FROM HopThuoc 
+        WHERE lo_thuoc_id = $1
+        ORDER BY uid ASC;
+    `;
+    const result = await pool.query(query, [batchId]);
+    return result.rows;
+};
+
+const getAllBatches = async () => {
+    const query = `
+        SELECT 
+            l.id,
+            l.so_lo AS "batchNumber",
+            l.ngay_san_xuat AS "createdAt",
+            l.han_su_dung AS "expiryDate",
+            d.ten_thuoc AS "productName",
+            (SELECT COUNT(*) FROM HopThuoc WHERE lo_thuoc_id = l.id) AS "quantity"
+        FROM LoThuoc l
+        JOIN DuocPham d ON l.duoc_pham_id = d.id
+        ORDER BY l.id DESC;
+    `;
+    const result = await pool.query(query);
+    return result.rows;
+};
+
+export { callImportProcedure, checkInventory, getTotalProductStock, deductStock, getBoxesByBatch, getAllBatches };
