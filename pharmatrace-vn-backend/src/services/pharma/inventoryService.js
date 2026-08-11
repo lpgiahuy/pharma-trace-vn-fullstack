@@ -41,8 +41,8 @@ const getBatchQRDetails = async (batchId) => {
     }));
 };
 
-const fetchInventoryList = async () => {
-    return await inventoryModel.getAllBatches();
+const fetchInventoryList = async (userContext) => {
+    return await inventoryModel.getAllBatches(userContext);
 };
 
 export { importNewBatch, getBatchQRDetails, fetchInventoryList };

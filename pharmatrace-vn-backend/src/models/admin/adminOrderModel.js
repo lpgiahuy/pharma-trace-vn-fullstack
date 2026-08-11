@@ -1,8 +1,39 @@
 import prisma, { serializeBigInt } from '../../config/prisma.js';
 
-// get all orders with customer info (for admin dashboard)
-const getAllOrders = async () => {
+// get all orders with customer info (for admin/staff dashboard)
+const getAllOrders = async (userContext = null) => {
+    const where = {};
+
+    // Filter orders by staff's unit (don_vi_id) if user is staff and not Admin/SuperAdmin
+    if (userContext && userContext.role !== 'Admin' && userContext.role !== 'SuperAdmin' && userContext.don_vi_id) {
+        const unitId = Number(userContext.don_vi_id);
+        where.OR = [
+            {
+                chitietdonhang: {
+                    some: {
+                        don_vi_xuat_id: unitId
+                    }
+                }
+            },
+            {
+                hopthuoc: {
+                    some: {
+                        don_vi_hien_tai_id: unitId
+                    }
+                }
+            },
+            {
+                chitietdonhang: {
+                    none: {
+                        don_vi_xuat_id: { not: null }
+                    }
+                }
+            }
+        ];
+    }
+
     const orders = await prisma.donhang.findMany({
+        where,
         include: {
             khachhang: {
                 select: {

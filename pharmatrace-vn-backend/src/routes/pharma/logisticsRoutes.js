@@ -25,10 +25,10 @@ router.use(protect);
 
 // GET read-only: all warehouse staff can view units, products, batches
 const allStaff = authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienBanHang');
-router.get('/units',                   allStaff, getAllLogisticsUnits);
-router.get('/units/:id/products',      allStaff, getProductsInUnit);
-router.get('/units/:id/batches',       allStaff, getBatchesInUnit);
-router.get('/units/:id/uids',          allStaff, getUIDsForTransfer);
+router.get('/units', allStaff, getAllLogisticsUnits);
+router.get('/units/:id/products', allStaff, getProductsInUnit);
+router.get('/units/:id/batches', allStaff, getBatchesInUnit);
+router.get('/units/:id/uids', allStaff, getUIDsForTransfer);
 
 // POST write operations: only managers and above
 router.use(authorizeRoles('SuperAdmin', 'QuanLyKho'));

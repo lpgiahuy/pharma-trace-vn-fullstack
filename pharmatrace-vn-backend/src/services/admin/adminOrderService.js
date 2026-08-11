@@ -2,8 +2,8 @@ import * as adminOrderModel from '../../models/admin/adminOrderModel.js';
 
 const VALID_PAYMENT_STATUSES = ['ChuaThanhToan', 'DaThanhToan', 'HoanTien', 'ThanhToanLoi'];
 
-const fetchOrders = async () => {
-    return await adminOrderModel.getAllOrders();
+const fetchOrders = async (userContext) => {
+    return await adminOrderModel.getAllOrders(userContext);
 };
 
 const fetchOrderDetail = async (orderId) => {

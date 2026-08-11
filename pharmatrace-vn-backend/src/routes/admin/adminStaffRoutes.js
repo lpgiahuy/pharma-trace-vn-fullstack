@@ -79,7 +79,7 @@ router.get('/', getStaffList);
  *                 example: "SecurePassword123!"
  *               vai_tro:
  *                 type: string
- *                 enum: [SuperAdmin, QuanLyKho, BanHang, KeToan, DuocSi]
+ *                 enum: [SuperAdmin, QuanLyKho, NhanVienBanHang]
  *                 example: "BanHang"
  *                 description: Staff role and permissions
  *     responses:
@@ -120,7 +120,7 @@ router.post('/add', createStaffAccount);
  *                 example: "Trần Thị B Updated"
  *               vai_tro:
  *                 type: string
- *                 enum: [SuperAdmin, QuanLyKho, BanHang, KeToan, DuocSi]
+ *                 enum: [SuperAdmin, QuanLyKho, NhanVienBanHang]
  *                 example: "QuanLyKho"
  *               trang_thai:
  *                 type: boolean

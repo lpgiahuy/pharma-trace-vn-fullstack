@@ -20,7 +20,10 @@ const loginAdmin = async (email, password) => {
     }
 
     // generate JWT token
-    const token = generateToken(employee.id, employee.vai_tro);
+    const token = generateToken(employee.id, employee.vai_tro, {
+        don_vi_id: employee.don_vi_id,
+        type: 'staff'
+    });
 
     return {
         nhan_vien: {

@@ -15,12 +15,12 @@ const ROLE_COLORS = {
 
 export default function StaffPage() {
   const { user: currentUser } = useAuthStore()
-  const [data, setData]       = useState([])
+  const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
-  const [open, setOpen]       = useState(false)
+  const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
-  const [saving, setSaving]   = useState(false)
-  const [units, setUnits]     = useState([])
+  const [saving, setSaving] = useState(false)
+  const [units, setUnits] = useState([])
   const [form] = Form.useForm()
 
   const fetchData = () => {
@@ -29,7 +29,7 @@ export default function StaffPage() {
   }
   useEffect(() => {
     fetchData()
-    unitService.getAll().then(setUnits).catch(() => {})
+    unitService.getAll().then(setUnits).catch(() => { })
   }, [])
 
   const openModal = (user = null) => {
@@ -62,7 +62,7 @@ export default function StaffPage() {
       }
 
       if (editing) await userService.update(editing.id, payload)
-      else         await userService.create(payload)
+      else await userService.create(payload)
 
       toast.success(editing ? 'Đã cập nhật nhân viên' : 'Đã tạo nhân viên')
       setOpen(false); fetchData()

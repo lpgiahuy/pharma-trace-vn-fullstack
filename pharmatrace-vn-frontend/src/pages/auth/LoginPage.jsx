@@ -17,7 +17,8 @@ export default function LoginPage() {
   const { login } = useAuthStore()
   const navigate  = useNavigate()
   const location  = useLocation()
-  const from = location.state?.from?.pathname || '/'
+  const defaultRedirect = loginType === 'admin' ? '/admin' : '/'
+  const from = location.state?.from?.pathname || defaultRedirect
 
   const customerSchema = z.object({
     phone:    z.string().min(9, t('auth.validation.invalid_phone')),
@@ -47,7 +48,14 @@ export default function LoginPage() {
         : { loginType: 'customer', phone: data.phone, password: data.password }
       const result = await login(credentials)
       toast.success(`${t('auth.welcome_back')}, ${(result.user?.ho_ten || result.user?.name || '').split(' ').pop()}!`)
-      navigate(from, { replace: true })
+
+      const userRole = result.user?.role || result.user?.vai_tro
+      let defaultPath = '/'
+      if (loginType === 'admin') {
+        defaultPath = userRole === 'QuanLyKho' ? '/warehouse/inbound' : '/admin'
+      }
+      const target = (from && from !== '/' && from !== '/login') ? from : defaultPath
+      navigate(target, { replace: true })
     } catch (err) {
       toast.error(err.response?.data?.message || err.message || t('auth.signin_failed'))
     }
@@ -125,10 +133,12 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-500">
-        {t('auth.no_account')}{' '}
-        <Link to="/register" className="text-brand-600 font-medium hover:underline">{t('auth.create_one')}</Link>
-      </p>
+      {loginType === 'customer' && (
+        <p className="mt-6 text-center text-sm text-slate-500">
+          {t('auth.no_account')}{' '}
+          <Link to="/register" className="text-brand-600 font-medium hover:underline">{t('auth.create_one')}</Link>
+        </p>
+      )}
     </div>
   )
 }

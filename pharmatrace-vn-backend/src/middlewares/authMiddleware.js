@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { userContextStorage } from '../utils/userContext.js';
 
 const protect = async (req, res, next) => {
     let token;
@@ -12,7 +13,7 @@ const protect = async (req, res, next) => {
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             req.user = decoded;
-            return next();
+            return userContextStorage.run(req.user, () => next());
         } catch (error) {
             const err = new Error('Invalid or expired token! Please login again.');
             err.statusCode = 401;
@@ -39,6 +40,9 @@ const optionalProtect = async (req, res, next) => {
         } catch (error) {
             req.user = null;
         }
+    }
+    if (req.user) {
+        return userContextStorage.run(req.user, () => next());
     }
     next();
 };

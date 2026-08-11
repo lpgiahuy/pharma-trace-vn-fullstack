@@ -20,8 +20,12 @@ export const GuestRoute = ({ children }) => {
   const { isAuthenticated, user } = useAuthStore()
 
   if (isAuthenticated) {
-    if (['admin', 'manager'].includes(user?.role)) return <Navigate to="/admin" replace />
-    if (user?.role === 'staff') return <Navigate to="/warehouse" replace />
+    if (user?.role === 'QuanLyKho') {
+      return <Navigate to="/warehouse/inbound" replace />
+    }
+    if (['SuperAdmin', 'Admin', 'NhanVienBanHang', 'admin', 'manager', 'staff'].includes(user?.role)) {
+      return <Navigate to="/admin" replace />
+    }
     return <Navigate to="/" replace />
   }
 

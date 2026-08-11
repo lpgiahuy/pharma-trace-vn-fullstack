@@ -261,7 +261,7 @@ export const Header = () => {
                       <Heart className="w-4 h-4 text-medical-red" />{" "}
                       {t("nav.wishlist")}
                     </Link>
-                    {(user?.role === "admin" || user?.role === "manager") && (
+                    {["SuperAdmin", "Admin", "QuanLyKho", "NhanVienBanHang", "admin", "manager", "staff"].includes(user?.role) && (
                       <Link
                         to="/admin"
                         className="flex items-center gap-3 px-5 py-2.5 text-sm text-brand-600 font-black bg-brand-50/50 hover:bg-brand-50 transition-colors"

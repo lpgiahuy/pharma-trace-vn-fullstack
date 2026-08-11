@@ -2,7 +2,7 @@ import * as adminOrderService from '../../services/admin/adminOrderService.js';
 
 const getOrders = async (req, res, next) => {
     try {
-        const data = await adminOrderService.fetchOrders();
+        const data = await adminOrderService.fetchOrders(req.user);
         res.status(200).json({ success: true, data });
     } catch (error) {
         next(error);

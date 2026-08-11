@@ -92,8 +92,8 @@ const getBoxesByBatch = async (batchId) => {
     return boxes;
 };
 
-const getAllBatches = async () => {
-    const batches = await prisma.$queryRawUnsafe(`
+const getAllBatches = async (userContext = null) => {
+    let query = `
         SELECT 
             l.id,
             l.so_lo AS "batchNumber",
@@ -103,8 +103,23 @@ const getAllBatches = async () => {
             (SELECT COUNT(*) FROM HopThuoc WHERE lo_thuoc_id = l.id) AS "quantity"
         FROM LoThuoc l
         JOIN DuocPham d ON l.duoc_pham_id = d.id
-        ORDER BY l.id DESC;
-    `);
+    `;
+
+    const params = [];
+
+    // Filter by staff's current unit if user is staff (not Admin/SuperAdmin)
+    if (userContext && userContext.role !== 'Admin' && userContext.role !== 'SuperAdmin' && userContext.don_vi_id) {
+        params.push(Number(userContext.don_vi_id));
+        query += ` WHERE EXISTS (
+            SELECT 1 FROM HopThuoc h 
+            WHERE h.lo_thuoc_id = l.id 
+              AND h.don_vi_hien_tai_id = $1
+        )`;
+    }
+
+    query += ` ORDER BY l.id DESC;`;
+
+    const batches = await prisma.$queryRawUnsafe(query, ...params);
     return serializeBigInt(batches);
 };
 

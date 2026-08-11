@@ -2,11 +2,46 @@ import pkgPrisma from '@prisma/client';
 const { PrismaClient } = pkgPrisma;
 import { PrismaPg } from '@prisma/adapter-pg';
 import pool from './db.js';
+import { getCurrentUserContext } from '../utils/userContext.js';
 
 const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({
+const basePrisma = new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
+});
+
+const prisma = basePrisma.$extends({
+    query: {
+        $allModels: {
+            async $allOperations({ model, operation, args, query }) {
+                const user = getCurrentUserContext();
+                if (!user) {
+                    return query(args);
+                }
+                
+                return basePrisma.$transaction(async (tx) => {
+                    const userId = user.id ? String(user.id) : '';
+                    const userType = user.type || (user.role === 'customer' ? 'customer' : 'staff');
+                    const unitId = user.don_vi_id ? String(user.don_vi_id) : '';
+                    const role = user.role || '';
+
+                    await tx.$executeRawUnsafe(`
+                        SET LOCAL app.current_user_id = '${userId}';
+                        SET LOCAL app.current_user_type = '${userType}';
+                        SET LOCAL app.current_unit_id = '${unitId}';
+                        SET LOCAL app.current_user_role = '${role}';
+                    `);
+
+                    // Ensure the model query runs on the transaction client `tx`
+                    const modelKey = model.charAt(0).toLowerCase() + model.slice(1);
+                    if (tx[modelKey] && typeof tx[modelKey][operation] === 'function') {
+                        return tx[modelKey][operation](args);
+                    }
+                    return query(args);
+                });
+            }
+        }
+    }
 });
 
 export const serializeBigInt = (obj) => {
@@ -32,3 +67,4 @@ export const serializeBigInt = (obj) => {
 };
 
 export default prisma;
+

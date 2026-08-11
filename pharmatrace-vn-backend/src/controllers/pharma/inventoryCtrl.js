@@ -44,7 +44,7 @@ const getBatchQRs = async (req, res, next) => {
 
 const getInventoryList = async (req, res, next) => {
     try {
-        const data = await inventoryService.fetchInventoryList();
+        const data = await inventoryService.fetchInventoryList(req.user);
         res.status(200).json({
             success: true,
             data: data

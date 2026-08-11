@@ -19,21 +19,11 @@ export const authService = {
       const result = data.data || data
       const adminUser = result.nhan_vien || result.user
       
-      // Function to map DB role to frontend role
-      const mapRole = (dbRole) => {
-        if (!dbRole) return 'customer';
-        const role = dbRole.toLowerCase();
-        if (role === 'superadmin' || role === 'admin') return 'admin';
-        if (role === 'quanlykho' || role === 'manager') return 'manager';
-        if (role === 'nhanvienbanhang') return 'staff';
-        return dbRole; // Fallback
-      }
-
       return {
         accessToken:  result.token || null,
         refreshToken: result.refreshToken || null,
         expiresAt:    result.expiresAt || (Date.now() + 3600000),
-        user:         adminUser ? { ...adminUser, role: mapRole(adminUser.vai_tro), name: adminUser.ho_ten || adminUser.name || '' } : null,
+        user:         adminUser ? { ...adminUser, role: adminUser.vai_tro || adminUser.role || 'SuperAdmin', name: adminUser.ho_ten || adminUser.name || '' } : null,
       }
     }
 

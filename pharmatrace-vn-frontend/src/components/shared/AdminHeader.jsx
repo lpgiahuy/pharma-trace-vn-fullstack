@@ -19,6 +19,12 @@ export const AdminHeader = ({ collapsed, onToggle, portal = 'Admin', isMobile })
 
   const menuItems = [
     { key: 'profile', label: t('admin.my_profile'), onClick: () => navigate(profilePath) },
+    ...(portal === 'Admin' && ['SuperAdmin', 'Admin', 'QuanLyKho', 'admin'].includes(user?.role) ? [
+      { key: 'warehouse', label: '📦 Quản lý Kho (WMS Portal)', onClick: () => navigate('/warehouse/inbound') }
+    ] : []),
+    ...(portal === 'Warehouse' && ['SuperAdmin', 'Admin', 'NhanVienBanHang', 'admin'].includes(user?.role) ? [
+      { key: 'admin', label: '📊 Trang Quản trị (Admin Portal)', onClick: () => navigate('/admin') }
+    ] : []),
     { key: 'store',   label: t('admin.back_to_store'), onClick: () => navigate('/') },
     { type: 'divider' },
     { key: 'logout',  label: <span className="text-red-500">{t('admin.sign_out')}</span>, onClick: logout },

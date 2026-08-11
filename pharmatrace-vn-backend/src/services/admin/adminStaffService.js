@@ -9,7 +9,7 @@ const addStaff = async (payload) => {
     const { don_vi_id, ho_ten, email, password, vai_tro } = payload;
 
     // Validate role 
-    const validRoles = ['SuperAdmin', 'QuanLyKho', 'BanHang', 'KeToan', 'DuocSi'];
+    const validRoles = ['SuperAdmin', 'QuanLyKho', 'NhanVienBanHang'];
     if (!validRoles.includes(vai_tro)) {
         const error = new Error(`Invalid role! Please choose one of: ${validRoles.join(', ')}`);
         error.statusCode = 400;
@@ -25,7 +25,7 @@ const addStaff = async (payload) => {
 
 const editStaff = async (id, payload) => {
     const { don_vi_id, ho_ten, vai_tro, trang_thai } = payload;
-    
+
     const updated = await adminStaffModel.updateStaff(id, don_vi_id, ho_ten, vai_tro, trang_thai);
     if (!updated) {
         const error = new Error('Employee not found!');

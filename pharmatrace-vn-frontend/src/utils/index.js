@@ -8,10 +8,10 @@ export const formatCurrency = (amount, currency = 'VND') =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency }).format(amount)
 
 export const formatDate = (date, format = 'DD/MM/YYYY') =>
-  dayjs(date).format(format)
+  date && dayjs(date).isValid() ? dayjs(date).format(format) : '—'
 
 export const formatDateTime = (date) =>
-  dayjs(date).format('DD/MM/YYYY HH:mm')
+  date && dayjs(date).isValid() ? dayjs(date).format('DD/MM/YYYY HH:mm') : '—'
 
 export const formatRelativeTime = (date) => {
   const diff = dayjs().diff(dayjs(date), 'minute')
