@@ -40,7 +40,7 @@ const AdminProductForm = lazy(() => import('@/pages/admin/products/ProductFormPa
 const AdminCategories = lazy(() => import('@/pages/admin/products/CategoriesPage'))
 const AdminOrders = lazy(() => import('@/pages/admin/orders/OrdersPage'))
 const AdminOrderDetail = lazy(() => import('@/pages/admin/orders/OrderDetailPage'))
-const AdminRma = lazy(() => import('@/pages/admin/orders/RmaPage'))
+const AdminRma = lazy(() => import('@/pages/admin/rma/RmaPage'))
 const AdminVouchers = lazy(() => import('@/pages/admin/vouchers/VouchersPage'))
 const AdminBlog = lazy(() => import('@/pages/admin/blog/BlogPage'))
 const AdminBlogForm = lazy(() => import('@/pages/admin/blog/BlogFormPage'))
@@ -53,6 +53,7 @@ const AdminProcurement = lazy(() => import('@/pages/admin/procurement/Procuremen
 const AdminLotMonitor = lazy(() => import('@/pages/admin/inventory/LotBatchMonitorPage'))
 const AdminLogisticsCod = lazy(() => import('@/pages/admin/logistics/LogisticsCodPage'))
 const AdminFraudAnomaly = lazy(() => import('@/pages/admin/security/FraudAnomalyEnginePage'))
+const AdminCrmLoyalty = lazy(() => import('@/pages/admin/crm/CrmLoyaltyPage'))
 
 // ── Warehouse ────────────────────────────────────────────────────────────────
 const InboundPage = lazy(() => import('@/pages/warehouse/inbound/InboundPage'))
@@ -121,6 +122,7 @@ export const AppRoutes = () => (
         <Route path="/admin/orders" element={<AdminOrders />} />
         <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
         <Route path="/admin/rma" element={<AdminRma />} />
+        <Route path="/admin/crm/loyalty" element={<AdminCrmLoyalty />} />
         <Route path="/admin/vouchers" element={<AdminVouchers />} />
         <Route path="/admin/blog" element={<AdminBlog />} />
         <Route path="/admin/blog/new" element={<AdminBlogForm />} />
