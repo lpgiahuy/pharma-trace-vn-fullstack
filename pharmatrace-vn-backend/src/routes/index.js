@@ -14,6 +14,7 @@ import adminRmaRoutes from './admin/adminRmaRoutes.js';
 import procurementRoutes from './admin/procurementRoutes.js';
 import lotRoutes from './admin/lotRoutes.js';
 import logisticsCodRoutes from './admin/logisticsCodRoutes.js';
+import fraudAnomalyRoutes from './admin/fraudAnomalyRoutes.js';
 
 // --- 2. Pharma & Logistics Routes ---
 import traceRoutes from './pharma/traceRoutes.js';
@@ -53,6 +54,7 @@ router.use('/admin/rma', adminRmaRoutes); // admin RMA management routes (view a
 router.use('/admin/procurement', procurementRoutes); // admin procurement & PO management routes
 router.use('/admin/lots', lotRoutes); // admin lot/batch & FEFO expiry management routes
 router.use('/admin/logistics-cod', logisticsCodRoutes); // admin logistics & COD reconciliation routes
+router.use('/admin/fraud-anomalies', fraudAnomalyRoutes); // admin QR fraud anomaly engine routes
 
 // ==========================================
 // 2. PHARMA & LOGISTICS ROUTES
