@@ -12,6 +12,7 @@ import adminCategoryRoutes from './admin/adminCategoryRoutes.js';
 import adminBlogRoutes from './admin/adminBlogRoutes.js';
 import adminRmaRoutes from './admin/adminRmaRoutes.js';
 import procurementRoutes from './admin/procurementRoutes.js';
+import lotRoutes from './admin/lotRoutes.js';
 
 // --- 2. Pharma & Logistics Routes ---
 import traceRoutes from './pharma/traceRoutes.js';
@@ -49,6 +50,7 @@ router.use('/admin/categories', adminCategoryRoutes); // admin category manageme
 router.use('/admin/blogs', adminBlogRoutes); // admin blog management routes (CRUD blogs) - auth required for admin
 router.use('/admin/rma', adminRmaRoutes); // admin RMA management routes (view all RMAs, update RMA status) - auth required for admin xong
 router.use('/admin/procurement', procurementRoutes); // admin procurement & PO management routes
+router.use('/admin/lots', lotRoutes); // admin lot/batch & FEFO expiry management routes
 
 // ==========================================
 // 2. PHARMA & LOGISTICS ROUTES
