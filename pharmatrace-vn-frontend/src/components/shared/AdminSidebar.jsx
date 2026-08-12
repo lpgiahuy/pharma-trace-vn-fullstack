@@ -4,7 +4,7 @@ import {
   DashboardOutlined, ShoppingOutlined, AppstoreOutlined,
   OrderedListOutlined, TeamOutlined, TagOutlined, FileTextOutlined,
   SwapOutlined, AlertOutlined, UserOutlined, FileDoneOutlined,
-  BankOutlined, QuestionCircleOutlined,
+  BankOutlined, QuestionCircleOutlined, ShoppingCartOutlined,
 } from '@ant-design/icons'
 import { Pill as PillIcon } from 'lucide-react'
 const Logo = 'https://res.cloudinary.com/dc64co0el/image/upload/v1777731026/Logo_ck5ouv.svg'
@@ -39,6 +39,7 @@ export const AdminSidebar = ({ collapsed, onCollapse, isMobile }) => {
       { key: '/warehouse/inbound',   icon: <BankOutlined />,      label: <Link to="/warehouse/inbound">Quản lý Kho (WMS)</Link> }
     ] : []),
     { key: '/admin/vouchers',       icon: <TagOutlined />,       label: <Link to="/admin/vouchers">{t('admin.vouchers')}</Link> },
+    { key: '/admin/procurement',    icon: <ShoppingCartOutlined />, label: <Link to="/admin/procurement">Mua hàng & PO</Link> },
     { key: '/admin/blog',           icon: <FileTextOutlined />,  label: <Link to="/admin/blog">{t('admin.blog_news')}</Link> },
     { key: '/admin/staff',          icon: <TeamOutlined />,      label: <Link to="/admin/staff">{t('admin.staff_rbac')}</Link> },
     { key: '/admin/customers',      icon: <UserOutlined />,      label: <Link to="/admin/customers">{t('admin.customers')}</Link> },

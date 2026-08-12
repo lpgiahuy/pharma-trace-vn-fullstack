@@ -49,6 +49,7 @@ const AdminCustomers = lazy(() => import('@/pages/admin/customers/CustomersPage'
 const AdminPrescriptions = lazy(() => import('@/pages/admin/prescriptions/PrescriptionsPage'))
 const AdminUnits = lazy(() => import('@/pages/admin/units/UnitsPage'))
 const AdminHelp = lazy(() => import('@/pages/admin/help/HelpPage'))
+const AdminProcurement = lazy(() => import('@/pages/admin/procurement/ProcurementPage'))
 
 // ── Warehouse ────────────────────────────────────────────────────────────────
 const InboundPage = lazy(() => import('@/pages/warehouse/inbound/InboundPage'))
@@ -124,6 +125,7 @@ export const AppRoutes = () => (
         <Route path="/admin/staff" element={<AdminStaff />} />
         <Route path="/admin/customers" element={<AdminCustomers />} />
         <Route path="/admin/prescriptions" element={<AdminPrescriptions />} />
+        <Route path="/admin/procurement" element={<AdminProcurement />} />
         <Route path="/admin/help" element={<AdminHelp />} />
       </Route>
 
