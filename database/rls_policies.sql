@@ -68,6 +68,45 @@ FOR ALL USING (
     OR khach_hang_id = rls_current_user_id()
 );
 
+-- Helper functions to prevent RLS mutual recursion between donhang and chitietdonhang
+CREATE OR REPLACE FUNCTION rls_donhang_matches_unit(p_don_hang_id INTEGER, p_unit_id INTEGER)
+RETURNS BOOLEAN
+SECURITY DEFINER
+AS $$
+BEGIN
+    RETURN (
+        EXISTS (
+            SELECT 1 FROM public.chitietdonhang ctdh
+            WHERE ctdh.don_hang_id = p_don_hang_id
+            AND ctdh.don_vi_xuat_id = p_unit_id
+        )
+        OR EXISTS (
+            SELECT 1 FROM public.hopthuoc ht
+            WHERE ht.don_hang_id = p_don_hang_id
+            AND ht.don_vi_hien_tai_id = p_unit_id
+        )
+        OR NOT EXISTS (
+            SELECT 1 FROM public.chitietdonhang ctdh
+            WHERE ctdh.don_hang_id = p_don_hang_id
+            AND ctdh.don_vi_xuat_id IS NOT NULL
+        )
+    );
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+CREATE OR REPLACE FUNCTION rls_ctdh_matches_customer(p_don_hang_id INTEGER, p_user_id INTEGER)
+RETURNS BOOLEAN
+SECURITY DEFINER
+AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.donhang dh
+        WHERE dh.id = p_don_hang_id
+        AND dh.khach_hang_id = p_user_id
+    );
+END;
+$$ LANGUAGE plpgsql STABLE;
+
 -- Table: donhang
 ALTER TABLE donhang ENABLE ROW LEVEL SECURITY;
 ALTER TABLE donhang FORCE ROW LEVEL SECURITY;
@@ -79,23 +118,7 @@ FOR ALL USING (
     OR khach_hang_id = rls_current_user_id()
     OR (
         current_setting('app.current_user_type', true) = 'staff'
-        AND (
-            EXISTS (
-                SELECT 1 FROM chitietdonhang ctdh
-                WHERE ctdh.don_hang_id = donhang.id
-                AND ctdh.don_vi_xuat_id = rls_current_unit_id()
-            )
-            OR EXISTS (
-                SELECT 1 FROM hopthuoc ht
-                WHERE ht.don_hang_id = donhang.id
-                AND ht.don_vi_hien_tai_id = rls_current_unit_id()
-            )
-            OR NOT EXISTS (
-                SELECT 1 FROM chitietdonhang ctdh
-                WHERE ctdh.don_hang_id = donhang.id
-                AND ctdh.don_vi_xuat_id IS NOT NULL
-            )
-        )
+        AND rls_donhang_matches_unit(donhang.id, rls_current_unit_id())
     )
 );
 
@@ -108,11 +131,7 @@ CREATE POLICY p_chitietdonhang ON chitietdonhang
 FOR ALL USING (
     rls_can_bypass()
     OR current_setting('app.current_user_type', true) = 'staff'
-    OR EXISTS (
-        SELECT 1 FROM donhang
-        WHERE donhang.id = chitietdonhang.don_hang_id
-        AND donhang.khach_hang_id = rls_current_user_id()
-    )
+    OR rls_ctdh_matches_customer(chitietdonhang.don_hang_id, rls_current_user_id())
 );
 
 -- Table: phieutrahang
