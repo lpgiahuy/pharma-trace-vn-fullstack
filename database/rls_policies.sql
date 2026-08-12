@@ -364,3 +364,24 @@ CREATE POLICY p_nhatkyxacthuc_select ON nhatkyxacthuc FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS p_nhatkyxacthuc_mod ON nhatkyxacthuc;
 CREATE POLICY p_nhatkyxacthuc_mod ON nhatkyxacthuc FOR ALL USING (true);
+
+-- Table: phieunhap
+ALTER TABLE phieunhap ENABLE ROW LEVEL SECURITY;
+ALTER TABLE phieunhap FORCE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS p_phieunhap_mod ON phieunhap;
+CREATE POLICY p_phieunhap_mod ON phieunhap FOR ALL USING (
+    rls_can_bypass()
+    OR current_setting('app.current_user_type', true) = 'staff'
+);
+
+-- Table: chitietphieunhap
+ALTER TABLE chitietphieunhap ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chitietphieunhap FORCE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS p_chitietphieunhap_mod ON chitietphieunhap;
+CREATE POLICY p_chitietphieunhap_mod ON chitietphieunhap FOR ALL USING (
+    rls_can_bypass()
+    OR current_setting('app.current_user_type', true) = 'staff'
+);
+

@@ -50,6 +50,7 @@ const AdminPrescriptions = lazy(() => import('@/pages/admin/prescriptions/Prescr
 const AdminUnits = lazy(() => import('@/pages/admin/units/UnitsPage'))
 const AdminHelp = lazy(() => import('@/pages/admin/help/HelpPage'))
 const AdminProcurement = lazy(() => import('@/pages/admin/procurement/ProcurementPage'))
+const AdminLotMonitor = lazy(() => import('@/pages/admin/inventory/LotBatchMonitorPage'))
 
 // ── Warehouse ────────────────────────────────────────────────────────────────
 const InboundPage = lazy(() => import('@/pages/warehouse/inbound/InboundPage'))
@@ -126,6 +127,7 @@ export const AppRoutes = () => (
         <Route path="/admin/customers" element={<AdminCustomers />} />
         <Route path="/admin/prescriptions" element={<AdminPrescriptions />} />
         <Route path="/admin/procurement" element={<AdminProcurement />} />
+        <Route path="/admin/inventory/lots" element={<AdminLotMonitor />} />
         <Route path="/admin/help" element={<AdminHelp />} />
       </Route>
 
