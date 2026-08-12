@@ -11,6 +11,7 @@ import adminVoucherRoutes from './admin/adminVoucherRoutes.js';
 import adminCategoryRoutes from './admin/adminCategoryRoutes.js';
 import adminBlogRoutes from './admin/adminBlogRoutes.js';
 import adminRmaRoutes from './admin/adminRmaRoutes.js';
+import procurementRoutes from './admin/procurementRoutes.js';
 
 // --- 2. Pharma & Logistics Routes ---
 import traceRoutes from './pharma/traceRoutes.js';
@@ -47,6 +48,7 @@ router.use('/admin/vouchers', adminVoucherRoutes); // admin voucher management r
 router.use('/admin/categories', adminCategoryRoutes); // admin category management routes (CRUD categories) - auth required for admin
 router.use('/admin/blogs', adminBlogRoutes); // admin blog management routes (CRUD blogs) - auth required for admin
 router.use('/admin/rma', adminRmaRoutes); // admin RMA management routes (view all RMAs, update RMA status) - auth required for admin xong
+router.use('/admin/procurement', procurementRoutes); // admin procurement & PO management routes
 
 // ==========================================
 // 2. PHARMA & LOGISTICS ROUTES
