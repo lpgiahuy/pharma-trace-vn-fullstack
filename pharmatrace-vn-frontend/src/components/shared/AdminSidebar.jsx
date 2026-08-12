@@ -4,7 +4,7 @@ import {
   DashboardOutlined, ShoppingOutlined, AppstoreOutlined,
   OrderedListOutlined, TeamOutlined, TagOutlined, FileTextOutlined,
   SwapOutlined, AlertOutlined, UserOutlined, FileDoneOutlined,
-  BankOutlined, QuestionCircleOutlined, ShoppingCartOutlined, CalendarOutlined, CarOutlined,
+  BankOutlined, QuestionCircleOutlined, ShoppingCartOutlined, CalendarOutlined, CarOutlined, SafetyCertificateOutlined,
 } from '@ant-design/icons'
 import { Pill as PillIcon } from 'lucide-react'
 const Logo = 'https://res.cloudinary.com/dc64co0el/image/upload/v1777731026/Logo_ck5ouv.svg'
@@ -42,6 +42,7 @@ export const AdminSidebar = ({ collapsed, onCollapse, isMobile }) => {
     { key: '/admin/procurement',    icon: <ShoppingCartOutlined />, label: <Link to="/admin/procurement">Mua hàng & PO</Link> },
     { key: '/admin/inventory/lots', icon: <CalendarOutlined />,     label: <Link to="/admin/inventory/lots">Quản lý Lô & FEFO</Link> },
     { key: '/admin/logistics/cod',  icon: <CarOutlined />,          label: <Link to="/admin/logistics/cod">Vận chuyển & COD</Link> },
+    { key: '/admin/security/fraud-anomalies', icon: <SafetyCertificateOutlined />, label: <Link to="/admin/security/fraud-anomalies">Cảnh báo Gian lận QR</Link> },
     { key: '/admin/blog',           icon: <FileTextOutlined />,  label: <Link to="/admin/blog">{t('admin.blog_news')}</Link> },
     { key: '/admin/staff',          icon: <TeamOutlined />,      label: <Link to="/admin/staff">{t('admin.staff_rbac')}</Link> },
     { key: '/admin/customers',      icon: <UserOutlined />,      label: <Link to="/admin/customers">{t('admin.customers')}</Link> },
