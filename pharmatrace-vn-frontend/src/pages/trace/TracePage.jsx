@@ -137,10 +137,14 @@ export default function TracePage() {
     
     // Check for UID in navigation state (passed from HomePage)
     const stateUid = location.state?.uid
+    const openScanner = location.state?.openScanner
     if (stateUid) {
       setInputCode(stateUid)
       handleTrace(stateUid)
       // Clear state after reading to avoid re-triggering on refresh if undesired
+      window.history.replaceState({}, document.title)
+    } else if (openScanner) {
+      startCamera()
       window.history.replaceState({}, document.title)
     } else {
       // Check for UID and sig in URL query parameters (scanned from external cameras)

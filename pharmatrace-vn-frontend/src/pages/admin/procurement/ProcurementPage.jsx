@@ -43,9 +43,20 @@ export default function ProcurementPage() {
   }
 
   useEffect(() => {
+    fetchOrders()
+    fetchSuppliers()
+  }, [])
+
+  useEffect(() => {
     if (activeTab === '1') fetchOrders()
     else if (activeTab === '2') fetchSuppliers()
   }, [activeTab])
+
+  useEffect(() => {
+    if (isPoModalOpen && suppliers.length === 0) {
+      fetchSuppliers()
+    }
+  }, [isPoModalOpen])
 
   const handleCreateSupplier = async (values) => {
     try {

@@ -68,6 +68,7 @@ const prisma = basePrisma.$extends({
 export const serializeBigInt = (obj) => {
     if (obj === null || obj === undefined) return obj;
     if (typeof obj === 'bigint') return Number(obj);
+    if (obj instanceof Date) return obj.toISOString();
     
     // Convert Prisma Decimal to standard JavaScript Number
     if (typeof obj === 'object' && obj.constructor && (obj.constructor.name.includes('Decimal') || (obj.s !== undefined && obj.e !== undefined && Array.isArray(obj.d)))) {

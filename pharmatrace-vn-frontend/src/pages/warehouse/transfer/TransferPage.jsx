@@ -166,10 +166,13 @@ export default function TransferPage() {
                 loading={loadingBatches}
                 placeholder={!form.getFieldValue('duoc_pham_id') ? 'Chọn thuốc trước' : loadingBatches ? 'Đang tải...' : 'Chọn số lô'}
                 disabled={batches.length === 0 || loadingBatches}
-                options={batches.map(b => ({
-                  value: b.id,
-                  label: `${b.so_lo} — HSD: ${formatDate(b.han_su_dung)} (${b.so_hop_trong_kho} hộp)`,
-                }))}
+                options={batches.map(b => {
+                  const hsd = b.han_su_dung || b.expiryDate || b.ngay_het_han || b.hsd
+                  return {
+                    value: b.id,
+                    label: `${b.so_lo} — HSD: ${hsd ? formatDate(hsd) : 'Chưa cập nhật'} (${b.so_hop_trong_kho} hộp)`,
+                  }
+                })}
                 onChange={handleBatchChange}
               />
             </Form.Item>
@@ -208,7 +211,7 @@ export default function TransferPage() {
           {selectedBatch && (
             <Alert
               type="info" showIcon className="mb-4"
-              message={`Lô ${selectedBatch.so_lo} — Còn ${selectedBatch.so_hop_trong_kho} hộp — HSD: ${formatDate(selectedBatch.han_su_dung)}`}
+              message={`Lô ${selectedBatch.so_lo} — Còn ${selectedBatch.so_hop_trong_kho} hộp — HSD: ${(selectedBatch.han_su_dung || selectedBatch.expiryDate || selectedBatch.ngay_het_han || selectedBatch.hsd) ? formatDate(selectedBatch.han_su_dung || selectedBatch.expiryDate || selectedBatch.ngay_het_han || selectedBatch.hsd) : 'Chưa cập nhật'}`}
             />
           )}
 

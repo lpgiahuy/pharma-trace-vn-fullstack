@@ -132,7 +132,7 @@ const getUniqueBrands = async () => {
     return result.map(r => r.ten_don_vi);
 };
 
-export const findStoreWithAllItems = async (items) => {
+export const findStoreWithAllItems = async (items, lat = null, lng = null) => {
     if (!items || items.length === 0) return null;
 
     const consolidated = items.reduce((acc, item) => {
@@ -151,11 +151,18 @@ export const findStoreWithAllItems = async (items) => {
 
     const params = uniqueItems.flatMap(item => [item.duoc_pham_id, item.so_luong]);
 
+    let orderBy = 'dv.id ASC';
+    if (lat && lng) {
+        params.push(parseFloat(lat), parseFloat(lng));
+        orderBy = `fn_tinh_khoang_cach_km($${params.length - 1}, $${params.length}, dv.toa_do_lat, dv.toa_do_lng) ASC`;
+    }
+
     const query = `
         SELECT dv.id as don_vi_id, dv.ten_don_vi, dv.dia_chi
         FROM DonVi dv
         WHERE dv.loai_don_vi = 'NhaThuoc'
           AND ${conditions}
+        ORDER BY ${orderBy}
         LIMIT 1
     `;
     const result = await prisma.$queryRawUnsafe(query, ...params);
