@@ -21,11 +21,23 @@ const createNewProduct = async (productData, variantsData) => {
 
         if (variantsData && variantsData.length > 0) {
             await tx.quycachdonggoi.createMany({
-                data: variantsData.map(variant => ({
-                    duoc_pham_id: product.id,
-                    ten_don_vi: variant.ten_don_vi,
-                    gia_ban: variant.gia_ban
-                }))
+                data: variantsData.map(v => {
+                    const giaBan = Number(v.gia_ban) || 0;
+                    const giaGoc = v.gia_goc ? Number(v.gia_goc) : null;
+                    let pct = v.phan_tram_giam ? Number(v.phan_tram_giam) : 0;
+                    if (giaGoc && giaGoc > giaBan && (!pct || pct === 0)) {
+                        pct = Math.max(0, Math.round(((giaGoc - giaBan) / giaGoc) * 100));
+                    }
+                    return {
+                        duoc_pham_id: product.id,
+                        ten_don_vi: v.ten_don_vi,
+                        gia_ban: giaBan,
+                        gia_goc: giaGoc,
+                        phan_tram_giam: pct,
+                        thoi_gian_bat_dau_sale: v.thoi_gian_bat_dau_sale ? new Date(v.thoi_gian_bat_dau_sale) : null,
+                        thoi_gian_ket_thuc_sale: v.thoi_gian_ket_thuc_sale ? new Date(v.thoi_gian_ket_thuc_sale) : null,
+                    };
+                })
             });
         }
 
@@ -163,11 +175,23 @@ const updateProductDb = async (id, productData, variantsData) => {
 
         if (variantsData && variantsData.length > 0) {
             await tx.quycachdonggoi.createMany({
-                data: variantsData.map(v => ({
-                    duoc_pham_id: productId,
-                    ten_don_vi: v.ten_don_vi,
-                    gia_ban: v.gia_ban
-                }))
+                data: variantsData.map(v => {
+                    const giaBan = Number(v.gia_ban) || 0;
+                    const giaGoc = v.gia_goc ? Number(v.gia_goc) : null;
+                    let pct = v.phan_tram_giam ? Number(v.phan_tram_giam) : 0;
+                    if (giaGoc && giaGoc > giaBan && (!pct || pct === 0)) {
+                        pct = Math.max(0, Math.round(((giaGoc - giaBan) / giaGoc) * 100));
+                    }
+                    return {
+                        duoc_pham_id: productId,
+                        ten_don_vi: v.ten_don_vi,
+                        gia_ban: giaBan,
+                        gia_goc: giaGoc,
+                        phan_tram_giam: pct,
+                        thoi_gian_bat_dau_sale: v.thoi_gian_bat_dau_sale ? new Date(v.thoi_gian_bat_dau_sale) : null,
+                        thoi_gian_ket_thuc_sale: v.thoi_gian_ket_thuc_sale ? new Date(v.thoi_gian_ket_thuc_sale) : null,
+                    };
+                })
             });
         }
 

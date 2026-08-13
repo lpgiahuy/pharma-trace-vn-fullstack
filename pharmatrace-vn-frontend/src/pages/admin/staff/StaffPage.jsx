@@ -36,11 +36,11 @@ export default function StaffPage() {
     setEditing(user)
     if (user) {
       form.setFieldsValue({
-        ho_ten: user.name,
-        email: user.email,
-        vai_tro: user.role,
-        don_vi_id: user.don_vi_id,
-        trang_thai: user.status === 'active' || user.status === true || user.status === 1
+        ho_ten: user.ho_ten || user.name || '',
+        email: user.email || '',
+        vai_tro: user.vai_tro || user.role || 'NhanVienBanHang',
+        don_vi_id: user.don_vi_id || null,
+        trang_thai: user.trang_thai ?? (user.status === 'active' || user.status === true || user.status === 1)
       })
     } else {
       form.resetFields()

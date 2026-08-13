@@ -5,10 +5,14 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant
 import { productService } from '@/services/product.service'
 import { formatCurrency } from '@/utils'
 import { StockBadge } from '@/components/ui/Badge'
+import { useAuthStore } from '@/store/authStore'
 
 const { useBreakpoint } = Grid
 
 export default function AdminProductsPage() {
+  const user = useAuthStore(s => s.user)
+  const isSuperAdmin = ['SuperAdmin', 'superadmin'].includes(user?.vai_tro || user?.role)
+
   const [data, setData]       = useState([])
   const [total, setTotal]     = useState(0)
   const [loading, setLoading] = useState(true)
@@ -32,11 +36,15 @@ export default function AdminProductsPage() {
 
   const handleDelete = async (id) => {
     try {
-      await productService.deleteProduct(id)
-      message.success('Đã xóa vĩnh viễn sản phẩm')
+      const res = await productService.deleteProduct(id)
+      if (res?.data?.isSoftDeleted) {
+        message.info(res.message || 'Sản phẩm đã được chuyển sang trạng thái Ẩn để bảo toàn lịch sử dữ liệu.')
+      } else {
+        message.success(res?.message || 'Đã xóa vĩnh viễn sản phẩm thành công.')
+      }
       loadData()
     } catch (err) {
-      message.error(err.response?.data?.message || 'Xóa thất bại. Nếu sản phẩm có tồn kho/đơn hàng, hãy thử ẩn sản phẩm.')
+      message.error(err.response?.data?.message || 'Xóa thất bại.')
     }
   }
 
@@ -66,34 +74,36 @@ export default function AdminProductsPage() {
     { title: 'Giá',      dataIndex: 'price',       key: 'price',    width: 100, align: 'right', render: v => <span className="text-[13px] font-bold text-slate-700 whitespace-nowrap">{formatCurrency(v)}</span> },
     { title: 'Kho',      dataIndex: 'totalStock',  key: 'stock',    responsive: ['sm'], width: 120, align: 'center', render: (v) => <StockBadge quantity={v} /> },
     { title: 'Lô',       dataIndex: 'batchNumber', key: 'batch',    responsive: ['xl'], width: 90, align: 'center', render: v => <span className="font-mono text-[11px]">{v}</span> },
-    { title: 'Trạng thái', dataIndex: 'isActive',  key: 'status',   responsive: ['sm'], width: 90, align: 'center',
-      render: (v, row) => (
-        <Tag
-          color={v ? "success" : "default"}
-          className="text-[11px] px-2 py-0.5 cursor-pointer hover:opacity-80"
-          onClick={() => handleToggleStatus(row.id)}
-        >
-          {v ? 'Hiển thị' : 'Ẩn'}
-        </Tag>
-      )
-    },
-    {
-      title: 'Thao tác', key: 'actions', width: 80, align: 'center',
-      render: (_, row) => (
-        <Space size={4}>
-          <AButton size="small" icon={<EditOutlined />} onClick={() => navigate(`/admin/products/${row.id}/edit`)} />
-          <Popconfirm
-            title="Xóa vĩnh viễn?"
-            description="Hành động này không thể hoàn tác. Toàn bộ dữ liệu sản phẩm sẽ bị mất."
-            onConfirm={() => handleDelete(row.id)}
-            okText="Xóa"
-            okButtonProps={{ danger: true }}
+    ...(isSuperAdmin ? [
+      { title: 'Trạng thái', dataIndex: 'isActive',  key: 'status',   responsive: ['sm'], width: 90, align: 'center',
+        render: (v, row) => (
+          <Tag
+            color={v ? "success" : "default"}
+            className="text-[11px] px-2 py-0.5 cursor-pointer hover:opacity-80"
+            onClick={() => handleToggleStatus(row.id)}
           >
-            <AButton size="small" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
-    },
+            {v ? 'Hiển thị' : 'Ẩn'}
+          </Tag>
+        )
+      },
+      {
+        title: 'Thao tác', key: 'actions', width: 80, align: 'center',
+        render: (_, row) => (
+          <Space size={4}>
+            <AButton size="small" icon={<EditOutlined />} onClick={() => navigate(`/admin/products/${row.id}/edit`)} />
+            <Popconfirm
+              title="Xóa vĩnh viễn?"
+              description="Hành động này không thể hoàn tác. Toàn bộ dữ liệu sản phẩm sẽ bị mất."
+              onConfirm={() => handleDelete(row.id)}
+              okText="Xóa"
+              okButtonProps={{ danger: true }}
+            >
+              <AButton size="small" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+          </Space>
+        ),
+      },
+    ] : []),
   ]
 
   return (
@@ -103,9 +113,11 @@ export default function AdminProductsPage() {
           <h1 className="text-xl font-display font-bold text-slate-900">Sản phẩm</h1>
           <p className="text-slate-500 text-sm">{total} sản phẩm</p>
         </div>
-        <Link to="/admin/products/new">
-          <AButton type="primary" icon={<PlusOutlined />} className="w-full sm:w-auto">Thêm sản phẩm</AButton>
-        </Link>
+        {isSuperAdmin && (
+          <Link to="/admin/products/new">
+            <AButton type="primary" icon={<PlusOutlined />} className="w-full sm:w-auto">Thêm sản phẩm</AButton>
+          </Link>
+        )}
       </div>
 
       <div className="card p-4">

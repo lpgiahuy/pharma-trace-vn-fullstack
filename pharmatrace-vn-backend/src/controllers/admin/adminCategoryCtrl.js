@@ -45,8 +45,8 @@ const updateCategory = async (req, res, next) => {
 
 const deleteCategory = async (req, res, next) => {
     try {
-        await adminCategoryService.removeCategory(req.params.id);
-        res.status(200).json({ success: true, message: 'Đã ẩn danh mục thành công!' });
+        const result = await adminCategoryService.removeCategory(req.params.id);
+        res.status(200).json({ success: true, message: result.message, data: result });
     } catch (error) {
         if (error.statusCode) res.status(error.statusCode);
         next(error);

@@ -24,6 +24,17 @@ const getProducts = async (categoryId, search, sort, limit, offset, userId = nul
     if (sort === 'price_desc') orderBy = 'qc.gia_ban DESC NULLS LAST';
     if (sort === 'best_selling') orderBy = 'dp.so_luong_da_ban DESC NULLS LAST';
 
+    let catIds = [];
+    if (Array.isArray(categoryId)) {
+        catIds = categoryId.map(id => parseInt(id)).filter(id => !isNaN(id));
+    } else if (typeof categoryId === 'string' && categoryId.trim()) {
+        catIds = categoryId.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+    } else if (typeof categoryId === 'number' && !isNaN(categoryId)) {
+        catIds = [categoryId];
+    }
+
+    const hasCatFilter = catIds.length > 0;
+
     const query = `
         SELECT dp.id, dp.ten_thuoc, dp.slug, dp.hinh_anh_url, dp.la_thuoc_ke_don, 
                 dp.mo_ta_ngan, dp.so_luong_da_ban, dp.diem_danh_gia,
@@ -32,7 +43,9 @@ const getProducts = async (categoryId, search, sort, limit, offset, userId = nul
                 (SELECT EXISTS(SELECT 1 FROM SanPhamYeuThich WHERE khach_hang_id = $5 AND duoc_pham_id = dp.id)) AS is_favorited
         FROM DuocPham dp
         LEFT JOIN QuyCachDongGoi qc ON dp.id = qc.duoc_pham_id 
-        WHERE ($1::INT IS NULL OR dp.danh_muc_id = $1)
+        WHERE (${!hasCatFilter} OR dp.danh_muc_id IN (
+            SELECT id FROM DanhMuc WHERE id = ANY($1::INT[]) OR danh_muc_cha_id = ANY($1::INT[])
+        ))
             AND ($2::VARCHAR IS NULL OR dp.ten_thuoc ILIKE '%' || $2 || '%')
             AND dp.trang_thai = TRUE
             AND ($6::BOOLEAN IS FALSE OR (SELECT COALESCE(MAX(tk.so_luong_ton), 0) FROM TonKho tk JOIN DonVi dv_tk ON tk.don_vi_id = dv_tk.id WHERE tk.duoc_pham_id = dp.id AND dv_tk.loai_don_vi = 'NhaThuoc') > 0)
@@ -40,7 +53,7 @@ const getProducts = async (categoryId, search, sort, limit, offset, userId = nul
         ORDER BY ${orderBy}
         LIMIT $3 OFFSET $4;
     `;
-    const result = await prisma.$queryRawUnsafe(query, categoryId, search, limit, offset, userId, inStock);
+    const result = await prisma.$queryRawUnsafe(query, hasCatFilter ? catIds : [0], search, limit, offset, userId, inStock);
     return serializeBigInt(result);
 };
 

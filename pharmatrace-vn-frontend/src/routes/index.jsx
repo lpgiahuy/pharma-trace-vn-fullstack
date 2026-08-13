@@ -118,8 +118,8 @@ export const AppRoutes = () => (
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/profile" element={<WarehouseProfilePage />} />
         <Route path="/admin/products" element={<AdminProducts />} />
-        <Route path="/admin/products/new" element={<AdminProductForm />} />
-        <Route path="/admin/products/:id/edit" element={<AdminProductForm />} />
+        <Route path="/admin/products/new" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin']}><AdminProductForm /></ProtectedRoute>} />
+        <Route path="/admin/products/:id/edit" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin']}><AdminProductForm /></ProtectedRoute>} />
         <Route path="/admin/categories" element={<AdminCategories />} />
         <Route path="/admin/orders" element={<AdminOrders />} />
         <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />

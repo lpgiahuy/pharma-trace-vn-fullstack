@@ -21,10 +21,11 @@ const createProduct = async (req, res, next) => {
 const deleteProduct = async (req, res, next) => {
     try {
         const { id } = req.params;
-        await adminProductService.removeProduct(id);
+        const result = await adminProductService.removeProduct(id);
         res.status(200).json({
             success: true,
-            message: `Successfully permanently deleted the product with ID ${id}.`
+            message: result.message || `Successfully processed product ID ${id}.`,
+            data: result
         });
     } catch (error) {
         if (error.statusCode) res.status(error.statusCode);
