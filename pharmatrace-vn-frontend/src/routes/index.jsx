@@ -54,6 +54,7 @@ const AdminLotMonitor = lazy(() => import('@/pages/admin/inventory/LotBatchMonit
 const AdminLogisticsCod = lazy(() => import('@/pages/admin/logistics/LogisticsCodPage'))
 const AdminFraudAnomaly = lazy(() => import('@/pages/admin/security/FraudAnomalyEnginePage'))
 const AdminCrmLoyalty = lazy(() => import('@/pages/admin/crm/CrmLoyaltyPage'))
+const AdminFinance = lazy(() => import('@/pages/admin/finance/FinancePage'))
 
 // ── Warehouse ────────────────────────────────────────────────────────────────
 const InboundPage = lazy(() => import('@/pages/warehouse/inbound/InboundPage'))
@@ -134,6 +135,7 @@ export const AppRoutes = () => (
         <Route path="/admin/inventory/lots" element={<AdminLotMonitor />} />
         <Route path="/admin/logistics/cod" element={<AdminLogisticsCod />} />
         <Route path="/admin/security/fraud-anomalies" element={<AdminFraudAnomaly />} />
+        <Route path="/admin/finance" element={<AdminFinance />} />
         <Route path="/admin/help" element={<AdminHelp />} />
       </Route>
 
