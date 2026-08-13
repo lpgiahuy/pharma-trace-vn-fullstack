@@ -2,10 +2,11 @@ import * as authService from '../../services/ecom/authService.js';
 
 const register = async (req, res, next) => {
     try {
-        let { ho_ten, so_dien_thoai, mat_khau } = req.body;
+        let { ho_ten, so_dien_thoai, mat_khau, email, dia_chi, dia_chi_mac_dinh, address } = req.body;
 
-        // Optimization: sanitize and validate phone number
+        // Optimization: sanitize and validate phone number and email
         if (so_dien_thoai) so_dien_thoai = so_dien_thoai.trim();
+        if (email) email = email.trim();
 
         if (!ho_ten || !so_dien_thoai || !mat_khau) {
             res.status(400);
@@ -18,7 +19,9 @@ const register = async (req, res, next) => {
             throw new Error('Invalid phone number format (must be 10-11 digits)');
         }
 
-        const data = await authService.registerUser(ho_ten, so_dien_thoai, mat_khau);
+        const userAddress = dia_chi_mac_dinh || dia_chi || address || null;
+
+        const data = await authService.registerUser(ho_ten, so_dien_thoai, mat_khau, email, userAddress);
 
 
 

@@ -2,7 +2,7 @@ import * as authModel from '../../models/ecom/authModel.js';
 import { hashPassword, comparePassword } from '../../utils/hashHelper.js';
 import { generateToken } from '../../utils/jwtHelper.js';
 
-const registerUser = async (ho_ten, so_dien_thoai, mat_khau) => {
+const registerUser = async (ho_ten, so_dien_thoai, mat_khau, email = null, dia_chi = null) => {
     // Check if user already exists
     const userExists = await authModel.findUserByPhone(so_dien_thoai);
     if (userExists) {
@@ -13,7 +13,7 @@ const registerUser = async (ho_ten, so_dien_thoai, mat_khau) => {
 
     const hashedPass = await hashPassword(mat_khau);
     
-    const newUser = await authModel.createUser(ho_ten, so_dien_thoai, hashedPass);
+    const newUser = await authModel.createUser(ho_ten, so_dien_thoai, hashedPass, email, dia_chi);
     
     // Gererate token for the new user
     const token = generateToken(newUser.id);
@@ -41,6 +41,7 @@ const loginUser = async (so_dien_thoai, mat_khau) => {
     // generate token and return user info
     const token = generateToken(user.id);
     delete user.mat_khau_hash; 
+    user.dia_chi = user.dia_chi_mac_dinh;
 
     return { user, token };
 };

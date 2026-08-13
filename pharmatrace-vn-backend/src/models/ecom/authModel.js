@@ -7,21 +7,29 @@ const findUserByPhone = async (phone) => {
     });
 };
 
-const createUser = async (name, phone, hashedPassword) => {
-    return await prisma.khachhang.create({
+const createUser = async (name, phone, hashedPassword, email = null, address = null) => {
+    const user = await prisma.khachhang.create({
         data: {
             ho_ten: name,
             so_dien_thoai: phone,
-            mat_khau_hash: hashedPassword
+            mat_khau_hash: hashedPassword,
+            email: email || null,
+            dia_chi_mac_dinh: address || null
         },
         select: {
             id: true,
             ho_ten: true,
             so_dien_thoai: true,
+            email: true,
+            dia_chi_mac_dinh: true,
             hang_thanh_vien: true,
             diem_tich_luy: true
         }
     });
+    return {
+        ...user,
+        dia_chi: user.dia_chi_mac_dinh
+    };
 };
 
 const findUserById = async (id) => {
