@@ -40,6 +40,27 @@ const prisma = basePrisma.$extends({
                     return query(args);
                 });
             }
+        },
+        async $queryRawUnsafe({ args, query }) {
+            const user = getCurrentUserContext();
+            if (!user) {
+                return query(args);
+            }
+            return basePrisma.$transaction(async (tx) => {
+                const userId = user.id ? String(user.id) : '';
+                const userType = user.type || (user.role === 'customer' ? 'customer' : 'staff');
+                const unitId = user.don_vi_id ? String(user.don_vi_id) : '';
+                const role = user.role || '';
+
+                await tx.$executeRawUnsafe(`
+                    SET LOCAL app.current_user_id = '${userId}';
+                    SET LOCAL app.current_user_type = '${userType}';
+                    SET LOCAL app.current_unit_id = '${unitId}';
+                    SET LOCAL app.current_user_role = '${role}';
+                `);
+
+                return tx.$queryRawUnsafe(...args);
+            });
         }
     }
 });

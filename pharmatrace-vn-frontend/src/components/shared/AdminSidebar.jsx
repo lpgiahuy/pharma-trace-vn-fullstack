@@ -42,9 +42,9 @@ export function AdminSidebar({ collapsed: collapsedProp, isCollapsed, onCollapse
     { key: '/admin/logistics/cod',  icon: <CarOutlined />,          label: <Link to="/admin/logistics/cod">Vận chuyển & COD</Link> },
     { key: '/admin/security/fraud-anomalies', icon: <SafetyCertificateOutlined />, label: <Link to="/admin/security/fraud-anomalies">Cảnh báo Gian lận QR</Link> },
     { key: '/admin/crm/loyalty',    icon: <CrownOutlined />,        label: <Link to="/admin/crm/loyalty">CRM & Tích điểm VIP</Link> },
-    { key: '/admin/finance',        icon: <BankOutlined />,         label: <Link to="/admin/finance">Tài Chính & Công Nợ</Link> },
     { key: '/admin/blog',           icon: <FileTextOutlined />,  label: <Link to="/admin/blog">{t('admin.blog_news')}</Link> },
     ...(isSuperAdmin ? [
+      { key: '/admin/finance',        icon: <BankOutlined />,         label: <Link to="/admin/finance">Tài Chính & Công Nợ</Link> },
       { key: '/admin/staff',          icon: <TeamOutlined />,      label: <Link to="/admin/staff">{t('admin.staff_rbac')}</Link> },
       { key: '/admin/customers',      icon: <UserOutlined />,      label: <Link to="/admin/customers">{t('admin.customers')}</Link> },
     ] : []),

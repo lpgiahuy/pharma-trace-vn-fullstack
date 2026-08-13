@@ -269,6 +269,7 @@
     "confirm_password": "Confirm Password",
     "forgot_password": "Forgot password?",
     "signin": "Sign In",
+    "signin_failed": "Invalid login credentials. Please check again.",
     "no_account": "Don't have an account?",
     "create_one": "Register Now",
     "create_account": "Create New Account",

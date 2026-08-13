@@ -27,7 +27,7 @@ export const createSupplier = async (req, res) => {
 
 export const getPurchaseOrders = async (req, res) => {
     try {
-        const orders = await getPurchaseOrdersService();
+        const orders = await getPurchaseOrdersService(req.user);
         res.status(200).json({ success: true, data: orders });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

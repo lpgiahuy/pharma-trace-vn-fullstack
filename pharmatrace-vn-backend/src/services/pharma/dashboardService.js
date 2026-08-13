@@ -16,13 +16,13 @@ const getTrend = (current, previous) => {
     return cur >= prev ? 'up' : 'down';
 };
 
-export const fetchAdminDashboard = async () => {
+export const fetchAdminDashboard = async (userContext = null) => {
     // Legacy endpoint: Keep it for compatibility if needed
     const [heatmap, canDate, doanhThu, tonKho] = await Promise.all([
-        dashboardModel.getHeatmapData(),
-        dashboardModel.getNearExpiredDrugs(),
-        dashboardModel.getDailyRevenue(),
-        dashboardModel.getInventorySummary()
+        dashboardModel.getHeatmapData(userContext),
+        dashboardModel.getNearExpiredDrugs(userContext),
+        dashboardModel.getDailyRevenue(userContext),
+        dashboardModel.getInventorySummary(userContext)
     ]);
     return {
         heatmap_diem_nong: heatmap, 
@@ -32,8 +32,8 @@ export const fetchAdminDashboard = async () => {
     };
 };
 
-export const fetchDashboardStats = async () => {
-    const rawData = (await dashboardModel.getOverallStats()) || {};
+export const fetchDashboardStats = async (userContext = null) => {
+    const rawData = (await dashboardModel.getOverallStats(userContext)) || {};
     
     const revCurrent = Number(rawData.rev_current) || 0;
     const revPrev = Number(rawData.rev_prev) || 0;
@@ -67,8 +67,8 @@ export const fetchDashboardStats = async () => {
     };
 };
 
-export const fetchRevenueChart = async () => {
-    const chartData = await dashboardModel.getMonthlyRevenueChart();
+export const fetchRevenueChart = async (userContext = null) => {
+    const chartData = await dashboardModel.getMonthlyRevenueChart(userContext);
     // Parse int for react recharts
     return chartData.map(item => ({
         month: item.month,
@@ -77,24 +77,24 @@ export const fetchRevenueChart = async () => {
     }));
 };
 
-export const fetchTopProducts = async (limit = 5) => {
-    return await dashboardModel.getTopSellingProducts(limit);
+export const fetchTopProducts = async (limit = 5, userContext = null) => {
+    return await dashboardModel.getTopSellingProducts(limit, userContext);
 };
 
-export const fetchLowStockAlerts = async () => {
-    return await dashboardModel.getLowStockItems();
+export const fetchLowStockAlerts = async (userContext = null) => {
+    return await dashboardModel.getLowStockItems(userContext);
 };
 
-export const fetchCategoryRevenue = async () => {
-    const rows = await dashboardModel.getCategoryRevenue();
+export const fetchCategoryRevenue = async (userContext = null) => {
+    const rows = await dashboardModel.getCategoryRevenue(userContext);
     return rows.map(r => ({
         category: r.category,
         revenue: parseInt(r.revenue),
     }));
 };
 
-export const fetchCategoryProductCount = async () => {
-    const rows = await dashboardModel.getCategoryProductCount();
+export const fetchCategoryProductCount = async (userContext = null) => {
+    const rows = await dashboardModel.getCategoryProductCount(userContext);
     return rows.map(r => ({
         category: r.category,
         count: r.count,

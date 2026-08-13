@@ -18,8 +18,8 @@ export const createSupplierService = async (data) => {
     return await createSupplierModel(data);
 };
 
-export const getPurchaseOrdersService = async () => {
-    return await getPurchaseOrdersModel();
+export const getPurchaseOrdersService = async (userContext = null) => {
+    return await getPurchaseOrdersModel(userContext);
 };
 
 export const getPurchaseOrderByIdService = async (id) => {

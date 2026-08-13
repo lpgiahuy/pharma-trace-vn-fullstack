@@ -80,7 +80,10 @@ apiClient.interceptors.response.use(
       )
     }
 
-    if (error.response?.status === 401 && !original._retry) {
+    // Skip auto-logout and token refresh for login/auth endpoints
+    const isLoginEndpoint = original?.url?.includes('/login') || original?.url?.includes('/register')
+
+    if (error.response?.status === 401 && !original._retry && !isLoginEndpoint) {
       const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
       if (!refreshToken) { _logout(); return Promise.reject(error) }
 

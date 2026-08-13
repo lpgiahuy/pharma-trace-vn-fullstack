@@ -21,7 +21,6 @@ const router = express.Router();
 
 // Apply middleware to all routes
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'QuanLyKho'));
 
 /**
  * @swagger
@@ -40,7 +39,7 @@ router.use(authorizeRoles('SuperAdmin', 'QuanLyKho'));
  *       403:
  *         description: Forbidden - Insufficient permissions
  */
-router.get('/', getAllProductsAdmin);
+router.get('/', authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienBanHang'), getAllProductsAdmin);
 
 /**
  * @swagger
@@ -63,7 +62,7 @@ router.get('/', getAllProductsAdmin);
  *       404:
  *         description: Product not found
  */
-router.get('/:id', getProductDetailAdmin);
+router.get('/:id', authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienBanHang'), getProductDetailAdmin);
 
 /**
  * @swagger
@@ -154,7 +153,7 @@ router.get('/:id', getProductDetailAdmin);
  *       400:
  *         description: Duplicate registration number or missing packaging unit
  */
-router.post('/', createProduct);
+router.post('/', authorizeRoles('SuperAdmin', 'QuanLyKho'), createProduct);
 
 /**
  * @swagger
@@ -224,7 +223,7 @@ router.post('/', createProduct);
  *       404:
  *         description: Product not found
  */
-router.put('/:id', updateProduct);
+router.put('/:id', authorizeRoles('SuperAdmin', 'QuanLyKho'), updateProduct);
 
 /**
  * @swagger
@@ -245,7 +244,7 @@ router.put('/:id', updateProduct);
  *       200:
  *         description: Status toggled successfully
  */
-router.patch('/:id/status', toggleProductStatus);
+router.patch('/:id/status', authorizeRoles('SuperAdmin', 'QuanLyKho'), toggleProductStatus);
 
 /**
  * @swagger
@@ -268,6 +267,6 @@ router.patch('/:id/status', toggleProductStatus);
  *       404:
  *         description: Product not found
  */
-router.delete('/:id', deleteProduct);
+router.delete('/:id', authorizeRoles('SuperAdmin', 'QuanLyKho'), deleteProduct);
 
 export default router;

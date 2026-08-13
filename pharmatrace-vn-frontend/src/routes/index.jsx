@@ -136,7 +136,7 @@ export const AppRoutes = () => (
         <Route path="/admin/inventory/lots" element={<AdminLotMonitor />} />
         <Route path="/admin/logistics/cod" element={<AdminLogisticsCod />} />
         <Route path="/admin/security/fraud-anomalies" element={<AdminFraudAnomaly />} />
-        <Route path="/admin/finance" element={<AdminFinance />} />
+        <Route path="/admin/finance" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin']}><AdminFinance /></ProtectedRoute>} />
         <Route path="/admin/help" element={<AdminHelp />} />
       </Route>
 

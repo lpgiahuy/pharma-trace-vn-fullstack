@@ -48,7 +48,7 @@ const login = async (req, res, next) => {
 
         if (!so_dien_thoai || !mat_khau) {
             res.status(400);
-            throw new Error('Please enter phone number and password');
+            throw new Error('Vui lòng nhập số điện thoại và mật khẩu');
         }
 
         const data = await authService.loginUser(so_dien_thoai, mat_khau);

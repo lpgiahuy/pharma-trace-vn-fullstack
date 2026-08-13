@@ -4,9 +4,12 @@ import prisma, { serializeBigInt } from '../../config/prisma.js';
 const getAllOrders = async (userContext = null) => {
     const where = {};
 
-    // Filter orders by staff's unit (don_vi_id) if user is staff and not Admin/SuperAdmin
-    if (userContext && userContext.role !== 'Admin' && userContext.role !== 'SuperAdmin' && userContext.don_vi_id) {
-        const unitId = Number(userContext.don_vi_id);
+    // Filter orders by staff's unit (don_vi_id) if user is staff (not SuperAdmin)
+    const unitId = (userContext && userContext.role === 'SuperAdmin' && userContext.force_unit_id)
+        ? Number(userContext.force_unit_id)
+        : (userContext && userContext.role !== 'SuperAdmin' && userContext.don_vi_id ? Number(userContext.don_vi_id) : null);
+
+    if (unitId) {
         where.OR = [
             {
                 chitietdonhang: {
@@ -19,13 +22,6 @@ const getAllOrders = async (userContext = null) => {
                 hopthuoc: {
                     some: {
                         don_vi_hien_tai_id: unitId
-                    }
-                }
-            },
-            {
-                chitietdonhang: {
-                    none: {
-                        don_vi_xuat_id: { not: null }
                     }
                 }
             }

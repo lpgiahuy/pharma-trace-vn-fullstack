@@ -25,7 +25,7 @@ const loginUser = async (so_dien_thoai, mat_khau) => {
     // find user by phone number
     const user = await authModel.findUserByPhone(so_dien_thoai);
     if (!user) {
-        const error = new Error('Account does not exist');
+        const error = new Error('Số điện thoại hoặc mật khẩu không chính xác');
         error.statusCode = 401;
         throw error;
     }
@@ -33,7 +33,7 @@ const loginUser = async (so_dien_thoai, mat_khau) => {
     // compare password
     const isMatch = await comparePassword(mat_khau, user.mat_khau_hash);
     if (!isMatch) {
-        const error = new Error('Incorrect password');
+        const error = new Error('Số điện thoại hoặc mật khẩu không chính xác');
         error.statusCode = 401;
         throw error;
     }

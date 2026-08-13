@@ -22,7 +22,18 @@ export const createSupplierModel = async ({ ten_don_vi, loai_don_vi = 'NhaPhanPh
     return rows[0];
 };
 
-export const getPurchaseOrdersModel = async () => {
+export const getPurchaseOrdersModel = async (userContext = null) => {
+    let whereClause = '';
+    const params = [];
+    const unitId = (userContext && userContext.role === 'SuperAdmin' && userContext.force_unit_id)
+        ? Number(userContext.force_unit_id)
+        : (userContext && userContext.role !== 'SuperAdmin' && userContext.don_vi_id ? Number(userContext.don_vi_id) : null);
+
+    if (unitId) {
+        whereClause = ' WHERE nv.don_vi_id = $1 OR pn.nha_cung_cap_id = $1';
+        params.push(unitId);
+    }
+
     const query = `
         SELECT 
             pn.id,
@@ -41,10 +52,11 @@ export const getPurchaseOrdersModel = async () => {
         LEFT JOIN public.donvi dv ON pn.nha_cung_cap_id = dv.id
         LEFT JOIN public.nhanvien nv ON pn.nguoi_tao_id = nv.id
         LEFT JOIN public.chitietphieunhap ct ON pn.id = ct.phieu_nhap_id
+        ${whereClause}
         GROUP BY pn.id, dv.ten_don_vi, nv.ho_ten
         ORDER BY pn.created_at DESC;
     `;
-    const { rows } = await pool.query(query);
+    const { rows } = await pool.query(query, params);
     return rows;
 };
 

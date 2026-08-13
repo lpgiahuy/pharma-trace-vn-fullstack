@@ -41,6 +41,7 @@ export const AdminHeader = ({ collapsed, onToggle, portal = 'Admin', isMobile })
         display: 'flex',
         alignItems: 'center',
         height: 64,
+        lineHeight: 'normal',
         position: 'sticky',
         top: 0,
         zIndex: 99,
@@ -78,9 +79,16 @@ export const AdminHeader = ({ collapsed, onToggle, portal = 'Admin', isMobile })
         <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
           <button className="flex items-center gap-2 py-1 px-1.5 sm:px-2 rounded-lg hover:bg-slate-100 transition-colors">
             <Avatar src={user?.avatar} name={user?.name} size="sm" />
-            <div className="text-left hidden sm:block">
-              <p className="text-sm font-medium text-slate-700 leading-none">{user?.name}</p>
-              <p className="text-xs text-slate-400 capitalize mt-0.5">{user?.role}</p>
+            <div className="text-left hidden sm:flex flex-col justify-center">
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm font-medium text-slate-700 leading-none">{user?.name}</p>
+                {user?.don_vi_id && (
+                  <span className="text-[10px] bg-blue-100 text-blue-700 font-semibold px-1.5 py-0.5 rounded leading-none shrink-0 inline-flex items-center">
+                    Đơn vị #{user.don_vi_id}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-400 capitalize mt-1 leading-none">{user?.role}</p>
             </div>
           </button>
         </Dropdown>
