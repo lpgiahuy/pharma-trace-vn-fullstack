@@ -16,6 +16,7 @@ import lotRoutes from './admin/lotRoutes.js';
 import logisticsCodRoutes from './admin/logisticsCodRoutes.js';
 import fraudAnomalyRoutes from './admin/fraudAnomalyRoutes.js';
 import crmLoyaltyRmaRoutes from './admin/crmLoyaltyRmaRoutes.js';
+import financeRoutes from './admin/financeRoutes.js';
 
 // --- 2. Pharma & Logistics Routes ---
 import traceRoutes from './pharma/traceRoutes.js';
@@ -57,6 +58,7 @@ router.use('/admin/lots', lotRoutes); // admin lot/batch & FEFO expiry managemen
 router.use('/admin/logistics-cod', logisticsCodRoutes); // admin logistics & COD reconciliation routes
 router.use('/admin/fraud-anomalies', fraudAnomalyRoutes); // admin QR fraud anomaly engine routes
 router.use('/admin/crm-rma', crmLoyaltyRmaRoutes); // admin CRM loyalty & RMA return management routes
+router.use('/admin/finance', financeRoutes); // admin finance, cashbook, AR/AP & PnL analytics routes
 
 // ==========================================
 // 2. PHARMA & LOGISTICS ROUTES
