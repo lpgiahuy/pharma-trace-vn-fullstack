@@ -19,6 +19,8 @@ export function AdminSidebar({ collapsed: collapsedProp, isCollapsed, onCollapse
   const location = useLocation()
   const { t } = useTranslation()
   const { user } = useAuthStore()
+  const userRole = user?.role || user?.vai_tro
+  const isSuperAdmin = ['SuperAdmin', 'superadmin'].includes(userRole)
 
   const menuItems = [
     { key: '/admin',                icon: <DashboardOutlined />, label: <Link to="/admin">{t('admin.dashboard')}</Link> },
@@ -31,7 +33,7 @@ export function AdminSidebar({ collapsed: collapsedProp, isCollapsed, onCollapse
     },
     { key: '/admin/orders',         icon: <OrderedListOutlined />, label: <Link to="/admin/orders">Quản lý Đơn hàng</Link> },
     { key: '/admin/rma',            icon: <HistoryOutlined />,     label: <Link to="/admin/rma">Quản lý Đổi trả RMA</Link> },
-    ...(['SuperAdmin', 'Admin', 'QuanLyKho', 'admin', 'manager'].includes(user?.role) ? [
+    ...(['SuperAdmin', 'Admin', 'QuanLyKho', 'admin', 'manager'].includes(userRole) ? [
       { key: '/warehouse/inbound',   icon: <BankOutlined />,      label: <Link to="/warehouse/inbound">Quản lý Kho (WMS)</Link> }
     ] : []),
     { key: '/admin/vouchers',       icon: <TagOutlined />,       label: <Link to="/admin/vouchers">{t('admin.vouchers')}</Link> },
@@ -42,8 +44,10 @@ export function AdminSidebar({ collapsed: collapsedProp, isCollapsed, onCollapse
     { key: '/admin/crm/loyalty',    icon: <CrownOutlined />,        label: <Link to="/admin/crm/loyalty">CRM & Tích điểm VIP</Link> },
     { key: '/admin/finance',        icon: <BankOutlined />,         label: <Link to="/admin/finance">Tài Chính & Công Nợ</Link> },
     { key: '/admin/blog',           icon: <FileTextOutlined />,  label: <Link to="/admin/blog">{t('admin.blog_news')}</Link> },
-    { key: '/admin/staff',          icon: <TeamOutlined />,      label: <Link to="/admin/staff">{t('admin.staff_rbac')}</Link> },
-    { key: '/admin/customers',      icon: <UserOutlined />,      label: <Link to="/admin/customers">{t('admin.customers')}</Link> },
+    ...(isSuperAdmin ? [
+      { key: '/admin/staff',          icon: <TeamOutlined />,      label: <Link to="/admin/staff">{t('admin.staff_rbac')}</Link> },
+      { key: '/admin/customers',      icon: <UserOutlined />,      label: <Link to="/admin/customers">{t('admin.customers')}</Link> },
+    ] : []),
     { key: '/admin/prescriptions',  icon: <FileDoneOutlined />,  label: <Link to="/admin/prescriptions">{t('admin.prescriptions')}</Link> },
     { key: '/admin/help',           icon: <QuestionCircleOutlined />, label: <Link to="/admin/help">{t('admin.help')}</Link> },
   ]

@@ -65,8 +65,8 @@ const RecallPage = lazy(() => import('@/pages/warehouse/recall/RecallPage'))
 const ScannerPage = lazy(() => import('@/pages/warehouse/scanner/ScannerPage'))
 const WarehouseProfilePage = lazy(() => import('@/pages/warehouse/profile/WarehouseProfilePage'))
 
-const ADMIN_ROLES = ['SuperAdmin', 'NhanVienBanHang']
-const WAREHOUSE_ROLES = ['SuperAdmin', 'QuanLyKho']
+const ADMIN_ROLES = ['SuperAdmin', 'NhanVienBanHang', 'Admin', 'admin', 'manager', 'staff', 'QuanLyKho']
+const WAREHOUSE_ROLES = ['SuperAdmin', 'QuanLyKho', 'Admin', 'admin', 'manager', 'staff', 'NhanVienBanHang']
 
 /**
  * Loading component tạm thời trong khi chờ tải file JS
@@ -116,6 +116,7 @@ export const AppRoutes = () => (
       {/* Admin */}
       <Route element={<ProtectedRoute roles={ADMIN_ROLES}><AdminLayout /></ProtectedRoute>}>
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/profile" element={<WarehouseProfilePage />} />
         <Route path="/admin/products" element={<AdminProducts />} />
         <Route path="/admin/products/new" element={<AdminProductForm />} />
         <Route path="/admin/products/:id/edit" element={<AdminProductForm />} />
@@ -128,8 +129,8 @@ export const AppRoutes = () => (
         <Route path="/admin/blog" element={<AdminBlog />} />
         <Route path="/admin/blog/new" element={<AdminBlogForm />} />
         <Route path="/admin/blog/:id/edit" element={<AdminBlogForm />} />
-        <Route path="/admin/staff" element={<AdminStaff />} />
-        <Route path="/admin/customers" element={<AdminCustomers />} />
+        <Route path="/admin/staff" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin']}><AdminStaff /></ProtectedRoute>} />
+        <Route path="/admin/customers" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin']}><AdminCustomers /></ProtectedRoute>} />
         <Route path="/admin/prescriptions" element={<AdminPrescriptions />} />
         <Route path="/admin/procurement" element={<AdminProcurement />} />
         <Route path="/admin/inventory/lots" element={<AdminLotMonitor />} />

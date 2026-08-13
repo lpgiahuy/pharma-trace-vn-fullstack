@@ -93,9 +93,30 @@ const updateUserPassword = async (id, newHashedPassword) => {
     return true;
 };
 
+const findStaffById = async (id) => {
+    const staff = await prisma.nhanvien.findUnique({
+        where: { id: Number(id) },
+        select: {
+            id: true,
+            ho_ten: true,
+            email: true,
+            vai_tro: true,
+            trang_thai: true,
+            don_vi_id: true
+        }
+    });
+    if (!staff) return null;
+    return {
+        ...staff,
+        so_dien_thoai: '',
+        name: staff.ho_ten,
+        role: staff.vai_tro
+    };
+};
+
 const getLoyaltyUpgradeProgress = async (id) => {
     const result = await prisma.$queryRaw`SELECT * FROM fn_get_loyalty_upgrade_progress(${Number(id)})`;
     return serializeBigInt(result[0]);
 };
 
-export { findUserByPhone, createUser, findUserById, findFullUserById, updateUserProfile, updateUserPassword, getLoyaltyUpgradeProgress };
+export { findUserByPhone, createUser, findUserById, findStaffById, findFullUserById, updateUserProfile, updateUserPassword, getLoyaltyUpgradeProgress };

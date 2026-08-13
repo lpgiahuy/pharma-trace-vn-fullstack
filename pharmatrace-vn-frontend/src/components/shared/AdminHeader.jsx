@@ -15,7 +15,9 @@ export const AdminHeader = ({ collapsed, onToggle, portal = 'Admin', isMobile })
   const currentLang = i18n.language?.startsWith('vi') ? 'vi' : 'en'
   const toggleLang = () => i18n.changeLanguage(currentLang === 'vi' ? 'en' : 'vi')
 
-  const profilePath = portal === 'Warehouse' ? '/warehouse/profile' : '/account'
+  const userRole = user?.role || user?.vai_tro
+  const isStaff = ['SuperAdmin', 'Admin', 'NhanVienBanHang', 'QuanLyKho', 'admin', 'manager', 'staff'].includes(userRole)
+  const profilePath = portal === 'Warehouse' ? '/warehouse/profile' : (isStaff ? '/admin/profile' : '/account/profile')
 
   const menuItems = [
     { key: 'profile', label: t('admin.my_profile'), onClick: () => navigate(profilePath) },

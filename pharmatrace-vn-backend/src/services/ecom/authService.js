@@ -47,7 +47,10 @@ const loginUser = async (so_dien_thoai, mat_khau) => {
 };
 
 const getUserProfile = async (id) => {
-    const user = await authModel.findUserById(id);
+    let user = await authModel.findUserById(id);
+    if (!user) {
+        user = await authModel.findStaffById(id);
+    }
     if (!user) {
         const error = new Error('User not found');
         error.statusCode = 404;
