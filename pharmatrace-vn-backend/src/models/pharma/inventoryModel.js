@@ -1,6 +1,6 @@
 import prisma, { serializeBigInt } from '../../config/prisma.js';
 
-const callImportProcedure = async (duocPhamId, donViId, soLo, ngaySx, hsd, soLuong, quyCachId = null) => {
+const callImportProcedure = async (duocPhamId, donViId, soLo, ngaySx, hsd, soLuong, quyCachId = null, donGia = 0) => {
     // If quy_cach_id is not provided, default to the first packaging unit of the product
     let finalQuyCachId = quyCachId ? Number(quyCachId) : null;
     if (!finalQuyCachId) {
@@ -34,6 +34,17 @@ const callImportProcedure = async (duocPhamId, donViId, soLo, ngaySx, hsd, soLuo
         `CALL sp_nhap_kho_lo_thuoc_moi($1::INT, $2::INT, $3::INT)`,
         loThuoc.id, Number(donViId), Number(soLuong)
     );
+
+    if (donGia && Number(donGia) > 0) {
+        await prisma.$queryRawUnsafe(`
+            UPDATE public.lichsuphanphoi ls
+            SET ghi_chu = 'KhoiTao|price:' || $1::text
+            FROM public.hopthuoc h
+            WHERE ls.hop_thuoc_uid = h.uid 
+              AND h.lo_thuoc_id = $2::int 
+              AND ls.loai_giao_dich = 'KhoiTao'
+        `, Number(donGia), loThuoc.id);
+    }
 
     return loThuoc;
 };
@@ -93,34 +104,58 @@ const getBoxesByBatch = async (batchId) => {
 };
 
 const getAllBatches = async (userContext = null) => {
-    let query = `
-        SELECT 
-            l.id,
-            l.so_lo AS "batchNumber",
-            l.ngay_san_xuat AS "createdAt",
-            l.han_su_dung AS "expiryDate",
-            d.ten_thuoc AS "productName",
-            (SELECT COUNT(*) FROM HopThuoc WHERE lo_thuoc_id = l.id) AS "quantity"
-        FROM LoThuoc l
-        JOIN DuocPham d ON l.duoc_pham_id = d.id
-    `;
+    const unitId = (userContext && userContext.role !== 'Admin' && userContext.role !== 'SuperAdmin' && userContext.don_vi_id)
+        ? Number(userContext.don_vi_id)
+        : null;
 
-    const params = [];
-
-    // Filter by staff's current unit if user is staff (not Admin/SuperAdmin)
-    if (userContext && userContext.role !== 'Admin' && userContext.role !== 'SuperAdmin' && userContext.don_vi_id) {
-        params.push(Number(userContext.don_vi_id));
-        query += ` WHERE EXISTS (
-            SELECT 1 FROM HopThuoc h 
-            WHERE h.lo_thuoc_id = l.id 
-              AND h.don_vi_hien_tai_id = $1
-        )`;
+    if (unitId) {
+        const query = `
+            SELECT 
+                l.id,
+                l.so_lo AS "batchNumber",
+                l.ngay_san_xuat AS "createdAt",
+                l.han_su_dung AS "expiryDate",
+                d.ten_thuoc AS "productName",
+                COUNT(DISTINCT CASE WHEN h.don_vi_hien_tai_id = $1 AND h.trang_thai = 'TrongKho' THEN h.uid END)::int AS "quantity",
+                MAX(ls_out.thoi_gian) AS "transferredOutAt",
+                COALESCE(
+                    (
+                        SELECT (ls_init.tu_don_vi_id != $1)
+                        FROM public.lichsuphanphoi ls_init
+                        JOIN public.hopthuoc h_init ON ls_init.hop_thuoc_uid = h_init.uid
+                        WHERE h_init.lo_thuoc_id = l.id AND ls_init.loai_giao_dich = 'KhoiTao'
+                        LIMIT 1
+                    ),
+                    false
+                ) AS "isReceivedViaTransfer"
+            FROM LoThuoc l
+            JOIN DuocPham d ON l.duoc_pham_id = d.id
+            LEFT JOIN HopThuoc h ON h.lo_thuoc_id = l.id
+            LEFT JOIN lichsuphanphoi ls_out ON ls_out.hop_thuoc_uid = h.uid AND ls_out.tu_don_vi_id = $1 AND ls_out.loai_giao_dich = 'LuanChuyen'
+            WHERE (h.don_vi_hien_tai_id = $1 AND h.trang_thai = 'TrongKho')
+               OR (ls_out.tu_don_vi_id = $1 AND ls_out.thoi_gian >= NOW() - INTERVAL '180 days')
+            GROUP BY l.id, l.so_lo, l.ngay_san_xuat, l.han_su_dung, d.ten_thuoc
+            ORDER BY l.id DESC;
+        `;
+        const batches = await prisma.$queryRawUnsafe(query, unitId);
+        return serializeBigInt(batches);
+    } else {
+        const query = `
+            SELECT 
+                l.id,
+                l.so_lo AS "batchNumber",
+                l.ngay_san_xuat AS "createdAt",
+                l.han_su_dung AS "expiryDate",
+                d.ten_thuoc AS "productName",
+                (SELECT COUNT(*) FROM HopThuoc WHERE lo_thuoc_id = l.id AND trang_thai = 'TrongKho')::int AS "quantity",
+                false AS "isReceivedViaTransfer"
+            FROM LoThuoc l
+            JOIN DuocPham d ON l.duoc_pham_id = d.id
+            ORDER BY l.id DESC;
+        `;
+        const batches = await prisma.$queryRawUnsafe(query);
+        return serializeBigInt(batches);
     }
-
-    query += ` ORDER BY l.id DESC;`;
-
-    const batches = await prisma.$queryRawUnsafe(query, ...params);
-    return serializeBigInt(batches);
 };
 
 export { callImportProcedure, checkInventory, getTotalProductStock, deductStock, getBoxesByBatch, getAllBatches };

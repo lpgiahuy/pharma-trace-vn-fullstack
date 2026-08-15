@@ -5,3 +5,10 @@ dist/
 build/
 .DS_Store
 Thumbs.db
+
+# Database backups
+*.sql
+backup_*.sql
+
+# One-off utility/admin scripts (not for production)
+pharmatrace-vn-backend/src/scripts/

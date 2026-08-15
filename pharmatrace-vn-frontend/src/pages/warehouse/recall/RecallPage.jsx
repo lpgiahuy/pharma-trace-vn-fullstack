@@ -65,9 +65,9 @@ export default function RecallPage() {
               </Form.Item>
               <Form.Item label="Mức độ nghiêm trọng" name="severity" rules={[{ required: true, message: 'Chọn mức độ' }]}>
                 <Select options={[
-                  { value: 'Class I',   label: '🔴 Hạng I — Nguy cơ sức khỏe nghiêm trọng' },
-                  { value: 'Class II',  label: '🟠 Hạng II — Nguy cơ sức khỏe tạm thời' },
-                  { value: 'Class III', label: '🟡 Hạng III — Ít có khả năng gây hại' },
+                  { value: 'Class I',   label: 'Hạng I — Nguy cơ sức khỏe nghiêm trọng' },
+                  { value: 'Class II',  label: 'Hạng II — Nguy cơ sức khỏe tạm thời' },
+                  { value: 'Class III', label: 'Hạng III — Ít có khả năng gây hại' },
                 ]} />
               </Form.Item>
               <Form.Item label="Người khởi động" name="initiatedBy" rules={[{ required: true, message: 'Nhập tên người thực hiện' }]}>

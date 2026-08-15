@@ -50,9 +50,9 @@ router.use(protect);
 // ==============================================================================
 // 3. ADMIN API
 // ==============================================================================
-router.get('/', authorizeRoles('SuperAdmin', 'superadmin', 'QuanLyKho', 'NhanVienBanHang'), getAllCategoriesAdmin);
-router.post('/', authorizeRoles('SuperAdmin', 'superadmin'), createCategory);
-router.put('/:id', authorizeRoles('SuperAdmin', 'superadmin'), updateCategory);
-router.delete('/:id', authorizeRoles('SuperAdmin', 'superadmin'), deleteCategory);
+router.get('/', authorizeRoles('SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho', 'NhanVienBanHang'), getAllCategoriesAdmin);
+router.post('/', authorizeRoles('SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho'), createCategory);
+router.put('/:id', authorizeRoles('SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho'), updateCategory);
+router.delete('/:id', authorizeRoles('SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho'), deleteCategory);
 
 export default router;

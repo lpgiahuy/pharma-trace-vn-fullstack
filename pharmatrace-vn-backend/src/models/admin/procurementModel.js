@@ -22,7 +22,7 @@ export const createSupplierModel = async ({ ten_don_vi, loai_don_vi = 'NhaPhanPh
     return rows[0];
 };
 
-export const getPurchaseOrdersModel = async (userContext = null) => {
+export const getPurchaseOrdersModel = async (userContext = null, type = 'all') => {
     let whereClause = '';
     const params = [];
     const unitId = (userContext && userContext.role === 'SuperAdmin' && userContext.force_unit_id)
@@ -30,7 +30,13 @@ export const getPurchaseOrdersModel = async (userContext = null) => {
         : (userContext && userContext.role !== 'SuperAdmin' && userContext.don_vi_id ? Number(userContext.don_vi_id) : null);
 
     if (unitId) {
-        whereClause = ' WHERE nv.don_vi_id = $1 OR pn.nha_cung_cap_id = $1';
+        if (type === 'inbound') {
+            whereClause = ' WHERE nv.don_vi_id = $1 ';
+        } else if (type === 'supplier') {
+            whereClause = ' WHERE pn.nha_cung_cap_id = $1 ';
+        } else {
+            whereClause = ' WHERE nv.don_vi_id = $1 OR pn.nha_cung_cap_id = $1 ';
+        }
         params.push(unitId);
     }
 

@@ -97,6 +97,16 @@ export const warehouseService = {
     return data.data || data
   },
 
+  async getPurchaseOrders(type = 'inbound') {
+    const { data } = await apiClient.get(`/admin/procurement/orders?type=${type}`)
+    return data.data || []
+  },
+
+  async updatePurchaseOrderStatus(orderId, trang_thai) {
+    const { data } = await apiClient.patch(`/admin/procurement/orders/${orderId}/status`, { trang_thai })
+    return data.data || data
+  },
+
 
   async getUnits() {
     const { data } = await apiClient.get('/logistics/units')
@@ -125,6 +135,26 @@ export const warehouseService = {
 
   async transferStock(payload) {
     const { data } = await apiClient.post('/logistics/transfer', payload)
+    return data.data || data
+  },
+
+  async getTransferHistory(params = {}) {
+    const { data } = await apiClient.get(`/logistics/transfers?${buildQueryString(params)}`)
+    return data.data || []
+  },
+
+  async getPendingIncomingTransfers() {
+    const { data } = await apiClient.get('/logistics/transfers/pending')
+    return data.data || []
+  },
+
+  async getInitialInbounds(params = {}) {
+    const { data } = await apiClient.get(`/logistics/inbound-history?${buildQueryString(params)}`)
+    return data.data || []
+  },
+
+  async confirmTransferReceipt(payload) {
+    const { data } = await apiClient.post('/logistics/transfer/confirm', payload)
     return data.data || data
   },
 

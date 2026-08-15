@@ -2,8 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { Table, Tabs, Button, Modal, Form, Input, Select, InputNumber, Tag, message, Card, Space } from 'antd'
 import { PlusOutlined, ShoppingCartOutlined, ShopOutlined, ReloadOutlined } from '@ant-design/icons'
 import apiClient from '@/services/apiClient'
+import { useAuthStore } from '@/store/authStore'
 
 export default function ProcurementPage() {
+  const { user: currentUser } = useAuthStore()
+  const currentUserRole = currentUser?.role || currentUser?.vai_tro
+  const canApprovePo = ['SuperAdmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho'].includes(currentUserRole)
+
   const [activeTab, setActiveTab] = useState('1')
   const [suppliers, setSuppliers] = useState([])
   const [orders, setOrders] = useState([])
@@ -104,6 +109,21 @@ export default function ProcurementPage() {
       }
     } catch (err) {
       message.error(err.response?.data?.message || 'Lỗi tải chi tiết đơn hàng')
+    }
+  }
+
+  const handleUpdateStatus = async (id, newStatus) => {
+    try {
+      const res = await apiClient.patch(`/admin/procurement/orders/${id}/status`, { trang_thai: newStatus })
+      if (res.data?.success) {
+        message.success('Cập nhật trạng thái thành công!')
+        fetchOrders()
+        if (selectedPo && selectedPo.id === id) {
+          setSelectedPo({ ...selectedPo, trang_thai: newStatus })
+        }
+      }
+    } catch (err) {
+      message.error(err.response?.data?.message || 'Lỗi khi cập nhật trạng thái')
     }
   }
 
@@ -305,6 +325,26 @@ export default function ProcurementPage() {
         open={isDetailModalOpen}
         onCancel={() => setIsDetailModalOpen(false)}
         footer={[
+          canApprovePo && selectedPo?.trang_thai === 'ChoDuyet' && (
+            <Button key="approve" type="primary" onClick={() => handleUpdateStatus(selectedPo.id, 'DaDuyet')}>
+              Duyệt Phiếu
+            </Button>
+          ),
+          canApprovePo && selectedPo?.trang_thai === 'DaDuyet' && (
+            <Button key="inbound" type="primary" style={{ backgroundColor: '#10b981', borderColor: '#10b981' }} onClick={() => handleUpdateStatus(selectedPo.id, 'DaNhapKho')}>
+              Xác Nhận Nhập Kho
+            </Button>
+          ),
+          canApprovePo && selectedPo?.trang_thai !== 'DaHuy' && selectedPo?.trang_thai !== 'DaNhapKho' && (
+            <Button key="cancel" danger onClick={() => handleUpdateStatus(selectedPo.id, 'DaHuy')}>
+              Hủy Phiếu
+            </Button>
+          ),
+          !canApprovePo && (
+            <span key="no-perm" className="text-xs text-amber-700 font-medium mr-3 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg inline-block">
+              ⚠️ Quyền hạn: Chỉ Quản Lý Cửa Hàng / SuperAdmin mới được duyệt hoặc hủy phiếu PO
+            </span>
+          ),
           <Button key="close" onClick={() => setIsDetailModalOpen(false)}>Đóng</Button>
         ]}
         width={750}

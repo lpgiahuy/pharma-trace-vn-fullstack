@@ -65,7 +65,7 @@ const buildCategoryTree = (flatList) => {
 
 export default function CategoriesPage() {
   const user = useAuthStore(s => s.user)
-  const isSuperAdmin = ['SuperAdmin', 'superadmin'].includes(user?.vai_tro || user?.role)
+  const isSuperAdmin = ['SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho'].includes(user?.vai_tro || user?.role)
 
   const [cats, setCats] = useState([])
   const [loading, setLoading] = useState(true)

@@ -11,7 +11,7 @@ const { useBreakpoint } = Grid
 
 export default function AdminProductsPage() {
   const user = useAuthStore(s => s.user)
-  const isSuperAdmin = ['SuperAdmin', 'superadmin'].includes(user?.vai_tro || user?.role)
+  const isSuperAdmin = ['SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho'].includes(user?.vai_tro || user?.role)
 
   const [data, setData]       = useState([])
   const [total, setTotal]     = useState(0)

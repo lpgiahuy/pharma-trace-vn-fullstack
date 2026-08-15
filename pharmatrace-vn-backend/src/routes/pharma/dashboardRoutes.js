@@ -7,7 +7,7 @@ const router = express.Router();
 
 // Allow SuperAdmin, QuanLyKho, and NhanVienBanHang to view dashboard
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienBanHang'));
+router.use(authorizeRoles('SuperAdmin', 'QuanLyCuaHang', 'QuanLyKho', 'NhanVienBanHang'));
 
 /**
  * @swagger

@@ -1,6 +1,10 @@
 import express from 'express';
 import {
     transferWarehouse,
+    getTransferHistory,
+    getPendingIncomingTransfers,
+    getInitialInbounds,
+    confirmTransferReceipt,
     handleDisposal,
     handleRMA,
     handleBatchRecall,
@@ -29,6 +33,10 @@ router.get('/units', allStaff, getAllLogisticsUnits);
 router.get('/units/:id/products', allStaff, getProductsInUnit);
 router.get('/units/:id/batches', allStaff, getBatchesInUnit);
 router.get('/units/:id/uids', allStaff, getUIDsForTransfer);
+router.get('/transfers', allStaff, getTransferHistory);
+router.get('/transfers/pending', allStaff, getPendingIncomingTransfers);
+router.get('/inbound-history', allStaff, getInitialInbounds);
+router.post('/transfer/confirm', allStaff, confirmTransferReceipt);
 
 // POST write operations: only managers and above
 router.use(authorizeRoles('SuperAdmin', 'QuanLyKho'));

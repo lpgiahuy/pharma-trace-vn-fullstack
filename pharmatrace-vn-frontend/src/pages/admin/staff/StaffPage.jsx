@@ -6,9 +6,10 @@ import { useAuthStore } from '@/store/authStore'
 import { Avatar } from '@/components/ui/Avatar'
 import toast from 'react-hot-toast'
 
-const ROLES = ['SuperAdmin', 'QuanLyKho', 'NhanVienBanHang']
+const ROLES = ['SuperAdmin', 'QuanLyCuaHang', 'QuanLyKho', 'NhanVienBanHang']
 const ROLE_COLORS = {
   SuperAdmin: 'red',
+  QuanLyCuaHang: 'orange',
   QuanLyKho: 'purple',
   NhanVienBanHang: 'blue'
 }

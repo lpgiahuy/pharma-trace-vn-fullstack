@@ -8,6 +8,8 @@ import { ProtectedRoute, GuestRoute } from './ProtectedRoute'
 
 // ── Auth ────────────────────────────────────────────────────────────────────
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
+const AdminLoginPage = lazy(() => import('@/pages/auth/AdminLoginPage'))
+const WarehouseLoginPage = lazy(() => import('@/pages/auth/WarehouseLoginPage'))
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'))
 const ForgotPassword = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
 const ResetPassword = lazy(() => import('@/pages/auth/ResetPasswordPage'))
@@ -65,8 +67,8 @@ const RecallPage = lazy(() => import('@/pages/warehouse/recall/RecallPage'))
 const ScannerPage = lazy(() => import('@/pages/warehouse/scanner/ScannerPage'))
 const WarehouseProfilePage = lazy(() => import('@/pages/warehouse/profile/WarehouseProfilePage'))
 
-const ADMIN_ROLES = ['SuperAdmin', 'NhanVienBanHang', 'Admin', 'admin', 'manager', 'staff', 'QuanLyKho']
-const WAREHOUSE_ROLES = ['SuperAdmin', 'QuanLyKho', 'Admin', 'admin', 'manager', 'staff', 'NhanVienBanHang']
+const ADMIN_ROLES = ['SuperAdmin', 'NhanVienBanHang', 'Admin', 'admin', 'manager', 'staff', 'QuanLyCuaHang']
+const WAREHOUSE_ROLES = ['SuperAdmin', 'QuanLyKho', 'Admin', 'admin', 'manager', 'staff']
 
 /**
  * Loading component tạm thời trong khi chờ tải file JS
@@ -86,6 +88,8 @@ export const AppRoutes = () => (
       {/* Auth */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+        <Route path="/admin/login" element={<GuestRoute><AdminLoginPage /></GuestRoute>} />
+        <Route path="/warehouse/login" element={<GuestRoute><WarehouseLoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
         <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
         <Route path="/reset-password" element={<GuestRoute><ResetPassword /></GuestRoute>} />

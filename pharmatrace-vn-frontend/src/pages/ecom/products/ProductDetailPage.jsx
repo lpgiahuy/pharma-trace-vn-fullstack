@@ -450,7 +450,7 @@ export default function ProductDetailPage() {
               {product.chi_tiet_thuoc?.chong_chi_dinh && (
                 <section className="p-5 bg-red-50/50 rounded-2xl border border-red-100 shadow-sm" role="alert">
                   <h3 className="text-base font-bold text-red-900 mb-2.5 flex items-center gap-2">
-                    🚫 {t('product.contraindications', { defaultValue: 'Contraindications' })}
+                    {t('product.contraindications', { defaultValue: 'Contraindications' })}
                   </h3>
                   <div className="text-red-800 font-medium">
                     <RenderSafeContent content={product.chi_tiet_thuoc.chong_chi_dinh} className="text-base leading-relaxed" />
@@ -542,11 +542,11 @@ export default function ProductDetailPage() {
           {activeTab === 'thong_tin_san_xuat' && product.chi_tiet_thuoc?.thong_tin_san_xuat && (
             <div className="grid gap-5 sm:grid-cols-2 animate-fade-in">
               {[
-                { label: t('product.manufacturing.brand'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.thuong_hieu, icon: '🏷️' },
-                { label: t('product.manufacturing.manufacturer'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.nha_san_xuat, icon: '🏭' },
-                { label: t('product.manufacturing.origin'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.xuat_xu, icon: '📍' },
-                { label: t('product.manufacturing.packaging'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.quy_cach, icon: '📦' },
-                { label: t('product.manufacturing.storage'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.bao_quan, icon: '🌡️' },
+                { label: t('product.manufacturing.brand'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.thuong_hieu },
+                { label: t('product.manufacturing.manufacturer'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.nha_san_xuat },
+                { label: t('product.manufacturing.origin'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.xuat_xu },
+                { label: t('product.manufacturing.packaging'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.quy_cach },
+                { label: t('product.manufacturing.storage'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.bao_quan },
               ].filter(i => i.value).map(item => (
                 <div key={item.label} className="flex items-start gap-4 p-5 bg-white rounded-3xl border border-slate-100 shadow-sm hover:border-brand-200 hover:shadow-md transition-all group">
                   <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-xl group-hover:bg-brand-50 transition-colors">
