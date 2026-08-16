@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Form, Input, InputNumber, Select, AutoComplete, Button as AButton, Card, Table, Tag, DatePicker, Modal, Spin, Tabs } from 'antd'
-import { InboxOutlined, PrinterOutlined, CheckCircleOutlined, CarOutlined, SafetyCertificateOutlined, FileTextOutlined, HistoryOutlined } from '@ant-design/icons'
+import { Form, Input, InputNumber, Select, AutoComplete, Button as AButton, Card, Table, Tag, DatePicker, Modal, Spin, Tabs, Popconfirm } from 'antd'
+import { InboxOutlined, PrinterOutlined, CheckCircleOutlined, CarOutlined, SafetyCertificateOutlined, FileTextOutlined, HistoryOutlined, CloseCircleOutlined, EyeOutlined } from '@ant-design/icons'
 import { warehouseService } from '@/services/warehouse.service'
 import { productService } from '@/services/product.service'
 import { formatDateTime } from '@/utils'
@@ -39,6 +39,7 @@ export default function InboundPage() {
   const [received, setReceived] = useState([])
   const [shipments, setShipments] = useState([])
   const [completedInbounds, setCompletedInbounds] = useState([])
+  const [selectedShipment, setSelectedShipment] = useState(null)
   const [products, setProducts] = useState([])
   const [variants, setVariants] = useState([])
   const [units, setUnits] = useState([])
@@ -62,6 +63,7 @@ export default function InboundPage() {
         productName: item.productName || 'Unknown',
         batchNumber: item.batchNumber || '',
         quantity: item.quantity || 0,
+        unitName: item.unitName || item.don_vi_tinh || 'hộp',
         qrCode: item.batchNumber || '',
         receivedAt: item.receivedAt || item.createdAt || new Date().toISOString(),
         location: item.location || '',
@@ -95,13 +97,15 @@ export default function InboundPage() {
         const qty = Number(t.so_luong_hop || 0)
         const donGia = Number(t.don_gia || 0)
         const total = Number(t.tong_tien || (donGia * qty))
+        const unitName = t.don_vi_tinh || 'hộp'
         return {
           id: t.id,
           ma_phieu_nhap: `TRF-${t.id || Date.now()}`,
           ten_nha_cung_cap: t.ten_tu_kho || `Đơn vị #${t.tu_don_vi_id}`,
-          so_luong_mat_hang: `${t.ten_duoc_pham} (${qty} hộp)`,
+          so_luong_mat_hang: `${t.ten_duoc_pham} (${qty} ${unitName})`,
           don_gia: donGia,
           tong_tien: total,
+          don_vi_tinh: unitName,
           trang_thai: t.trang_thai || 'DangVanChuyen',
           created_at: t.thoi_gian,
           isTransfer: true,
@@ -111,21 +115,24 @@ export default function InboundPage() {
         }
       })
 
-      // 2. Completed Transfers (Đã nhận hàng chuyển kho)
+      // 2. Completed & Cancelled Transfers (Lịch sử nhận kho)
       const normalizedCompletedTransfers = (incomingTransfers || [])
-        .filter(t => t.trang_thai === 'HoanThanh' || !t.trang_thai?.startsWith('DangVanChuyen'))
+        .filter(t => t.trang_thai === 'HoanThanh' || t.trang_thai === 'DaHuy' || !t.trang_thai?.startsWith('DangVanChuyen'))
         .map(t => {
           const qty = Number(t.so_luong_hop || 0)
           const donGia = Number(t.don_gia || 0)
           const total = Number(t.tong_tien || (donGia * qty))
+          const isCancelled = t.trang_thai === 'DaHuy' || (typeof t.trang_thai === 'string' && t.trang_thai.startsWith('DaHuy'))
+          const unitName = t.don_vi_tinh || 'hộp'
           return {
             id: t.id,
             ma_phieu_nhap: `TRF-${t.id}`,
             ten_nha_cung_cap: t.ten_tu_kho || `Đơn vị #${t.tu_don_vi_id}`,
-            so_luong_mat_hang: `${t.ten_duoc_pham} (${qty} hộp)`,
+            so_luong_mat_hang: `${t.ten_duoc_pham} (${qty} ${unitName})`,
             don_gia: donGia,
             tong_tien: total,
-            trang_thai: 'HoanThanh',
+            don_vi_tinh: unitName,
+            trang_thai: isCancelled ? 'DaHuy' : 'HoanThanh',
             created_at: t.thoi_gian,
             isTransfer: true,
             tu_don_vi_id: t.tu_don_vi_id,
@@ -139,13 +146,15 @@ export default function InboundPage() {
         const qty = Number(init.so_luong_hop || 0)
         const donGia = Number(init.don_gia || 0)
         const total = Number(init.tong_tien || (donGia * qty))
+        const unitName = init.don_vi_tinh || 'hộp'
         return {
           id: `INIT-${init.id}`,
           ma_phieu_nhap: `NK-${init.so_lo}`,
           ten_nha_cung_cap: init.ten_nha_cung_cap || 'Khai báo nhập lô mới',
-          so_luong_mat_hang: `${init.ten_duoc_pham} (${qty} hộp)`,
+          so_luong_mat_hang: `${init.ten_duoc_pham} (${qty} ${unitName})`,
           don_gia: donGia,
           tong_tien: total,
+          don_vi_tinh: unitName,
           trang_thai: 'HoanThanh',
           created_at: init.thoi_gian,
           isTransfer: false,
@@ -263,6 +272,17 @@ export default function InboundPage() {
     }
   }
 
+  const handleRejectTransferReceipt = async (record) => {
+    try {
+      await warehouseService.cancelStockTransfer(record.id, record.mang_uid)
+      toast.success('Đã từ chối nhận chuyến hàng! Thuốc đã được tự động hoàn trả về Kho gửi khả dụng.')
+      await fetchShipments()
+      await fetchHistory()
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Từ chối chuyến hàng thất bại')
+    }
+  }
+
   const handleOpenPrintModal = async (batchId, batchNumber) => {
     setPrintBatchNumber(batchNumber)
     setPrintModalVisible(true)
@@ -346,11 +366,10 @@ export default function InboundPage() {
           return (
             <AButton
               size="small"
-              type="primary"
-              icon={<CheckCircleOutlined />}
-              onClick={() => isTransfer ? handleConfirmTransferReceipt(record) : handleConfirmReceipt(record.id, 'DaNhanHang')}
+              icon={<EyeOutlined />}
+              onClick={() => setSelectedShipment(record)}
             >
-              Xác Nhận Đã Nhận Hàng
+              Chi tiết
             </AButton>
           )
         }
@@ -395,7 +414,12 @@ export default function InboundPage() {
       title: 'Trạng thái',
       dataIndex: 'trang_thai',
       key: 'trang_thai',
-      render: () => <Tag color="green" icon={<CheckCircleOutlined />}>Đã hoàn tất lưu kho</Tag>
+      render: (st) => {
+        if (st === 'DaHuy') {
+          return <Tag color="error" icon={<CloseCircleOutlined />}>Đã hủy (Đã hoàn kho gốc)</Tag>
+        }
+        return <Tag color="green" icon={<CheckCircleOutlined />}>Đã hoàn tất lưu kho</Tag>
+      }
     },
     { title: 'Thời gian nhập', dataIndex: 'created_at', key: 'created_at', render: v => v ? formatDateTime(v) : '-' }
   ]
@@ -411,7 +435,7 @@ export default function InboundPage() {
         if (record.isTransferredOut || v === 0) {
           return <Tag color="volcano">Đã chuyển kho (Giữ lịch sử 180 ngày)</Tag>
         }
-        return <span className="font-semibold text-slate-800">{v} hộp</span>
+        return <span className="font-semibold text-slate-800">{v} {record.unitName || record.don_vi_tinh || 'hộp'}</span>
       }
     },
     { title: 'Thời gian', dataIndex: 'receivedAt', key: 'time', render: v => v ? formatDateTime(v) : 'Vừa xong' },
@@ -427,7 +451,7 @@ export default function InboundPage() {
         }
         return record.batchId ? (
           <AButton size="small" type="primary" icon={<PrinterOutlined />} onClick={() => handleOpenPrintModal(record.batchId, record.batchNumber)}>
-            In mã QR Tem Phụ (Hàng NCC)
+            In mã QR
           </AButton>
         ) : null
       }
@@ -550,9 +574,16 @@ export default function InboundPage() {
                           <DatePicker style={{ width: '100%' }} placeholder="YYYY-MM-DD" />
                         </Form.Item>
 
-                        <Form.Item label="Đơn giá nhập / Giá xuất xưởng (VNĐ)" name="don_gia">
+                        <Form.Item
+                          label="Đơn giá nhập / Giá xuất xưởng (VNĐ)"
+                          name="don_gia"
+                          rules={[
+                            { required: true, message: 'Vui lòng nhập đơn giá nhập kho' },
+                            { type: 'number', min: 1, message: 'Đơn giá phải lớn hơn 0' }
+                          ]}
+                        >
                           <InputNumber
-                            min={0}
+                            min={1}
                             step={1000}
                             placeholder="Ví dụ: 4000"
                             style={{ width: '100%' }}
@@ -659,6 +690,107 @@ export default function InboundPage() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal Chi Tiết Chuyến Hàng Đang Vận Chuyển */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2 text-slate-800 text-lg font-bold">
+            <CarOutlined className="text-blue-600" /> Chi tiết chuyến hàng nhập kho
+          </div>
+        }
+        open={!!selectedShipment}
+        onCancel={() => setSelectedShipment(null)}
+        footer={[
+          selectedShipment && (
+            <AButton
+              key="confirm"
+              type="primary"
+              icon={<CheckCircleOutlined />}
+              onClick={async () => {
+                const rec = selectedShipment
+                setSelectedShipment(null)
+                if (rec.isTransfer) {
+                  await handleConfirmTransferReceipt(rec)
+                } else {
+                  await handleConfirmReceipt(rec.id, 'DaNhanHang')
+                }
+              }}
+            >
+              Xác Nhận Đã Nhận Hàng
+            </AButton>
+          ),
+          selectedShipment && selectedShipment.isTransfer && (
+            <Popconfirm
+              key="reject-confirm"
+              title="Từ chối / Hủy nhận chuyến hàng?"
+              description="Toàn bộ số thuốc thuộc chuyến hàng này sẽ được tự động hoàn trả về Kho gửi khả dụng."
+              onConfirm={async () => {
+                const rec = selectedShipment
+                setSelectedShipment(null)
+                await handleRejectTransferReceipt(rec)
+              }}
+              okText="Từ chối / Hủy"
+              cancelText="Quay lại"
+              okButtonProps={{ danger: true }}
+            >
+              <AButton key="reject" danger icon={<CloseCircleOutlined />}>
+                Từ Chối / Hủy
+              </AButton>
+            </Popconfirm>
+          ),
+          <AButton key="close" onClick={() => setSelectedShipment(null)}>Đóng</AButton>
+        ]}
+        width={650}
+        centered
+      >
+        {selectedShipment && (
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
+              <div>
+                <div className="text-xs text-slate-500 font-medium">Mã phiếu / Thời gian tạo</div>
+                <div className="text-sm font-semibold text-slate-800 flex items-center gap-2 mt-0.5">
+                  <span>{selectedShipment.ma_phieu_nhap}</span>
+                  <span className="text-slate-300">•</span>
+                  <span>{selectedShipment.created_at ? formatDateTime(selectedShipment.created_at) : '-'}</span>
+                </div>
+              </div>
+              <div>
+                <Tag color="processing" icon={<CarOutlined />} className="px-3 py-1 text-xs font-semibold rounded-full">
+                  Đang vận chuyển (Chờ nhận)
+                </Tag>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="bg-amber-50/60 p-3 rounded-xl border border-amber-100">
+                <div className="text-xs text-amber-700 font-semibold mb-1">Nguồn hàng / Kho gửi</div>
+                <div className="text-sm font-semibold text-slate-800 break-words">{selectedShipment.ten_nha_cung_cap}</div>
+              </div>
+
+              <div className="bg-blue-50/60 p-3 rounded-xl border border-blue-100">
+                <div className="text-xs text-blue-700 font-semibold mb-1">Sản phẩm & Số lượng</div>
+                <div className="text-sm font-semibold text-slate-800 break-words">{selectedShipment.so_luong_mat_hang}</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+                <div className="text-xs text-slate-500 font-medium mb-1">Đơn giá nhập</div>
+                <div className="text-base font-bold text-slate-800">
+                  {selectedShipment.don_gia ? `${Number(selectedShipment.don_gia).toLocaleString('vi-VN')} đ` : '0 đ'}
+                </div>
+              </div>
+
+              <div className="bg-emerald-50/80 p-3 rounded-xl border border-emerald-200 text-center">
+                <div className="text-xs text-emerald-700 font-semibold mb-1">Tổng tiền</div>
+                <div className="text-base font-extrabold text-emerald-700">
+                  {selectedShipment.tong_tien ? `${Number(selectedShipment.tong_tien).toLocaleString('vi-VN')} đ` : '0 đ'}
+                </div>
+              </div>
             </div>
           </div>
         )}

@@ -5,6 +5,7 @@ import {
     getPendingIncomingTransfers,
     getInitialInbounds,
     confirmTransferReceipt,
+    cancelStockTransfer,
     handleDisposal,
     handleRMA,
     handleBatchRecall,
@@ -37,6 +38,7 @@ router.get('/transfers', allStaff, getTransferHistory);
 router.get('/transfers/pending', allStaff, getPendingIncomingTransfers);
 router.get('/inbound-history', allStaff, getInitialInbounds);
 router.post('/transfer/confirm', allStaff, confirmTransferReceipt);
+router.post('/transfer/:id/cancel', allStaff, cancelStockTransfer);
 
 // POST write operations: only managers and above
 router.use(authorizeRoles('SuperAdmin', 'QuanLyKho'));

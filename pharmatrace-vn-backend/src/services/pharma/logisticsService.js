@@ -46,6 +46,17 @@ const confirmTransferReceiptService = async (payload) => {
     return { message: 'Đã xác nhận nhận hàng thành công' };
 };
 
+const cancelTransferService = async (transferId, mang_uid = null) => {
+    if (!transferId) {
+        throw new Error('Thiếu mã phiếu chuyển kho');
+    }
+    const success = await logisticsModel.cancelStockTransferRequest(transferId, mang_uid);
+    if (!success) {
+        throw new Error('Không tìm thấy phiếu chuyển kho để hủy');
+    }
+    return { message: 'Đã hủy lệnh chuyển kho và hoàn thuốc về kho thành công' };
+};
+
 const processDisposal = async (payload) => {
     const { don_vi_id, mang_uid, ly_do } = payload;
 
@@ -128,6 +139,7 @@ export {
     getPendingIncomingTransfersService,
     getInitialInboundsService,
     confirmTransferReceiptService,
+    cancelTransferService,
     processDisposal,
     processRMA,
     processBatchRecall,

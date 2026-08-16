@@ -32,17 +32,18 @@ export default function WarehouseLoginPage() {
       const result = await login(credentials)
       const userRole = result.user?.role || result.user?.vai_tro
 
-      toast.success(`Đăng nhập thành công! Xin chào ${result.user?.ho_ten || 'Quản lý kho'}`)
-
-      if (userRole === 'QuanLyKho' || userRole === 'SuperAdmin') {
-        const target = (from && from !== '/' && !from.includes('/login')) ? from : '/warehouse/inbound'
-        navigate(target, { replace: true })
-      } else {
-        toast('Tài khoản của bạn có quyền Cửa hàng / Admin. Đang điều hướng...', { icon: 'ℹ️' })
-        navigate('/admin', { replace: true })
+      const allowedWarehouseRoles = ['QuanLyKho', 'NhanVienKho', 'SuperAdmin', 'superadmin']
+      if (!allowedWarehouseRoles.includes(userRole)) {
+        await useAuthStore.getState().logout()
+        toast.error('Tài khoản hoặc mật khẩu không chính xác!')
+        return
       }
+
+      toast.success(`Đăng nhập thành công! Xin chào ${result.user?.ho_ten || 'Quản lý kho'}`)
+      const target = (from && from !== '/' && !from.includes('/login')) ? from : '/warehouse/inbound'
+      navigate(target, { replace: true })
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message || 'Đăng nhập Kho WMS thất bại!')
+      toast.error(err.response?.data?.message || err.message || 'Tài khoản hoặc mật khẩu không chính xác!')
     }
   }
 

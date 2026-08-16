@@ -12,12 +12,12 @@ import toast from 'react-hot-toast'
 export default function AdminLoginPage() {
   const [showPw, setShowPw] = useState(false)
   const { login } = useAuthStore()
-  const navigate  = useNavigate()
-  const location  = useLocation()
+  const navigate = useNavigate()
+  const location = useLocation()
   const from = location.state?.from?.pathname || '/admin'
 
   const adminSchema = z.object({
-    email:    z.string().email('Email không đúng định dạng'),
+    email: z.string().email('Email không đúng định dạng'),
     password: z.string().min(6, 'Mật khẩu phải từ 6 ký tự trở lên'),
   })
 
@@ -32,9 +32,10 @@ export default function AdminLoginPage() {
       const result = await login(credentials)
       const userRole = result.user?.role || result.user?.vai_tro
 
-      if (userRole === 'QuanLyKho') {
-        toast.error('Tài khoản của bạn thuộc bộ phận Kho. Đang chuyển tới Portal Kho WMS...')
-        navigate('/warehouse/inbound', { replace: true })
+      const allowedAdminRoles = ['SuperAdmin', 'superadmin', 'Admin', 'admin', 'NhanVienBanHang', 'QuanLyCuaHang', 'manager', 'staff']
+      if (!allowedAdminRoles.includes(userRole)) {
+        await useAuthStore.getState().logout()
+        toast.error('Tài khoản hoặc mật khẩu không chính xác!')
         return
       }
 
@@ -42,7 +43,7 @@ export default function AdminLoginPage() {
       const target = (from && from !== '/' && from !== '/admin/login') ? from : '/admin'
       navigate(target, { replace: true })
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message || 'Đăng nhập Admin thất bại!')
+      toast.error(err.response?.data?.message || err.message || 'Tài khoản hoặc mật khẩu không chính xác!')
     }
   }
 
@@ -55,7 +56,7 @@ export default function AdminLoginPage() {
         </div>
         <h1 className="text-2xl sm:text-3xl font-display font-bold text-slate-900 mb-2 flex items-center gap-2">
           <Store className="w-7 h-7 text-brand-600 inline-block" />
-          Đăng Nhập Cửa Hàng & Admin
+          Welcome back, Admin!
         </h1>
         <p className="text-slate-500 text-sm">
           Hệ thống dành riêng cho Quản lý cửa hàng, Dược sĩ bán hàng và Ban quản trị PharmaTrace.

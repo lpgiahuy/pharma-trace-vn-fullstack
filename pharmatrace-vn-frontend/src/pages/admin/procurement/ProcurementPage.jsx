@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Table, Tabs, Button, Modal, Form, Input, Select, InputNumber, Tag, message, Card, Space } from 'antd'
+import { Table, Tabs, Button, Modal, Form, Input, Select, InputNumber, Tag, message, Card, Space, Tooltip, Alert } from 'antd'
 import { PlusOutlined, ShoppingCartOutlined, ShopOutlined, ReloadOutlined } from '@ant-design/icons'
 import apiClient from '@/services/apiClient'
 import { useAuthStore } from '@/store/authStore'
@@ -331,9 +331,27 @@ export default function ProcurementPage() {
             </Button>
           ),
           canApprovePo && selectedPo?.trang_thai === 'DaDuyet' && (
-            <Button key="inbound" type="primary" style={{ backgroundColor: '#10b981', borderColor: '#10b981' }} onClick={() => handleUpdateStatus(selectedPo.id, 'DaNhapKho')}>
-              Xác Nhận Nhập Kho
-            </Button>
+            <Tooltip
+              key="inbound-tooltip"
+              title={
+                selectedPo.is_internal_supplier && !selectedPo.is_in_transit
+                  ? 'Đang chờ Kho xuất phát lệnh vận chuyển hàng đi mới được xác nhận nhập kho!'
+                  : ''
+              }
+            >
+              <Button
+                key="inbound"
+                type="primary"
+                disabled={selectedPo.is_internal_supplier && !selectedPo.is_in_transit}
+                style={{
+                  backgroundColor: selectedPo.is_internal_supplier && !selectedPo.is_in_transit ? '#d1d5db' : '#10b981',
+                  borderColor: selectedPo.is_internal_supplier && !selectedPo.is_in_transit ? '#d1d5db' : '#10b981'
+                }}
+                onClick={() => handleUpdateStatus(selectedPo.id, 'DaNhapKho')}
+              >
+                Xác Nhận Nhập Kho
+              </Button>
+            </Tooltip>
           ),
           canApprovePo && selectedPo?.trang_thai !== 'DaHuy' && selectedPo?.trang_thai !== 'DaNhapKho' && (
             <Button key="cancel" danger onClick={() => handleUpdateStatus(selectedPo.id, 'DaHuy')}>
@@ -351,6 +369,15 @@ export default function ProcurementPage() {
       >
         {selectedPo && (
           <div className="space-y-4">
+            {selectedPo.is_internal_supplier && !selectedPo.is_in_transit && selectedPo.trang_thai === 'DaDuyet' && (
+              <Alert
+                type="warning"
+                showIcon
+                message="Hàng chưa được phát lệnh vận chuyển"
+                description="Phiếu nhập hàng này đến từ đơn vị nội bộ. Bạn cần chờ Kho gửi tạo Lệnh Chuyển Kho (phát lệnh vận chuyển) trước khi có thể bấm Xác Nhận Nhập Kho."
+                className="rounded-lg font-medium"
+              />
+            )}
             <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg text-sm">
               <div><strong>Nhà cung cấp:</strong> {selectedPo.ten_nha_cung_cap}</div>
               <div><strong>Trạng thái:</strong> {renderStatusTag(selectedPo.trang_thai)}</div>

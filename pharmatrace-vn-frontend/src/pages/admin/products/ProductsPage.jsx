@@ -72,7 +72,7 @@ export default function AdminProductsPage() {
     },
     { title: 'Danh mục', dataIndex: 'category',   key: 'category', responsive: ['lg'], width: 130, align: 'center', render: v => <Tag className="text-[11px] px-2 py-0.5">{v}</Tag> },
     { title: 'Giá',      dataIndex: 'price',       key: 'price',    width: 100, align: 'right', render: v => <span className="text-[13px] font-bold text-slate-700 whitespace-nowrap">{formatCurrency(v)}</span> },
-    { title: 'Kho',      dataIndex: 'totalStock',  key: 'stock',    responsive: ['sm'], width: 120, align: 'center', render: (v) => <StockBadge quantity={v} /> },
+    { title: 'Tồn kho hệ thống', dataIndex: 'totalStock',  key: 'stock',    responsive: ['sm'], width: 140, align: 'center', render: (v) => <StockBadge quantity={v} /> },
     { title: 'Lô',       dataIndex: 'batchNumber', key: 'batch',    responsive: ['xl'], width: 90, align: 'center', render: v => <span className="font-mono text-[11px]">{v}</span> },
     ...(isSuperAdmin ? [
       { title: 'Trạng thái', dataIndex: 'isActive',  key: 'status',   responsive: ['sm'], width: 90, align: 'center',

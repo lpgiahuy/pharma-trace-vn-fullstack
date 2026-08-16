@@ -81,30 +81,35 @@ const toggleProductStatus = async (id) => {
     });
 };
 
-// get all products for admin view (includes hidden/soft-deleted ones)
 const getAllAdminProducts = async (filters = {}) => {
-    const { search, sort } = filters;
-    
+    const { search, sort, don_vi_id } = filters;
+    const params = [];
+
+    let stockSubquery = `SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE duoc_pham_id = dp.id`;
+    if (don_vi_id) {
+        params.push(Number(don_vi_id));
+        stockSubquery += ` AND don_vi_id = $${params.length}`;
+    }
+
     let query = `
         WITH DistinctProducts AS (
             SELECT DISTINCT ON (dp.id)
                    dp.id, dp.ten_thuoc, dp.so_dang_ky, dp.hinh_anh_url, dp.trang_thai, dm.ten_danh_muc,
                    qc.gia_ban AS price,
-                   (SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE duoc_pham_id = dp.id) AS total_stock
+                   (${stockSubquery}) AS total_stock
             FROM DuocPham dp
             LEFT JOIN DanhMuc dm ON dp.danh_muc_id = dm.id
             LEFT JOIN QuyCachDongGoi qc ON dp.id = qc.duoc_pham_id
             WHERE 1=1
     `;
-    const params = [];
 
     if (search) {
-        query += ` AND (
-            dp.id::TEXT = $1 OR 
-            dp.ten_thuoc ILIKE '%' || $1 || '%' OR 
-            dp.so_dang_ky ILIKE '%' || $1 || '%'
-        )`;
         params.push(search);
+        query += ` AND (
+            dp.id::TEXT = $${params.length} OR 
+            dp.ten_thuoc ILIKE '%' || $${params.length} || '%' OR 
+            dp.so_dang_ky ILIKE '%' || $${params.length} || '%'
+        )`;
     }
 
     query += `

@@ -44,6 +44,9 @@ export const Header = () => {
   } = useUIStore();
   const itemCount = useCartStore((s) => s.getItemCount());
   const { user, isAuthenticated, logout } = useAuthStore();
+  const userRole = user?.role || user?.vai_tro;
+  const isInternalStaff = ["SuperAdmin", "superadmin", "Admin", "admin", "NhanVienBanHang", "QuanLyCuaHang", "QuanLyKho", "NhanVienKho", "manager", "staff"].includes(userRole);
+  const isCustomerLoggedIn = isAuthenticated && !isInternalStaff;
   const navigate = useNavigate();
   const location = useLocation();
   const { categories, fetchCategories } = useCategoryStore();
@@ -223,7 +226,7 @@ export const Header = () => {
                 <Bell className="w-5 h-5" />
               </button>
 
-              {isAuthenticated ? (
+              {isCustomerLoggedIn ? (
                 <div className="relative group">
                   <button className="flex items-center gap-1.5 px-3 py-1.5 text-white hover:bg-white/10 rounded-xl transition-all">
                     <User className="w-5 h-5" />
@@ -261,17 +264,6 @@ export const Header = () => {
                       <Heart className="w-4 h-4 text-medical-red" />{" "}
                       {t("nav.wishlist")}
                     </Link>
-                    {["SuperAdmin", "Admin", "QuanLyKho", "NhanVienBanHang", "admin", "manager", "staff"].includes(user?.role) && (
-                      <Link
-                        to="/admin"
-                        className="flex items-center gap-3 px-5 py-2.5 text-sm text-brand-600 font-black bg-brand-50/50 hover:bg-brand-50 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[18px]">
-                          admin_panel_settings
-                        </span>{" "}
-                        {t("nav.admin_portal")}
-                      </Link>
-                    )}
                     <div className="mx-3 my-2 border-t border-slate-100" />
                     <button
                       onClick={logout}

@@ -125,12 +125,24 @@ const getUIDsForTransfer = async (req, res, next) => {
     } catch (error) { next(error); }
 };
 
+const cancelStockTransfer = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { mang_uid } = req.body || {};
+        const result = await logisticsService.cancelTransferService(id, mang_uid);
+        res.status(200).json({ success: true, message: result.message });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export {
     transferWarehouse,
     getTransferHistory,
     getPendingIncomingTransfers,
     getInitialInbounds,
     confirmTransferReceipt,
+    cancelStockTransfer,
     handleDisposal,
     handleRMA,
     handleBatchRecall,

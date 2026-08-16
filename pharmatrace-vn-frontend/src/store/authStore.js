@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { authService } from '@/services/auth.service'
 import { STORAGE_KEYS } from '@/constants'
+import { getPortalKey, setPortalAuth, clearPortalAuth } from '@/utils/portalAuth'
 
 export const useAuthStore = create(
   persist(
@@ -17,25 +18,19 @@ export const useAuthStore = create(
         set({ isLoading: true, error: null })
         try {
           const result = await authService.login(credentials)
+          const portal = getPortalKey(window.location.pathname)
 
-          // Store tokens — backend may return `token` instead of `accessToken`
           const accessToken = result.accessToken || result.token
           const refreshToken = result.refreshToken || null
           const expiresAt = result.expiresAt || (Date.now() + 3600000)
 
-          if (accessToken) {
-            localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken)
-          }
-          if (refreshToken) {
-            localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken)
-          }
-          localStorage.setItem('pharma_token_expiry', expiresAt)
+          setPortalAuth(portal, result.user, accessToken, refreshToken, expiresAt)
 
           set({
             user: result.user,
             accessToken,
             refreshToken,
-            isAuthenticated: !!result.user, // When using cookies, we rely on user profile presence
+            isAuthenticated: !!result.user,
             isLoading: false,
           })
           return result
@@ -47,18 +42,31 @@ export const useAuthStore = create(
       },
 
       logout: async () => {
+        const currentUser = get().user
+        const userRole = currentUser?.role || currentUser?.vai_tro
+        const pathname = window.location.pathname
+        const portal = getPortalKey(pathname)
+
+        let redirectUrl = '/login'
+        if (['QuanLyKho', 'NhanVienKho'].includes(userRole) || portal === 'warehouse') {
+          redirectUrl = '/warehouse/login'
+        } else if (['SuperAdmin', 'superadmin', 'Admin', 'admin', 'NhanVienBanHang', 'QuanLyCuaHang', 'manager', 'staff'].includes(userRole) || portal === 'admin') {
+          redirectUrl = '/admin/login'
+        }
+
         try { await authService.logout() } catch {}
+        
+        clearPortalAuth(portal)
+
         set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false })
-        localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
-        localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
-        localStorage.removeItem('pharma_token_expiry')
         
-        // Clear cart state and persistence
-        const { useCartStore } = await import('./cartStore')
-        useCartStore.getState().clearCart()
-        localStorage.removeItem('pharma-cart')
+        if (portal === 'customer') {
+          const { useCartStore } = await import('./cartStore')
+          useCartStore.getState().clearCart()
+          localStorage.removeItem('pharma-cart')
+        }
         
-        window.location.reload()
+        window.location.href = redirectUrl
       },
 
       updateUser: (updates) => set(state => ({ user: { ...state.user, ...updates } })),

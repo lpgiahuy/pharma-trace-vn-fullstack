@@ -116,6 +116,10 @@ const getAllBatches = async (userContext = null) => {
                 l.ngay_san_xuat AS "createdAt",
                 l.han_su_dung AS "expiryDate",
                 d.ten_thuoc AS "productName",
+                COALESCE(
+                    (SELECT ten_don_vi FROM quycachdonggoi WHERE duoc_pham_id = d.id ORDER BY id ASC LIMIT 1),
+                    'Hộp'
+                ) AS "unitName",
                 COUNT(DISTINCT CASE WHEN h.don_vi_hien_tai_id = $1 AND h.trang_thai = 'TrongKho' THEN h.uid END)::int AS "quantity",
                 MAX(ls_out.thoi_gian) AS "transferredOutAt",
                 COALESCE(
@@ -134,7 +138,7 @@ const getAllBatches = async (userContext = null) => {
             LEFT JOIN lichsuphanphoi ls_out ON ls_out.hop_thuoc_uid = h.uid AND ls_out.tu_don_vi_id = $1 AND ls_out.loai_giao_dich = 'LuanChuyen'
             WHERE (h.don_vi_hien_tai_id = $1 AND h.trang_thai = 'TrongKho')
                OR (ls_out.tu_don_vi_id = $1 AND ls_out.thoi_gian >= NOW() - INTERVAL '180 days')
-            GROUP BY l.id, l.so_lo, l.ngay_san_xuat, l.han_su_dung, d.ten_thuoc
+            GROUP BY l.id, l.so_lo, l.ngay_san_xuat, l.han_su_dung, d.ten_thuoc, d.id
             ORDER BY l.id DESC;
         `;
         const batches = await prisma.$queryRawUnsafe(query, unitId);
@@ -147,6 +151,10 @@ const getAllBatches = async (userContext = null) => {
                 l.ngay_san_xuat AS "createdAt",
                 l.han_su_dung AS "expiryDate",
                 d.ten_thuoc AS "productName",
+                COALESCE(
+                    (SELECT ten_don_vi FROM quycachdonggoi WHERE duoc_pham_id = d.id ORDER BY id ASC LIMIT 1),
+                    'Hộp'
+                ) AS "unitName",
                 (SELECT COUNT(*) FROM HopThuoc WHERE lo_thuoc_id = l.id AND trang_thai = 'TrongKho')::int AS "quantity",
                 false AS "isReceivedViaTransfer"
             FROM LoThuoc l

@@ -73,13 +73,21 @@ export const getPurchaseOrderByIdModel = async (id) => {
             pn.ma_phieu_nhap,
             pn.nha_cung_cap_id,
             dv.ten_don_vi AS ten_nha_cung_cap,
+            dv.loai_don_vi AS loai_nha_cung_cap,
             pn.nguoi_tao_id,
             nv.ho_ten AS ten_nguoi_tao,
             pn.tong_tien,
             pn.trang_thai,
             pn.ghi_chu,
             pn.ngay_nhap,
-            pn.created_at
+            pn.created_at,
+            EXISTS (
+                SELECT 1 
+                FROM public.lichsuphanphoi ls
+                WHERE (ls.ghi_chu LIKE 'DangVanChuyen%' OR ls.ghi_chu = 'DangVanChuyen')
+                  AND (ls.tu_don_vi_id = pn.nha_cung_cap_id OR ls.ghi_chu LIKE '%po:' || pn.ma_phieu_nhap || '%')
+            ) AS is_in_transit,
+            (dv.id IS NOT NULL) AS is_internal_supplier
         FROM public.phieunhap pn
         LEFT JOIN public.donvi dv ON pn.nha_cung_cap_id = dv.id
         LEFT JOIN public.nhanvien nv ON pn.nguoi_tao_id = nv.id
@@ -160,12 +168,121 @@ export const createPurchaseOrderModel = async ({ nha_cung_cap_id, nguoi_tao_id, 
 };
 
 export const updatePurchaseOrderStatusModel = async (id, trang_thai) => {
-    const query = `
-        UPDATE public.phieunhap
-        SET trang_thai = $1
-        WHERE id = $2
-        RETURNING id, ma_phieu_nhap, trang_thai;
-    `;
-    const { rows } = await pool.query(query, [trang_thai, id]);
-    return rows[0];
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        const updatePoQuery = `
+            UPDATE public.phieunhap
+            SET trang_thai = $1
+            WHERE id = $2
+            RETURNING id, ma_phieu_nhap, nha_cung_cap_id, trang_thai;
+        `;
+        const { rows } = await client.query(updatePoQuery, [trang_thai, id]);
+        const po = rows[0];
+
+        if (po && trang_thai === 'DaHuy') {
+            // Check if there are items with lo_thuoc_id in chitietphieunhap
+            const itemsRes = await client.query(`
+                SELECT lo_thuoc_id FROM public.chitietphieunhap WHERE phieu_nhap_id = $1 AND lo_thuoc_id IS NOT NULL
+            `, [id]);
+
+            const loThuocIds = itemsRes.rows.map(r => r.lo_thuoc_id);
+
+            // Find all boxes for these batches or shipments currently in transit ('DangLuanChuyen')
+            let uidsRes;
+            if (loThuocIds.length > 0) {
+                uidsRes = await client.query(`
+                    SELECT ht.uid, ht.don_vi_hien_tai_id
+                    FROM public.hopthuoc ht
+                    WHERE ht.lo_thuoc_id = ANY($1::int[]) AND ht.trang_thai = 'DangLuanChuyen'
+                `, [loThuocIds]);
+            } else {
+                // Search by transfer history if lo_thuoc_id is null
+                uidsRes = await client.query(`
+                    SELECT ht.uid, ht.don_vi_hien_tai_id
+                    FROM public.hopthuoc ht
+                    JOIN public.lichsuphanphoi ls ON ht.uid = ls.hop_thuoc_uid
+                    WHERE ls.loai_giao_dich = 'LuanChuyen' 
+                      AND (ls.ghi_chu LIKE 'DangVanChuyen%' OR ls.ghi_chu = 'DangVanChuyen')
+                      AND ht.trang_thai = 'DangLuanChuyen'
+                `);
+            }
+
+            if (uidsRes && uidsRes.rows.length > 0) {
+                const uids = uidsRes.rows.map(r => r.uid);
+                // 1. Restore medicine boxes to 'TrongKho'
+                await client.query(`
+                    UPDATE public.hopthuoc
+                    SET trang_thai = 'TrongKho'
+                    WHERE uid = ANY($1::uuid[])
+                `, [uids]);
+
+                // 2. Mark transfer logs as 'DaHuy'
+                await client.query(`
+                    UPDATE public.lichsuphanphoi
+                    SET ghi_chu = 'DaHuy'
+                    WHERE hop_thuoc_uid = ANY($1::uuid[]) 
+                      AND loai_giao_dich = 'LuanChuyen'
+                      AND (ghi_chu LIKE 'DangVanChuyen%' OR ghi_chu = 'DangVanChuyen')
+                `, [uids]);
+            }
+        }
+
+        if (po && trang_thai === 'DaNhapKho') {
+            const itemsRes = await client.query(`
+                SELECT lo_thuoc_id FROM public.chitietphieunhap WHERE phieu_nhap_id = $1 AND lo_thuoc_id IS NOT NULL
+            `, [id]);
+
+            const loThuocIds = itemsRes.rows.map(r => r.lo_thuoc_id);
+
+            let transferLogsRes;
+            if (loThuocIds.length > 0) {
+                transferLogsRes = await client.query(`
+                    SELECT ls.tu_don_vi_id, ls.den_don_vi_id, array_agg(DISTINCT ls.hop_thuoc_uid) AS uids
+                    FROM public.lichsuphanphoi ls
+                    JOIN public.hopthuoc ht ON ls.hop_thuoc_uid = ht.uid
+                    WHERE ht.lo_thuoc_id = ANY($1::int[])
+                      AND ls.loai_giao_dich = 'LuanChuyen'
+                      AND (ls.ghi_chu LIKE 'DangVanChuyen%' OR ls.ghi_chu = 'DangVanChuyen')
+                    GROUP BY ls.tu_don_vi_id, ls.den_don_vi_id
+                `, [loThuocIds]);
+            } else {
+                transferLogsRes = await client.query(`
+                    SELECT ls.tu_don_vi_id, ls.den_don_vi_id, array_agg(DISTINCT ls.hop_thuoc_uid) AS uids
+                    FROM public.lichsuphanphoi ls
+                    WHERE ls.loai_giao_dich = 'LuanChuyen'
+                      AND (ls.ghi_chu LIKE 'DangVanChuyen%' OR ls.ghi_chu LIKE '%po:' || $1 || '%')
+                    GROUP BY ls.tu_don_vi_id, ls.den_don_vi_id
+                `, [po.ma_phieu_nhap]);
+            }
+
+            for (const row of transferLogsRes.rows) {
+                const { tu_don_vi_id, den_don_vi_id, uids } = row;
+                if (uids && uids.length > 0) {
+                    const pgArrayString = `{${uids.join(',')}}`;
+                    await client.query(
+                        `CALL sp_luan_chuyen_kho($1::INT, $2::INT, $3::UUID[])`,
+                        [Number(tu_don_vi_id), Number(den_don_vi_id), pgArrayString]
+                    );
+
+                    await client.query(`
+                        UPDATE public.lichsuphanphoi
+                        SET ghi_chu = 'HoanThanh' || COALESCE(SUBSTRING(ghi_chu FROM '\\|price:.*'), '')
+                        WHERE hop_thuoc_uid = ANY($1::uuid[]) 
+                          AND loai_giao_dich = 'LuanChuyen'
+                          AND (ghi_chu LIKE 'DangVanChuyen%' OR ghi_chu = 'DangVanChuyen')
+                    `, [uids]);
+                }
+            }
+        }
+
+        await client.query('COMMIT');
+        return po;
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
 };

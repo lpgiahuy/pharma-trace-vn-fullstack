@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Form, InputNumber, Select, Button as AButton, Card, Table, Tag, Alert, Modal, Descriptions } from 'antd'
-import { SwapOutlined, EyeOutlined, CheckCircleOutlined, CarOutlined } from '@ant-design/icons'
+import { Form, InputNumber, Select, Button as AButton, Card, Table, Tag, Alert, Modal, Descriptions, Popconfirm } from 'antd'
+import { SwapOutlined, EyeOutlined, CheckCircleOutlined, CarOutlined, CloseCircleOutlined } from '@ant-design/icons'
 import { warehouseService } from '@/services/warehouse.service'
 import { useAuthStore } from '@/store/authStore'
 import { formatDateTime, formatDate } from '@/utils'
@@ -11,6 +11,8 @@ export default function TransferPage() {
   const sourceUnitId = user?.don_vi_id ? Number(user.don_vi_id) : null
 
   const [form] = Form.useForm()
+  const watchQty = Form.useWatch('so_luong', form)
+  const watchPrice = Form.useWatch('don_gia', form)
   const [loading, setLoading] = useState(false)
   const [history, setHistory] = useState([])
   const [loadingHistory, setLoadingHistory] = useState(false)
@@ -84,7 +86,7 @@ export default function TransferPage() {
         return
       }
       await warehouseService.transferStock({ tu_don_vi_id: sourceUnitId, den_don_vi_id, mang_uid, ly_do, don_gia })
-      toast.success(`Đã phát lệnh chuyển ${mang_uid.length} hộp thuốc (Tổng: ${(so_luong * (don_gia || 0)).toLocaleString('vi-VN')} đ). Đang chờ kho đích xác nhận!`)
+      toast.success(`Đã phát lệnh chuyển ${mang_uid.length} ${selectedBatch?.don_vi_tinh || 'đơn vị'} thuốc (Tổng: ${(so_luong * (don_gia || 0)).toLocaleString('vi-VN')} đ). Đang chờ kho đích xác nhận!`)
       form.resetFields()
       setBatches([])
       setSelectedBatch(null)
@@ -96,17 +98,24 @@ export default function TransferPage() {
     finally { setLoading(false) }
   }
 
-  const watchQty = Form.useWatch('so_luong', form)
-  const watchPrice = Form.useWatch('don_gia', form)
-
   const destUnitOptions = units
     .filter(u => u.id !== sourceUnitId)
     .map(u => ({ value: u.id, label: `${u.ten_don_vi}${u.loai_don_vi ? ` — ${u.loai_don_vi}` : ''}` }))
 
+  const handleCancelTransfer = async (transferId) => {
+    try {
+      await warehouseService.cancelStockTransfer(transferId)
+      toast.success('Hủy lệnh chuyển kho và hoàn hàng về kho gốc thành công!')
+      fetchHistory()
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Hủy lệnh chuyển thất bại')
+    }
+  }
+
   const cols = [
     { title: 'Sản phẩm', dataIndex: 'ten_duoc_pham', key: 'productName', render: (v, r) => v || r.productName || 'Dược phẩm' },
     { title: 'Số lô', dataIndex: 'so_lo', key: 'batchNumber', render: (v, r) => <span className="font-mono text-xs">{v || r.batchNumber}</span> },
-    { title: 'Số hộp', dataIndex: 'so_luong_hop', key: 'quantity', render: (v, r) => v || r.quantity || 0 },
+    { title: 'Số lượng', dataIndex: 'so_luong_hop', key: 'quantity', render: (v, r) => `${v || r.quantity || 0} ${r.don_vi_tinh || 'hộp'}` },
     {
       title: 'Đơn giá',
       dataIndex: 'don_gia',
@@ -129,7 +138,7 @@ export default function TransferPage() {
       key: 'status',
       render: (st) => {
         if (st === 'DaHuy') {
-          return <Tag color="error">Đã hủy</Tag>
+          return <Tag color="error">Đã hủy (Đã hoàn kho gốc)</Tag>
         }
         if (st === 'DangVanChuyen' || (typeof st === 'string' && st.startsWith('DangVanChuyen')) || st === 'IN_TRANSIT') {
           return <Tag color="processing" icon={<CarOutlined />}>Đang vận chuyển (Chờ nhận)</Tag>
@@ -178,7 +187,7 @@ export default function TransferPage() {
                 optionFilterProp="label"
                 options={products.map(p => ({
                   value: p.id,
-                  label: `${p.ten_thuoc} (${p.so_hop_trong_kho} hộp)`,
+                  label: `${p.ten_thuoc} (${p.so_hop_trong_kho} ${p.don_vi_tinh || 'hộp'})`,
                 }))}
                 onChange={handleProductChange}
               />
@@ -194,7 +203,7 @@ export default function TransferPage() {
                   const hsd = b.han_su_dung || b.expiryDate || b.ngay_het_han || b.hsd
                   return {
                     value: b.id,
-                    label: `${b.so_lo} — HSD: ${hsd ? formatDate(hsd) : 'Chưa cập nhật'} (${b.so_hop_trong_kho} hộp)`,
+                    label: `${b.so_lo} — HSD: ${hsd ? formatDate(hsd) : 'Chưa cập nhật'} (${b.so_hop_trong_kho} ${b.don_vi_tinh || 'hộp'})`,
                   }
                 })}
                 onChange={handleBatchChange}
@@ -203,7 +212,7 @@ export default function TransferPage() {
 
             {/* Quantity */}
             <Form.Item
-              label={selectedBatch ? `Số lượng hộp (tối đa ${selectedBatch.so_hop_trong_kho})` : 'Số lượng hộp'}
+              label={selectedBatch ? `Số lượng (${selectedBatch.so_hop_trong_kho} ${selectedBatch.don_vi_tinh || 'hộp'} khả dụng)` : 'Số lượng'}
               name="so_luong"
               rules={[{ required: true, message: 'Nhập số lượng' }]}
             >
@@ -212,13 +221,13 @@ export default function TransferPage() {
                 max={selectedBatch ? parseInt(selectedBatch.so_hop_trong_kho) : undefined}
                 disabled={!selectedBatch}
                 style={{ width: '100%' }}
-                placeholder="Nhập số hộp cần chuyển"
+                placeholder={`Nhập số lượng cần chuyển (${selectedBatch?.don_vi_tinh || 'đơn vị'})`}
               />
             </Form.Item>
 
             {/* Unit Price */}
             <Form.Item
-              label="Đơn giá chuyển kho (VNĐ / hộp — Tùy chọn)"
+              label={`Đơn giá chuyển kho (VNĐ / ${selectedBatch?.don_vi_tinh || 'đơn vị'} — Tùy chọn)`}
               name="don_gia"
             >
               <InputNumber
@@ -227,7 +236,7 @@ export default function TransferPage() {
                 formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                 parser={value => value.replace(/\s?\(?\$?\)?\s?|,/g, '')}
                 style={{ width: '100%' }}
-                placeholder="Nhập đơn giá tự định giá (tùy chọn)"
+                placeholder={`Nhập đơn giá cho mỗi ${selectedBatch?.don_vi_tinh || 'đơn vị'} (tùy chọn)`}
               />
             </Form.Item>
 
@@ -250,14 +259,14 @@ export default function TransferPage() {
           {selectedBatch && (
             <Alert
               type="info" showIcon className="mb-4"
-              message={`Lô ${selectedBatch.so_lo} — Còn ${selectedBatch.so_hop_trong_kho} hộp — HSD: ${(selectedBatch.han_su_dung || selectedBatch.expiryDate || selectedBatch.ngay_het_han || selectedBatch.hsd) ? formatDate(selectedBatch.han_su_dung || selectedBatch.expiryDate || selectedBatch.ngay_het_han || selectedBatch.hsd) : 'Chưa cập nhật'}`}
+              message={`Lô ${selectedBatch.so_lo} — Còn ${selectedBatch.so_hop_trong_kho} ${selectedBatch.don_vi_tinh || 'hộp'} — HSD: ${(selectedBatch.han_su_dung || selectedBatch.expiryDate || selectedBatch.ngay_het_han || selectedBatch.hsd) ? formatDate(selectedBatch.han_su_dung || selectedBatch.expiryDate || selectedBatch.ngay_het_han || selectedBatch.hsd) : 'Chưa cập nhật'}`}
             />
           )}
 
           {Boolean(watchQty && watchPrice) && (
             <Alert
               type="success" showIcon className="mb-4 font-semibold text-emerald-800"
-              message={`Tổng giá trị lô hàng chuyển: ${(watchQty * watchPrice).toLocaleString('vi-VN')} VNĐ (${watchQty} hộp × ${watchPrice.toLocaleString('vi-VN')} đ/hộp)`}
+              message={`Tổng giá trị lô hàng chuyển: ${(watchQty * watchPrice).toLocaleString('vi-VN')} VNĐ (${watchQty} ${selectedBatch?.don_vi_tinh || 'đơn vị'} × ${watchPrice.toLocaleString('vi-VN')} đ/${selectedBatch?.don_vi_tinh || 'đơn vị'})`}
             />
           )}
 
@@ -280,6 +289,25 @@ export default function TransferPage() {
         open={!!detailRecord}
         onCancel={() => setDetailRecord(null)}
         footer={[
+          detailRecord && (detailRecord.trang_thai === 'DangVanChuyen' || (typeof detailRecord.trang_thai === 'string' && detailRecord.trang_thai.startsWith('DangVanChuyen'))) && (
+            <Popconfirm
+              key="cancel-confirm"
+              title="Hủy lệnh chuyển kho?"
+              description="Toàn bộ số thuốc thuộc lệnh chuyển này sẽ được hoàn trả về kho gốc khả dụng."
+              onConfirm={async () => {
+                const recId = detailRecord.id
+                setDetailRecord(null)
+                await handleCancelTransfer(recId)
+              }}
+              okText="Hủy lệnh"
+              cancelText="Quay lại"
+              okButtonProps={{ danger: true }}
+            >
+              <AButton danger icon={<CloseCircleOutlined />}>
+                Hủy lệnh chuyển kho
+              </AButton>
+            </Popconfirm>
+          ),
           <AButton key="close" type="primary" onClick={() => setDetailRecord(null)}>
             Đóng
           </AButton>
@@ -359,7 +387,7 @@ export default function TransferPage() {
               <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
                 <div className="text-xs text-slate-500 font-medium mb-1">Số lượng chuyển</div>
                 <div className="text-base font-bold text-slate-900">
-                  {detailRecord.so_luong_hop || detailRecord.quantity || 0} <span className="text-xs font-normal text-slate-500">hộp</span>
+                  {detailRecord.so_luong_hop || detailRecord.quantity || 0} <span className="text-xs font-normal text-slate-500">{detailRecord.don_vi_tinh || 'hộp'}</span>
                 </div>
               </div>
 

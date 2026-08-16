@@ -9,6 +9,7 @@ const normalizeInbound = (i) => {
     productName: i.ten_thuoc || i.productName || 'Unknown',
     batchNumber: i.so_lo || i.batchNumber || '',
     quantity: i.so_luong || i.quantity || 0,
+    unitName: i.unitName || i.don_vi_tinh || i.ten_don_vi || 'hộp',
     location: i.vi_tri || i.location || '',
     qrCode: i.ma_qr || i.qrCode || '',
     receivedAt: i.ngay_nhap || i.createdAt || i.receivedAt,
@@ -155,6 +156,11 @@ export const warehouseService = {
 
   async confirmTransferReceipt(payload) {
     const { data } = await apiClient.post('/logistics/transfer/confirm', payload)
+    return data.data || data
+  },
+
+  async cancelStockTransfer(id, mang_uid = null) {
+    const { data } = await apiClient.post(`/logistics/transfer/${id}/cancel`, { mang_uid })
     return data.data || data
   },
 

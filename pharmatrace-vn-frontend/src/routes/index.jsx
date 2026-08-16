@@ -67,8 +67,8 @@ const RecallPage = lazy(() => import('@/pages/warehouse/recall/RecallPage'))
 const ScannerPage = lazy(() => import('@/pages/warehouse/scanner/ScannerPage'))
 const WarehouseProfilePage = lazy(() => import('@/pages/warehouse/profile/WarehouseProfilePage'))
 
-const ADMIN_ROLES = ['SuperAdmin', 'NhanVienBanHang', 'Admin', 'admin', 'manager', 'staff', 'QuanLyCuaHang']
-const WAREHOUSE_ROLES = ['SuperAdmin', 'QuanLyKho', 'Admin', 'admin', 'manager', 'staff']
+const ADMIN_ROLES = ['SuperAdmin', 'superadmin', 'NhanVienBanHang', 'Admin', 'admin', 'manager', 'staff', 'QuanLyCuaHang']
+const WAREHOUSE_ROLES = ['SuperAdmin', 'superadmin', 'QuanLyKho', 'NhanVienKho']
 
 /**
  * Loading component tạm thời trong khi chờ tải file JS

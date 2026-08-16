@@ -50,7 +50,11 @@ const toggleProductStatus = async (req, res, next) => {
 
 const getAllProductsAdmin = async (req, res, next) => {
     try {
-        const data = await adminProductService.fetchAdminProducts(req.query) || [];
+        const filters = {
+            ...req.query,
+            don_vi_id: req.query.don_vi_id || req.user?.don_vi_id || null
+        };
+        const data = await adminProductService.fetchAdminProducts(filters) || [];
         res.status(200).json({ success: true, data });
     } catch (error) {
         next(error);

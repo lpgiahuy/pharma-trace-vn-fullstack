@@ -32,20 +32,20 @@ export default function LoginPage() {
     try {
       const credentials = { loginType: 'customer', phone: data.phone, password: data.password }
       const result = await login(credentials)
-      toast.success(`${t('auth.welcome_back')}, ${(result.user?.ho_ten || result.user?.name || '').split(' ').pop()}!`)
-
       const userRole = result.user?.role || result.user?.vai_tro
-      let target = '/'
-      if (userRole === 'QuanLyKho') {
-        target = '/warehouse/inbound'
-      } else if (['SuperAdmin', 'QuanLyCuaHang', 'NhanVienBanHang'].includes(userRole)) {
-        target = '/admin'
-      } else {
-        target = (from && from !== '/login') ? from : '/'
+
+      const internalRoles = ['QuanLyKho', 'NhanVienKho', 'SuperAdmin', 'superadmin', 'Admin', 'admin', 'NhanVienBanHang', 'QuanLyCuaHang']
+      if (internalRoles.includes(userRole)) {
+        await useAuthStore.getState().logout()
+        toast.error('Tài khoản hoặc mật khẩu không chính xác!')
+        return
       }
+
+      toast.success(`${t('auth.welcome_back')}, ${(result.user?.ho_ten || result.user?.name || '').split(' ').pop()}!`)
+      const target = (from && from !== '/login') ? from : '/'
       navigate(target, { replace: true })
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message || t('auth.signin_failed'))
+      toast.error(err.response?.data?.message || err.message || 'Tài khoản hoặc mật khẩu không chính xác!')
     }
   }
 
