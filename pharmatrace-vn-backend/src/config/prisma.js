@@ -40,6 +40,27 @@ const prisma = basePrisma.$extends({
                     return query(args);
                 });
             }
+        },
+        async $queryRawUnsafe({ args, query }) {
+            const user = getCurrentUserContext();
+            if (!user) {
+                return query(args);
+            }
+            return basePrisma.$transaction(async (tx) => {
+                const userId = user.id ? String(user.id) : '';
+                const userType = user.type || (user.role === 'customer' ? 'customer' : 'staff');
+                const unitId = user.don_vi_id ? String(user.don_vi_id) : '';
+                const role = user.role || '';
+
+                await tx.$executeRawUnsafe(`
+                    SET LOCAL app.current_user_id = '${userId}';
+                    SET LOCAL app.current_user_type = '${userType}';
+                    SET LOCAL app.current_unit_id = '${unitId}';
+                    SET LOCAL app.current_user_role = '${role}';
+                `);
+
+                return tx.$queryRawUnsafe(...args);
+            });
         }
     }
 });
@@ -47,6 +68,7 @@ const prisma = basePrisma.$extends({
 export const serializeBigInt = (obj) => {
     if (obj === null || obj === undefined) return obj;
     if (typeof obj === 'bigint') return Number(obj);
+    if (obj instanceof Date) return obj.toISOString();
     
     // Convert Prisma Decimal to standard JavaScript Number
     if (typeof obj === 'object' && obj.constructor && (obj.constructor.name.includes('Decimal') || (obj.s !== undefined && obj.e !== undefined && Array.isArray(obj.d)))) {

@@ -21,11 +21,23 @@ const createNewProduct = async (productData, variantsData) => {
 
         if (variantsData && variantsData.length > 0) {
             await tx.quycachdonggoi.createMany({
-                data: variantsData.map(variant => ({
-                    duoc_pham_id: product.id,
-                    ten_don_vi: variant.ten_don_vi,
-                    gia_ban: variant.gia_ban
-                }))
+                data: variantsData.map(v => {
+                    const giaBan = Number(v.gia_ban) || 0;
+                    const giaGoc = v.gia_goc ? Number(v.gia_goc) : null;
+                    let pct = v.phan_tram_giam ? Number(v.phan_tram_giam) : 0;
+                    if (giaGoc && giaGoc > giaBan && (!pct || pct === 0)) {
+                        pct = Math.max(0, Math.round(((giaGoc - giaBan) / giaGoc) * 100));
+                    }
+                    return {
+                        duoc_pham_id: product.id,
+                        ten_don_vi: v.ten_don_vi,
+                        gia_ban: giaBan,
+                        gia_goc: giaGoc,
+                        phan_tram_giam: pct,
+                        thoi_gian_bat_dau_sale: v.thoi_gian_bat_dau_sale ? new Date(v.thoi_gian_bat_dau_sale) : null,
+                        thoi_gian_ket_thuc_sale: v.thoi_gian_ket_thuc_sale ? new Date(v.thoi_gian_ket_thuc_sale) : null,
+                    };
+                })
             });
         }
 
@@ -69,30 +81,40 @@ const toggleProductStatus = async (id) => {
     });
 };
 
-// get all products for admin view (includes hidden/soft-deleted ones)
 const getAllAdminProducts = async (filters = {}) => {
-    const { search, sort } = filters;
-    
+    const { search, sort, don_vi_id, is_super_admin } = filters;
+    const params = [];
+
+    let stockSubquery;
+    if (is_super_admin) {
+        // SuperAdmin: sum stock across ALL internal PharmaTrace units
+        stockSubquery = `SELECT COALESCE(SUM(tk2.so_luong_ton), 0) FROM TonKho tk2 JOIN DonVi dv2 ON tk2.don_vi_id = dv2.id WHERE tk2.duoc_pham_id = dp.id AND dv2.la_don_vi_noi_bo = TRUE`;
+    } else if (don_vi_id) {
+        params.push(Number(don_vi_id));
+        stockSubquery = `SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE duoc_pham_id = dp.id AND don_vi_id = $${params.length}`;
+    } else {
+        stockSubquery = `SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE duoc_pham_id = dp.id`;
+    }
+
     let query = `
         WITH DistinctProducts AS (
             SELECT DISTINCT ON (dp.id)
                    dp.id, dp.ten_thuoc, dp.so_dang_ky, dp.hinh_anh_url, dp.trang_thai, dm.ten_danh_muc,
                    qc.gia_ban AS price,
-                   (SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE duoc_pham_id = dp.id) AS total_stock
+                   (${stockSubquery}) AS total_stock
             FROM DuocPham dp
             LEFT JOIN DanhMuc dm ON dp.danh_muc_id = dm.id
             LEFT JOIN QuyCachDongGoi qc ON dp.id = qc.duoc_pham_id
             WHERE 1=1
     `;
-    const params = [];
 
     if (search) {
-        query += ` AND (
-            dp.id::TEXT = $1 OR 
-            dp.ten_thuoc ILIKE '%' || $1 || '%' OR 
-            dp.so_dang_ky ILIKE '%' || $1 || '%'
-        )`;
         params.push(search);
+        query += ` AND (
+            dp.id::TEXT = $${params.length} OR 
+            dp.ten_thuoc ILIKE '%' || $${params.length} || '%' OR 
+            dp.so_dang_ky ILIKE '%' || $${params.length} || '%'
+        )`;
     }
 
     query += `
@@ -163,11 +185,23 @@ const updateProductDb = async (id, productData, variantsData) => {
 
         if (variantsData && variantsData.length > 0) {
             await tx.quycachdonggoi.createMany({
-                data: variantsData.map(v => ({
-                    duoc_pham_id: productId,
-                    ten_don_vi: v.ten_don_vi,
-                    gia_ban: v.gia_ban
-                }))
+                data: variantsData.map(v => {
+                    const giaBan = Number(v.gia_ban) || 0;
+                    const giaGoc = v.gia_goc ? Number(v.gia_goc) : null;
+                    let pct = v.phan_tram_giam ? Number(v.phan_tram_giam) : 0;
+                    if (giaGoc && giaGoc > giaBan && (!pct || pct === 0)) {
+                        pct = Math.max(0, Math.round(((giaGoc - giaBan) / giaGoc) * 100));
+                    }
+                    return {
+                        duoc_pham_id: productId,
+                        ten_don_vi: v.ten_don_vi,
+                        gia_ban: giaBan,
+                        gia_goc: giaGoc,
+                        phan_tram_giam: pct,
+                        thoi_gian_bat_dau_sale: v.thoi_gian_bat_dau_sale ? new Date(v.thoi_gian_bat_dau_sale) : null,
+                        thoi_gian_ket_thuc_sale: v.thoi_gian_ket_thuc_sale ? new Date(v.thoi_gian_ket_thuc_sale) : null,
+                    };
+                })
             });
         }
 

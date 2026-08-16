@@ -3,10 +3,18 @@ import pool from '../../config/db.js';
 /**
  * Lấy số liệu thống kê tài chính KPI (Doanh thu, Chi phí, Công nợ AR/AP, Dòng tiền)
  */
-export const getFinanceStatsModel = async () => {
+export const getFinanceStatsModel = async (userContext = null) => {
     const client = await pool.connect();
     try {
-        await client.query("SELECT set_config('app.bypass_rls', 'on', true)");
+        const unitId = (userContext && userContext.role === 'SuperAdmin' && userContext.force_unit_id)
+            ? Number(userContext.force_unit_id)
+            : (userContext && userContext.role !== 'SuperAdmin' && userContext.don_vi_id ? Number(userContext.don_vi_id) : null);
+
+        if (!unitId) {
+            await client.query("SELECT set_config('app.bypass_rls', 'on', true)");
+        } else {
+            await client.query(`SELECT set_config('app.current_unit_id', '${unitId}', true)`);
+        }
 
         // 1. Tổng tiền Thu & Tổng tiền Chi trong Sổ quỹ
         const cashbookRes = await client.query(`

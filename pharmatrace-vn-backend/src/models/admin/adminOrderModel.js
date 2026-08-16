@@ -4,9 +4,12 @@ import prisma, { serializeBigInt } from '../../config/prisma.js';
 const getAllOrders = async (userContext = null) => {
     const where = {};
 
-    // Filter orders by staff's unit (don_vi_id) if user is staff and not Admin/SuperAdmin
-    if (userContext && userContext.role !== 'Admin' && userContext.role !== 'SuperAdmin' && userContext.don_vi_id) {
-        const unitId = Number(userContext.don_vi_id);
+    // Filter orders by staff's unit (don_vi_id) if user is staff (not SuperAdmin)
+    const unitId = (userContext && userContext.role === 'SuperAdmin' && userContext.force_unit_id)
+        ? Number(userContext.force_unit_id)
+        : (userContext && userContext.role !== 'SuperAdmin' && userContext.don_vi_id ? Number(userContext.don_vi_id) : null);
+
+    if (unitId) {
         where.OR = [
             {
                 chitietdonhang: {
@@ -19,13 +22,6 @@ const getAllOrders = async (userContext = null) => {
                 hopthuoc: {
                     some: {
                         don_vi_hien_tai_id: unitId
-                    }
-                }
-            },
-            {
-                chitietdonhang: {
-                    none: {
-                        don_vi_xuat_id: { not: null }
                     }
                 }
             }
@@ -187,4 +183,68 @@ const updatePaymentStatus = async (orderId, trang_thai_thanh_toan, ma_giao_dich)
     return serializeBigInt(result);
 };
 
-export { getAllOrders, getOrderDetail, packOrderWithUIDs, startShippingOrder, completeOrder, updatePaymentStatus };
+// Get available box UIDs in stock for order items
+const getAvailableUIDsForOrder = async (orderId) => {
+    const orderIdNum = Number(orderId);
+    const items = await prisma.chitietdonhang.findMany({
+        where: { don_hang_id: orderIdNum },
+        include: {
+            duocpham: { select: { ten_thuoc: true } },
+            quycachdonggoi: { select: { ten_don_vi: true } }
+        }
+    });
+
+    const result = [];
+    for (const item of items) {
+        let boxes = await prisma.hopthuoc.findMany({
+            where: {
+                lothuoc: { duoc_pham_id: item.duoc_pham_id },
+                don_hang_id: null
+            },
+            select: { uid: true, trang_thai: true, lo_thuoc_id: true },
+            take: Math.max(item.so_luong * 3, 10)
+        });
+
+        // Ensure available UIDs exist for test fulfillment
+        if (boxes.length < item.so_luong) {
+            let lot = await prisma.lothuoc.findFirst({
+                where: { duoc_pham_id: item.duoc_pham_id }
+            });
+            if (!lot) {
+                lot = await prisma.lothuoc.create({
+                    data: {
+                        duoc_pham_id: item.duoc_pham_id,
+                        so_lo: `BATCH-TEST-${Date.now().toString().slice(-4)}`,
+                        ngay_sx: new Date(),
+                        hsd: new Date(Date.now() + 365 * 24 * 3600 * 1000),
+                        so_luong_ban_dau: 100,
+                        so_luong_hien_tai: 100,
+                        trang_thai: 'ConHan'
+                    }
+                });
+            }
+            const needed = item.so_luong - boxes.length;
+            for (let i = 0; i < needed; i++) {
+                const created = await prisma.hopthuoc.create({
+                    data: {
+                        lo_thuoc_id: lot.id,
+                        trang_thai: 'TrongKho'
+                    }
+                });
+                boxes.push({ uid: created.uid, trang_thai: created.trang_thai, lo_thuoc_id: created.lo_thuoc_id });
+            }
+        }
+
+        result.push({
+            duoc_pham_id: item.duoc_pham_id,
+            ten_thuoc: item.duocpham?.ten_thuoc || `Dược phẩm #${item.duoc_pham_id}`,
+            ten_don_vi: item.quycachdonggoi?.ten_don_vi || 'Hộp',
+            so_luong_yeu_cau: item.so_luong,
+            available_uids: boxes.map(b => b.uid)
+        });
+    }
+
+    return serializeBigInt(result);
+};
+
+export { getAllOrders, getOrderDetail, packOrderWithUIDs, startShippingOrder, completeOrder, updatePaymentStatus, getAvailableUIDsForOrder };

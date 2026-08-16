@@ -21,7 +21,7 @@ const router = express.Router();
 
 // All routes require authentication and warehouse or admin role
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'QuanLyKho'));
+router.use(authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienKho'));
 
 /**
  * @swagger

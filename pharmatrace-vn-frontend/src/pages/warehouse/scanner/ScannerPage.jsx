@@ -169,16 +169,6 @@ export default function ScannerPage() {
             Tra cứu
           </AButton>
         </div>
-
-        {/* Demo */}
-        <div className="mt-3 flex gap-2 flex-wrap">
-          <p className="text-xs text-slate-400 w-full">Thử quét mẫu:</p>
-          {['QR-BATCH-0001', 'QR-BATCH-0002', 'QR-BATCH-0003'].map(code => (
-            <AButton key={code} size="small" onClick={() => { setManualCode(code); handleScan(code) }}>
-              {code}
-            </AButton>
-          ))}
-        </div>
       </Card>
 
       {loading && <InlineLoader text="Đang tra cứu…" />}

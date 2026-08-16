@@ -9,6 +9,7 @@ const normalizeInbound = (i) => {
     productName: i.ten_thuoc || i.productName || 'Unknown',
     batchNumber: i.so_lo || i.batchNumber || '',
     quantity: i.so_luong || i.quantity || 0,
+    unitName: i.unitName || i.don_vi_tinh || i.ten_don_vi || 'hộp',
     location: i.vi_tri || i.location || '',
     qrCode: i.ma_qr || i.qrCode || '',
     receivedAt: i.ngay_nhap || i.createdAt || i.receivedAt,
@@ -97,6 +98,16 @@ export const warehouseService = {
     return data.data || data
   },
 
+  async getPurchaseOrders(type = 'inbound') {
+    const { data } = await apiClient.get(`/admin/procurement/orders?type=${type}`)
+    return data.data || []
+  },
+
+  async updatePurchaseOrderStatus(orderId, trang_thai) {
+    const { data } = await apiClient.patch(`/admin/procurement/orders/${orderId}/status`, { trang_thai })
+    return data.data || data
+  },
+
 
   async getUnits() {
     const { data } = await apiClient.get('/logistics/units')
@@ -125,6 +136,31 @@ export const warehouseService = {
 
   async transferStock(payload) {
     const { data } = await apiClient.post('/logistics/transfer', payload)
+    return data.data || data
+  },
+
+  async getTransferHistory(params = {}) {
+    const { data } = await apiClient.get(`/logistics/transfers?${buildQueryString(params)}`)
+    return data.data || []
+  },
+
+  async getPendingIncomingTransfers() {
+    const { data } = await apiClient.get('/logistics/transfers/pending')
+    return data.data || []
+  },
+
+  async getInitialInbounds(params = {}) {
+    const { data } = await apiClient.get(`/logistics/inbound-history?${buildQueryString(params)}`)
+    return data.data || []
+  },
+
+  async confirmTransferReceipt(payload) {
+    const { data } = await apiClient.post('/logistics/transfer/confirm', payload)
+    return data.data || data
+  },
+
+  async cancelStockTransfer(id, mang_uid = null) {
+    const { data } = await apiClient.post(`/logistics/transfer/${id}/cancel`, { mang_uid })
     return data.data || data
   },
 

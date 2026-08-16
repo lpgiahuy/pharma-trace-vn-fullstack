@@ -46,4 +46,11 @@ const softDeleteCategory = async (id) => {
     return !!updated;
 };
 
-export { getAllCategories, createCategory, updateCategory, softDeleteCategory };
+const hardDeleteCategory = async (id) => {
+    const deleted = await prisma.danhmuc.delete({
+        where: { id: Number(id) }
+    });
+    return !!deleted;
+};
+
+export { getAllCategories, createCategory, updateCategory, softDeleteCategory, hardDeleteCategory };

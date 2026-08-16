@@ -12,6 +12,7 @@ export const ProductFilters = memo(({
   categories, 
   selectedCategory, 
   onCategoryChange,
+  onCategoryToggle,
   minPrice,
   maxPrice,
   onPriceChange,
@@ -29,6 +30,8 @@ export const ProductFilters = memo(({
   const [localMax, setLocalMax] = useState(maxPrice || '')
   const [brandSearch, setBrandSearch] = useState('')
   const [showAllBrands, setShowAllBrands] = useState(false)
+
+  const handleCatToggle = onCategoryToggle || onCategoryChange;
 
   // Sync local inputs with props when filters are cleared
   useEffect(() => {
@@ -61,7 +64,7 @@ export const ProductFilters = memo(({
         {hasActiveFilters && (
           <button 
             onClick={onClearFilters} 
-            className="text-xs text-red-500 hover:underline flex items-center gap-1"
+            className="text-xs text-red-500 hover:underline flex items-center gap-1 cursor-pointer"
             aria-label="Clear all filters"
           >
             <X className="w-3 h-3" /> {t('common.clear_all', { defaultValue: 'Clear all' })}
@@ -74,17 +77,17 @@ export const ProductFilters = memo(({
         <h4 className="text-sm font-bold text-slate-800">{t('product_list.category', { defaultValue: 'Danh mục' })}</h4>
         <div className="space-y-2" role="group" aria-label="Filter by category">
           <button
-            onClick={() => onCategoryChange('')}
+            onClick={() => handleCatToggle('')}
             aria-pressed={!selectedCategory}
             className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-[13px] font-medium transition-all group",
+              "w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-[13px] font-medium transition-all group cursor-pointer",
               !selectedCategory 
                 ? "bg-brand-50 border-brand-200 text-brand-700 shadow-sm" 
                 : "bg-surface-soft/50 border-slate-100 text-slate-600 hover:border-brand-200 hover:bg-white"
             )}
           >
             <div className={cn(
-              "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
+              "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all shrink-0",
               !selectedCategory ? "border-brand-500 bg-brand-500" : "border-slate-300 group-hover:border-brand-400"
             )}>
               {!selectedCategory && <Check className="w-3 h-3 text-white" />}
@@ -97,7 +100,7 @@ export const ProductFilters = memo(({
               key={cat.id}
               cat={cat}
               selectedCategory={selectedCategory}
-              onCategoryChange={onCategoryChange}
+              onCategoryToggle={handleCatToggle}
             />
           ))}
         </div>

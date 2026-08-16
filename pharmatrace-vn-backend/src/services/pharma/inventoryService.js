@@ -2,7 +2,7 @@ import * as inventoryModel from '../../models/pharma/inventoryModel.js';
 import { generateSignature } from '../../utils/qrCrypto.js';
 
 const importNewBatch = async (payload) => {
-    const { duoc_pham_id, don_vi_id, so_lo, ngay_sx, hsd, so_luong_hop } = payload;
+    const { duoc_pham_id, don_vi_id, so_lo, ngay_sx, hsd, so_luong_hop, don_gia } = payload;
 
     // Validate input data
     if (new Date(ngay_sx) >= new Date(hsd)) {
@@ -19,7 +19,7 @@ const importNewBatch = async (payload) => {
 
     // Call the Stored Procedure to handle all inventory updates in one go
     const newBatch = await inventoryModel.callImportProcedure(
-        duoc_pham_id, don_vi_id, so_lo, ngay_sx, hsd, so_luong_hop
+        duoc_pham_id, don_vi_id, so_lo, ngay_sx, hsd, so_luong_hop, payload.quy_cach_id || null, don_gia || 0
     );
 
     // After the procedure, check the current inventory level for this product at this unit

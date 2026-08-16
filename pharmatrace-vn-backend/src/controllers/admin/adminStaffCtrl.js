@@ -18,9 +18,9 @@ const createStaffAccount = async (req, res, next) => {
             data
         });
     } catch (error) {
-        if (error.code === '23505') { // error code for unique violation in PostgreSQL
+        if (error.code === 'P2002' || error.code === '23505') { 
             res.status(400);
-            return next(new Error('Failed! This email is already in use for another account.'));
+            return next(new Error('Email này đã được sử dụng cho một tài khoản khác trong hệ thống.'));
         }
         if (error.statusCode) res.status(error.statusCode);
         next(error);
@@ -49,7 +49,7 @@ const disableStaffAccount = async (req, res, next) => {
             return next(new Error('Không thể xóa tài khoản của chính mình.'))
         }
         await adminStaffService.removeStaff(targetId);
-        res.status(200).json({ success: true, message: 'Employee account disabled successfully!' });
+        res.status(200).json({ success: true, message: 'Đã xóa vĩnh viễn tài khoản nhân viên thành công!' });
     } catch (error) {
         if (error.statusCode) res.status(error.statusCode);
         next(error);

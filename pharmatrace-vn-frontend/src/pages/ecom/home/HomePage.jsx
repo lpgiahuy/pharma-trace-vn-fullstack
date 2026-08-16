@@ -531,16 +531,25 @@ export default function HomePage() {
               </div>
             </div>
             
-            {/* QR Card - Optimized for mobile */}
-            <div className="relative shrink-0 w-full sm:w-72 lg:w-80 h-auto sm:h-80 flex items-center justify-center mt-4 lg:mt-0">
-                <div className="absolute inset-0 bg-white/5 rounded-3xl rotate-3 sm:rotate-6 group-hover:rotate-12 transition-transform duration-500 border border-white/10 hidden sm:block" />
-                <div className="relative z-10 w-full max-w-[280px] sm:w-full bg-white rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col items-center justify-center">
+            {/* QR Card - Interactive & Clickable */}
+            <div 
+              onClick={() => navigate('/trace', { state: { openScanner: true } })}
+              className="relative shrink-0 w-full sm:w-72 lg:w-80 h-auto sm:h-80 flex items-center justify-center mt-4 lg:mt-0 cursor-pointer group/card select-none"
+              role="button"
+              tabIndex={0}
+              aria-label={t('home.scan_qr')}
+            >
+                <div className="absolute inset-0 bg-white/5 rounded-3xl rotate-3 sm:rotate-6 group-hover/card:rotate-12 transition-transform duration-500 border border-white/10 hidden sm:block" />
+                <div className="relative z-10 w-full max-w-[280px] sm:w-full bg-white rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col items-center justify-center transition-transform group-hover/card:scale-105 duration-300">
                     <div className="w-full aspect-square border-4 border-slate-50 flex items-center justify-center rounded-2xl mb-3 sm:mb-4 relative overflow-hidden group/qr">
-                        <div className="text-[80px] sm:text-[120px] filter grayscale group-hover:grayscale-0 transition-all duration-500 text-brand-500">
+                        <div className="text-[80px] sm:text-[120px] filter grayscale group-hover/card:grayscale-0 transition-all duration-500 text-brand-500">
                           <span className="material-symbols-outlined text-[100px] sm:text-[140px]">qr_code_scanner</span>
                         </div>
-                        <div className="absolute inset-0 bg-brand-500/10 flex items-center justify-center opacity-0 group-hover/qr:opacity-100 transition-opacity">
-                            <span className="bg-brand-500 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase">{t('home.scan_qr')}</span>
+                        <div className="absolute inset-0 bg-brand-500/10 flex items-center justify-center opacity-90 group-hover/card:opacity-100 transition-opacity">
+                            <span className="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-full text-xs font-black uppercase shadow-lg shadow-brand-500/30 transition-all flex items-center gap-1.5 cursor-pointer">
+                              <span className="material-symbols-outlined text-sm">center_focus_weak</span>
+                              {t('home.scan_qr')}
+                            </span>
                         </div>
                     </div>
                     <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center">{t('home.qr_desc')}</p>

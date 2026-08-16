@@ -2,19 +2,20 @@ import { useEffect, useState } from 'react'
 import { Table, Button as AButton, Modal, Form, Input, Select, Switch, Popconfirm, Tag } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { userService, unitService } from '@/services/user.service'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 import { Avatar } from '@/components/ui/Avatar'
 import toast from 'react-hot-toast'
 
-const ROLES = ['SuperAdmin', 'QuanLyKho', 'NhanVienBanHang']
+const ROLES = ['SuperAdmin', 'QuanLyCuaHang', 'QuanLyKho', 'NhanVienBanHang']
 const ROLE_COLORS = {
   SuperAdmin: 'red',
+  QuanLyCuaHang: 'orange',
   QuanLyKho: 'purple',
   NhanVienBanHang: 'blue'
 }
 
 export default function StaffPage() {
-  const { user: currentUser } = useAuthStore()
+  const { user: currentUser } = useAuth()
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
@@ -36,11 +37,11 @@ export default function StaffPage() {
     setEditing(user)
     if (user) {
       form.setFieldsValue({
-        ho_ten: user.name,
-        email: user.email,
-        vai_tro: user.role,
-        don_vi_id: user.don_vi_id,
-        trang_thai: user.status === 'active' || user.status === true || user.status === 1
+        ho_ten: user.ho_ten || user.name || '',
+        email: user.email || '',
+        vai_tro: user.vai_tro || user.role || 'NhanVienBanHang',
+        don_vi_id: user.don_vi_id || null,
+        trang_thai: user.trang_thai ?? (user.status === 'active' || user.status === true || user.status === 1)
       })
     } else {
       form.resetFields()

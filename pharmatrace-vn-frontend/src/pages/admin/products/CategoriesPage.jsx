@@ -1,10 +1,31 @@
 import { useState, useEffect } from 'react'
-import { Table, Button as AButton, Modal, Form, Input, Popconfirm, Space, Grid, InputNumber, Select, Switch, Tag } from 'antd'
+import { Table, Button as AButton, Modal, Form, Input, Popconfirm, Space, Grid, InputNumber, Select, Switch, Tag, AutoComplete } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { productService } from '@/services/product.service'
 import toast from 'react-hot-toast'
+import { useAuth } from '@/store/authStore'
 
 const { useBreakpoint } = Grid
+
+const COMMON_ICONS = [
+  { value: 'medication', label: 'Thuốc / Kháng sinh' },
+  { value: 'pill', label: 'Thuốc viên / Dược phẩm' },
+  { value: 'vaccines', label: 'Vaccine / Tiêm chủng' },
+  { value: 'medical_services', label: 'Thiết bị & Y tế' },
+  { value: 'health_and_safety', label: 'Chăm sóc sức khỏe' },
+  { value: 'sanitizer', label: 'Sát khuẩn / Khử trùng' },
+  { value: 'clean_hands', label: 'Vệ sinh cá nhân' },
+  { value: 'healing', label: 'Sơ cứu / Băng gạc' },
+  { value: 'ecg_heart', label: 'Tim mạch / Huyết áp' },
+  { value: 'psychology', label: 'Thần kinh / Bổ não' },
+  { value: 'eye', label: 'Chăm sóc mắt' },
+  { value: 'dentistry', label: 'Răng hàm mặt' },
+  { value: 'child_care', label: 'Mẹ và bé' },
+  { value: 'nutrition', label: 'Dinh dưỡng / TPCN' },
+  { value: 'fitness_center', label: 'Thể thao / Tăng cường' },
+  { value: 'skincare', label: 'Mỹ phẩm / Chăm sóc da' },
+  { value: 'category', label: 'Khác / Mặc định' },
+]
 
 const buildCategoryTree = (flatList) => {
   const map = {};
@@ -43,6 +64,9 @@ const buildCategoryTree = (flatList) => {
 };
 
 export default function CategoriesPage() {
+  const { user } = useAuth()
+  const isSuperAdmin = ['SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho'].includes(user?.vai_tro || user?.role)
+
   const [cats, setCats] = useState([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
@@ -70,10 +94,10 @@ export default function CategoriesPage() {
     if (cat) {
       form.setFieldsValue({
         ten_danh_muc: cat.name || cat.ten_danh_muc,
-        danh_muc_cha_id: cat.danh_muc_cha_id,
+        danh_muc_cha_id: cat.danh_muc_cha_id || null,
         hinh_anh_icon: cat.hinh_anh_icon,
         thu_tu_hien_thi: cat.thu_tu_hien_thi,
-        trang_thai: cat.trang_thai ?? true
+        trang_thai: cat.trang_thai
       })
     } else {
       form.resetFields()
@@ -90,7 +114,7 @@ export default function CategoriesPage() {
         danh_muc_cha_id: vals.danh_muc_cha_id || null,
         hinh_anh_icon: vals.hinh_anh_icon || '',
         thu_tu_hien_thi: vals.thu_tu_hien_thi || 0,
-        trang_thai: vals.trang_thai ?? true
+        trang_thai: vals.trang_thai
       }
 
       if (editing) await productService.updateCategory(editing.id || editing._id, payload)
@@ -108,11 +132,15 @@ export default function CategoriesPage() {
 
   const handleDelete = async (id) => {
     try {
-      await productService.deleteCategory(id)
-      toast.success('Đã xóa danh mục')
+      const res = await productService.deleteCategory(id)
+      if (res?.data?.isSoftDeleted) {
+        toast.error(res.message || 'Danh mục đã có sản phẩm thuộc về nên đã được tự động chuyển sang trạng thái Ẩn.')
+      } else {
+        toast.success(res?.message || 'Đã xóa vĩnh viễn danh mục thành công!')
+      }
       fetchCategories()
-    } catch {
-      toast.error('Xóa danh mục thất bại')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Xóa danh mục thất bại')
     }
   }
 
@@ -145,26 +173,28 @@ export default function CategoriesPage() {
       align: 'center',
       render: v => <Tag>{v}</Tag>
     },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'trang_thai',
-      key: 'status',
-      width: 120,
-      render: v => <Tag color={v ? 'green' : 'red'}>{v ? 'HOẠT ĐỘNG' : 'ẨN'}</Tag>
-    },
-    {
-      title: 'Thao tác',
-      key: 'actions',
-      width: 100,
-      render: (_, row) => (
-        <Space size="small">
-          <AButton size="small" icon={<EditOutlined />} onClick={() => openModal(row)} />
-          <Popconfirm title="Xóa danh mục?" onConfirm={() => handleDelete(row.id || row._id)} okText="Xóa" okButtonProps={{ danger: true }}>
-            <AButton size="small" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      )
-    },
+    ...(isSuperAdmin ? [
+      {
+        title: 'Trạng thái',
+        dataIndex: 'trang_thai',
+        key: 'status',
+        width: 120,
+        render: v => <Tag color={v ? 'green' : 'red'}>{v ? 'HOẠT ĐỘNG' : 'ẨN'}</Tag>
+      },
+      {
+        title: 'Thao tác',
+        key: 'actions',
+        width: 100,
+        render: (_, row) => (
+          <Space size="small">
+            <AButton size="small" icon={<EditOutlined />} onClick={() => openModal(row)} />
+            <Popconfirm title="Xóa danh mục?" onConfirm={() => handleDelete(row.id || row._id)} okText="Xóa" okButtonProps={{ danger: true }}>
+              <AButton size="small" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+          </Space>
+        )
+      },
+    ] : []),
   ]
 
   return (
@@ -174,9 +204,11 @@ export default function CategoriesPage() {
           <h1 className="text-xl font-display font-bold text-slate-900">Danh mục</h1>
           <p className="text-slate-500 text-sm">Quản lý nhóm sản phẩm và danh mục</p>
         </div>
-        <AButton type="primary" icon={<PlusOutlined />} onClick={() => openModal()} className="w-full sm:w-auto">
-          Thêm danh mục
-        </AButton>
+        {isSuperAdmin && (
+          <AButton type="primary" icon={<PlusOutlined />} onClick={() => openModal()} className="w-full sm:w-auto">
+            Thêm danh mục
+          </AButton>
+        )}
       </div>
 
       <div className="card p-4">
@@ -213,8 +245,25 @@ export default function CategoriesPage() {
           </Form.Item>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item label="Tên icon" name="hinh_anh_icon">
-              <Input placeholder="VD: medication" prefix={<span className="material-symbols-outlined text-[16px]">search</span>} />
+            <Form.Item label="Icon danh mục" name="hinh_anh_icon">
+              <AutoComplete
+                placeholder="Chọn hoặc gõ tên icon (VD: medication, pill...)"
+                allowClear
+                filterOption={(inputValue, option) =>
+                  (option?.value || '').toLowerCase().includes(inputValue.toLowerCase()) ||
+                  (option?.searchValue || '').toLowerCase().includes(inputValue.toLowerCase())
+                }
+              >
+                {COMMON_ICONS.map(item => (
+                  <Select.Option key={item.value} value={item.value} searchValue={item.label}>
+                    <div className="flex items-center gap-2 py-0.5">
+                      <span className="material-symbols-outlined text-primary-600 text-lg flex-shrink-0">{item.value}</span>
+                      <span className="text-sm text-slate-700 font-medium">{item.label}</span>
+                      <span className="text-xs text-slate-400 font-mono ml-auto">({item.value})</span>
+                    </div>
+                  </Select.Option>
+                ))}
+              </AutoComplete>
             </Form.Item>
             <Form.Item label="Thứ tự hiển thị" name="thu_tu_hien_thi">
               <InputNumber min={0} style={{ width: '100%' }} />

@@ -67,7 +67,7 @@ const processCheckout = async (userId, payload) => {
         let phiShip = 30000;
         let nearestStoreId = null;
 
-        const storeWithAll = await productModel.findStoreWithAllItems(cartItems);
+        const storeWithAll = await productModel.findStoreWithAllItems(cartItems, lat, lng);
 
         if (storeWithAll) {
             nearestStoreId = storeWithAll.don_vi_id;

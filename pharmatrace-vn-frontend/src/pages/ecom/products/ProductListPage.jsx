@@ -61,6 +61,43 @@ export default function ProductListPage() {
     }, { replace: true })
   }, [setSearchParams])
 
+  const handleCategoryToggle = useCallback((targetId, parentId = null) => {
+    if (!targetId) {
+      setParam('category', '')
+      return
+    }
+
+    const currentIds = category ? category.split(',').filter(Boolean) : []
+    const strTarget = String(targetId)
+
+    // 1. If clicking a parent category
+    if (!parentId) {
+      if (currentIds.length === 1 && currentIds[0] === strTarget) {
+        setParam('category', '')
+      } else {
+        setParam('category', strTarget)
+      }
+      return
+    }
+
+    // 2. If clicking a subcategory
+    const strParent = String(parentId)
+    let activeSubIds = currentIds.filter(id => id !== strParent)
+
+    if (activeSubIds.includes(strTarget)) {
+      activeSubIds = activeSubIds.filter(id => id !== strTarget)
+    } else {
+      activeSubIds.push(strTarget)
+    }
+
+    if (activeSubIds.length === 0) {
+      // If no subcategories left -> Revert to parent category!
+      setParam('category', strParent)
+    } else {
+      setParam('category', activeSubIds.join(','))
+    }
+  }, [category, setParam])
+
   const fetchProducts = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -144,6 +181,7 @@ export default function ProductListPage() {
             categories={categories}
             selectedCategory={category}
             onCategoryChange={val => setParam('category', val)}
+            onCategoryToggle={handleCategoryToggle}
             minPrice={minPrice}
             maxPrice={maxPrice}
             onPriceChange={setParam}
@@ -165,6 +203,7 @@ export default function ProductListPage() {
             categories={categories}
             category={category}
             setParam={setParam}
+            handleCategoryToggle={handleCategoryToggle}
             t={t}
           />
 

@@ -119,4 +119,8 @@ const processPaymentUpdate = async (orderId, trang_thai_thanh_toan, ma_giao_dich
     return updated;
 };
 
-export { fetchOrders, fetchOrderDetail, processOrderFulfillment, shipOrder, confirmDelivery, processPaymentUpdate }
+const fetchAvailableUIDsForOrder = async (orderId) => {
+    return await adminOrderModel.getAvailableUIDsForOrder(orderId);
+};
+
+export { fetchOrders, fetchOrderDetail, processOrderFulfillment, shipOrder, confirmDelivery, processPaymentUpdate, fetchAvailableUIDsForOrder }

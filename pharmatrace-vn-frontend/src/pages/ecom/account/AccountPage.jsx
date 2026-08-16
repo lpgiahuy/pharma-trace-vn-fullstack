@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Package, Heart, FileText, RefreshCw, Settings, ChevronRight } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
+import { User, Package, Heart, FileText, RefreshCw, Settings, ChevronRight } from 'lucide-react'
+import { useAuth } from '@/store/authStore'
 import { Avatar } from '@/components/ui/Avatar'
 
 const MENU = [
@@ -11,7 +11,7 @@ const MENU = [
 ]
 
 export default function AccountPage() {
-  const { user } = useAuthStore()
+  const { user } = useAuth()
   return (
     <div className="page-container py-8 animate-fade-in max-w-2xl">
       <div className="card p-6 flex items-center gap-4 mb-6">

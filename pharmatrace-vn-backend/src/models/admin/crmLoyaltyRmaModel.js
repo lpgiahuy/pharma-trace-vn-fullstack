@@ -1,4 +1,5 @@
 import pool from '../../config/db.js';
+import { getCurrentUserContext } from '../../utils/userContext.js';
 
 export const getCustomersCrmModel = async ({ rank, search } = {}) => {
     let query = `
@@ -37,6 +38,19 @@ export const getCustomersCrmModel = async ({ rank, search } = {}) => {
 };
 
 export const getCrmStatsModel = async () => {
+    const userContext = getCurrentUserContext();
+    const unitId = (userContext && ['SuperAdmin', 'superadmin'].includes(userContext.role) && userContext.force_unit_id)
+        ? Number(userContext.force_unit_id)
+        : (userContext && !['SuperAdmin', 'superadmin'].includes(userContext.role) && userContext.don_vi_id ? Number(userContext.don_vi_id) : null);
+
+    const rmaCond = unitId ? ` WHERE EXISTS (
+        SELECT 1 FROM public.donhang dh 
+        WHERE dh.id = pth.don_hang_id AND (
+            EXISTS (SELECT 1 FROM public.chitietdonhang ctdh WHERE ctdh.don_hang_id = dh.id AND ctdh.don_vi_xuat_id = ${unitId})
+            OR EXISTS (SELECT 1 FROM public.hopthuoc ht WHERE ht.don_hang_id = dh.id AND ht.don_vi_hien_tai_id = ${unitId})
+        )
+    ) AND pth.trang_thai_duyet = 'ChoDuyet'` : ` WHERE trang_thai_duyet = 'ChoDuyet'`;
+
     const query = `
         SELECT 
             COUNT(*)::int AS tong_khach_hang,
@@ -44,7 +58,7 @@ export const getCrmStatsModel = async () => {
             COUNT(CASE WHEN hang_thanh_vien = 'Bạch Kim' THEN 1 END)::int AS thanh_vien_bach_kim,
             COUNT(CASE WHEN hang_thanh_vien = 'Vàng' THEN 1 END)::int AS thanh_vien_vang,
             COALESCE(SUM(diem_tich_luy_tong), 0)::int AS tong_diem_da_cap,
-            (SELECT COUNT(*)::int FROM public.phieutrahang WHERE trang_thai_duyet = 'ChoDuyet') AS rma_cho_duyet
+            (SELECT COUNT(*)::int FROM public.phieutrahang pth ${rmaCond}) AS rma_cho_duyet
         FROM public.khachhang;
     `;
     const { rows } = await pool.query(query);
@@ -118,6 +132,11 @@ export const getRmaRequestsModel = async ({ status, search } = {}) => {
     const client = await pool.connect();
     try {
         await client.query("SELECT set_config('app.bypass_rls', 'on', true)");
+        const userContext = getCurrentUserContext();
+        const unitId = (userContext && ['SuperAdmin', 'superadmin'].includes(userContext.role) && userContext.force_unit_id)
+            ? Number(userContext.force_unit_id)
+            : (userContext && !['SuperAdmin', 'superadmin'].includes(userContext.role) && userContext.don_vi_id ? Number(userContext.don_vi_id) : null);
+
         let query = `
             SELECT 
                 pth.id,
@@ -136,6 +155,14 @@ export const getRmaRequestsModel = async ({ status, search } = {}) => {
             WHERE 1=1
         `;
         const params = [];
+
+        if (unitId) {
+            params.push(unitId);
+            query += ` AND (
+                EXISTS (SELECT 1 FROM public.chitietdonhang ctdh WHERE ctdh.don_hang_id = dh.id AND ctdh.don_vi_xuat_id = $${params.length})
+                OR EXISTS (SELECT 1 FROM public.hopthuoc ht WHERE ht.don_hang_id = dh.id AND ht.don_vi_hien_tai_id = $${params.length})
+            )`;
+        }
 
         if (status) {
             params.push(status);

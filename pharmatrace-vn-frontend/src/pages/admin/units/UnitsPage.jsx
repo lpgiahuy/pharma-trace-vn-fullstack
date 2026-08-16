@@ -34,11 +34,11 @@ export default function UnitsPage() {
     setEditing(unit)
     if (unit) {
       form.setFieldsValue({
-        ten_don_vi:  unit.name,
-        loai_don_vi: unit.type,
-        dia_chi:     unit.address,
-        toa_do_lat:  unit.lat,
-        toa_do_lng:  unit.lng,
+        ten_don_vi:  unit.ten_don_vi || unit.name || '',
+        loai_don_vi: unit.loai_don_vi || unit.type || '',
+        dia_chi:     unit.dia_chi || unit.address || '',
+        toa_do_lat:  unit.toa_do_lat ?? unit.lat ?? null,
+        toa_do_lng:  unit.toa_do_lng ?? unit.lng ?? null,
       })
     } else {
       form.resetFields()

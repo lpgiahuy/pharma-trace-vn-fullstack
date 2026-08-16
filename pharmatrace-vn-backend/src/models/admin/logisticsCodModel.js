@@ -1,6 +1,12 @@
 import pool from '../../config/db.js';
+import { getCurrentUserContext } from '../../utils/userContext.js';
 
 export const getShipmentsModel = async ({ carrier, deliveryStatus, codStatus, search } = {}) => {
+    const userContext = getCurrentUserContext();
+    const unitId = (userContext && ['SuperAdmin', 'superadmin'].includes(userContext.role) && userContext.force_unit_id)
+        ? Number(userContext.force_unit_id)
+        : (userContext && !['SuperAdmin', 'superadmin'].includes(userContext.role) && userContext.don_vi_id ? Number(userContext.don_vi_id) : null);
+
     let query = `
         SELECT 
             vc.id,
@@ -23,6 +29,14 @@ export const getShipmentsModel = async ({ carrier, deliveryStatus, codStatus, se
         WHERE 1=1
     `;
     const params = [];
+
+    if (unitId) {
+        params.push(unitId);
+        query += ` AND (
+            EXISTS (SELECT 1 FROM public.chitietdonhang ctdh WHERE ctdh.don_hang_id = dh.id AND ctdh.don_vi_xuat_id = $${params.length})
+            OR EXISTS (SELECT 1 FROM public.hopthuoc ht WHERE ht.don_hang_id = dh.id AND ht.don_vi_hien_tai_id = $${params.length})
+        )`;
+    }
 
     if (carrier) {
         params.push(carrier);
@@ -51,15 +65,32 @@ export const getShipmentsModel = async ({ carrier, deliveryStatus, codStatus, se
 };
 
 export const getCodSummaryModel = async () => {
-    const query = `
+    const userContext = getCurrentUserContext();
+    const unitId = (userContext && ['SuperAdmin', 'superadmin'].includes(userContext.role) && userContext.force_unit_id)
+        ? Number(userContext.force_unit_id)
+        : (userContext && !['SuperAdmin', 'superadmin'].includes(userContext.role) && userContext.don_vi_id ? Number(userContext.don_vi_id) : null);
+
+    let query = `
         SELECT 
             COUNT(*)::int AS tong_so_van_don,
-            COUNT(CASE WHEN trang_thai_giao IN ('ChoLayHang', 'DangVanChuyen') THEN 1 END)::int AS don_dang_giao,
-            COALESCE(SUM(CASE WHEN trang_thai_cod = 'ChuaDoiSoat' THEN tien_cod ELSE 0 END), 0)::numeric(12,2) AS tong_cod_chua_doi_soat,
-            COALESCE(SUM(CASE WHEN trang_thai_cod = 'DaDoiSoat' THEN tien_cod ELSE 0 END), 0)::numeric(12,2) AS tong_cod_da_doi_soat
-        FROM public.vanchuyen;
+            COUNT(CASE WHEN vc.trang_thai_giao IN ('ChoLayHang', 'DangVanChuyen') THEN 1 END)::int AS don_dang_giao,
+            COALESCE(SUM(CASE WHEN vc.trang_thai_cod = 'ChuaDoiSoat' THEN vc.tien_cod ELSE 0 END), 0)::numeric(12,2) AS tong_cod_chua_doi_soat,
+            COALESCE(SUM(CASE WHEN vc.trang_thai_cod = 'DaDoiSoat' THEN vc.tien_cod ELSE 0 END), 0)::numeric(12,2) AS tong_cod_da_doi_soat
+        FROM public.vanchuyen vc
+        LEFT JOIN public.donhang dh ON vc.don_hang_id = dh.id
+        WHERE 1=1
     `;
-    const { rows } = await pool.query(query);
+    const params = [];
+
+    if (unitId) {
+        params.push(unitId);
+        query += ` AND (
+            EXISTS (SELECT 1 FROM public.chitietdonhang ctdh WHERE ctdh.don_hang_id = dh.id AND ctdh.don_vi_xuat_id = $1)
+            OR EXISTS (SELECT 1 FROM public.hopthuoc ht WHERE ht.don_hang_id = dh.id AND ht.don_vi_hien_tai_id = $1)
+        )`;
+    }
+
+    const { rows } = await pool.query(query, params);
     return rows[0];
 };
 

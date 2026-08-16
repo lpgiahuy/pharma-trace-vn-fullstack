@@ -24,13 +24,13 @@ export default function VouchersPage() {
     setEditing(v)
     if (v) {
       form.setFieldsValue({
-        ma_code: v.code,
-        loai_giam_gia: v.type,
-        gia_tri: v.value,
-        don_hang_toi_thieu: v.minOrder,
-        so_luong_gioi_han: v.usageLimit,
-        ngay_bat_dau: v.startDate ? dayjs(v.startDate) : null,
-        ngay_ket_thuc: v.endDate ? dayjs(v.endDate) : null,
+        ma_code:            v.ma_code || v.code || '',
+        loai_giam_gia:      v.loai_giam_gia || v.type || 'PhanTram',
+        gia_tri:            v.gia_tri !== undefined ? v.gia_tri : v.value,
+        don_hang_toi_thieu: v.don_hang_toi_thieu !== undefined ? v.don_hang_toi_thieu : v.minOrder,
+        so_luong_gioi_han:  v.so_luong_gioi_han !== undefined ? v.so_luong_gioi_han : v.usageLimit,
+        ngay_bat_dau:       (v.ngay_bat_dau || v.startDate) ? dayjs(v.ngay_bat_dau || v.startDate) : null,
+        ngay_ket_thuc:      (v.ngay_ket_thuc || v.endDate) ? dayjs(v.ngay_ket_thuc || v.endDate) : null,
       })
     } else {
       form.resetFields()

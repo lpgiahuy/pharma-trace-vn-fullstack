@@ -7,6 +7,7 @@ import { OrderStatusBadge } from '@/components/ui/Badge'
 import { PageLoader } from '@/components/ui/Spinner'
 import { formatCurrency, formatDateTime } from '@/utils'
 import { ORDER_STATUS } from '@/constants'
+import { OrderPackingModal } from '@/components/shared/OrderPackingModal'
 import toast from 'react-hot-toast'
 
 export default function AdminOrderDetailPage() {
@@ -221,31 +222,15 @@ export default function AdminOrderDetailPage() {
         </div>
       </div>
 
-      <Modal
-        title={<><ScanOutlined className="mr-2 text-brand-600"/> Đóng gói đơn hàng #{order.id}</>}
+      <OrderPackingModal
         open={fulfillOpen}
-        onCancel={() => setFulfillOpen(false)}
-        onOk={() => fulfillForm.submit()}
-        confirmLoading={fulfilling}
-        okText="Xác nhận & Đóng gói"
-        destroyOnClose
-      >
-        <div className="mb-4 p-3 bg-blue-50 text-blue-800 rounded-lg text-sm">
-          Quét mã QR/Barcode trên hộp thuốc đang đóng gói cho đơn hàng này.
-          Dùng máy quét mã vạch hoặc nhập thủ công rồi nhấn Enter cho mỗi UID.
-        </div>
-        <Form form={fulfillForm} layout="vertical" onFinish={handleFulfill}>
-          <Form.Item label="Mã UID sản phẩm đã quét" name="uids" rules={[{ required: true, message: 'Vui lòng cung cấp ít nhất một UID' }]}>
-            <Select
-              mode="tags"
-              style={{ width: '100%' }}
-              placeholder="Quét mã vạch tại đây..."
-              open={false}
-              tokenSeparators={[',', ' ']}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
+        onClose={() => setFulfillOpen(false)}
+        orderId={order.id}
+        orderData={order}
+        onSuccess={() => {
+          setOrder(o => ({ ...o, status: ORDER_STATUS.DaDongGoi, trang_thai_don: ORDER_STATUS.DaDongGoi }))
+        }}
+      />
     </div>
   )
 }

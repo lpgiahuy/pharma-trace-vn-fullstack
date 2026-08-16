@@ -13,103 +13,65 @@ import toast from 'react-hot-toast'
 export default function LoginPage() {
   const { t } = useTranslation()
   const [showPw, setShowPw] = useState(false)
-  const [loginType, setLoginType] = useState('customer')
   const { login } = useAuthStore()
   const navigate  = useNavigate()
   const location  = useLocation()
-  const defaultRedirect = loginType === 'admin' ? '/admin' : '/'
-  const from = location.state?.from?.pathname || defaultRedirect
+  const from = location.state?.from?.pathname || '/'
 
   const customerSchema = z.object({
-    phone:    z.string().min(9, t('auth.validation.invalid_phone')),
+    identifier: z.string().min(3, 'Vui lòng nhập Email hoặc Số điện thoại'),
     password: z.string().min(6, t('auth.validation.pw_min')),
   })
-  const adminSchema = z.object({
-    email:    z.string().email(t('auth.validation.invalid_email')),
-    password: z.string().min(6, t('auth.validation.pw_min')),
-  })
-  const schema   = loginType === 'admin' ? adminSchema : customerSchema
-  const defaults = loginType === 'admin' ? { email: '', password: '' } : { phone: '', password: '' }
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm({
-    resolver: zodResolver(schema),
-    defaultValues: defaults,
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    resolver: zodResolver(customerSchema),
+    defaultValues: { identifier: '', password: '' },
   })
-
-  const switchType = (type) => {
-    setLoginType(type)
-    reset(type === 'admin' ? { email: '', password: '' } : { phone: '', password: '' })
-  }
 
   const onSubmit = async (data) => {
     try {
-      const credentials = loginType === 'admin'
-        ? { loginType: 'admin', email: data.email, password: data.password }
-        : { loginType: 'customer', phone: data.phone, password: data.password }
-      const result = await login(credentials)
-      toast.success(`${t('auth.welcome_back')}, ${(result.user?.ho_ten || result.user?.name || '').split(' ').pop()}!`)
-
-      const userRole = result.user?.role || result.user?.vai_tro
-      let defaultPath = '/'
-      if (loginType === 'admin') {
-        defaultPath = userRole === 'QuanLyKho' ? '/warehouse/inbound' : '/admin'
+      const credentials = {
+        loginType: 'customer',
+        identifier: data.identifier,
+        phone: data.identifier,
+        email: data.identifier,
+        password: data.password
       }
-      const target = (from && from !== '/' && from !== '/login') ? from : defaultPath
+      const result = await login(credentials)
+      const userRole = result.user?.role || result.user?.vai_tro
+
+      const internalRoles = ['QuanLyKho', 'NhanVienKho', 'SuperAdmin', 'superadmin', 'Admin', 'admin', 'NhanVienBanHang', 'QuanLyCuaHang']
+      if (internalRoles.includes(userRole)) {
+        await useAuthStore.getState().logout()
+        toast.error('Tài khoản hoặc mật khẩu không chính xác!')
+        return
+      }
+
+      toast.success(`${t('auth.welcome_back')}, ${(result.user?.ho_ten || result.user?.name || '').split(' ').pop()}!`)
+      const target = (from && from !== '/login') ? from : '/'
       navigate(target, { replace: true })
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message || t('auth.signin_failed'))
+      toast.error(err.response?.data?.message || err.message || 'Tài khoản hoặc mật khẩu không chính xác!')
     }
   }
 
   return (
     <div className="animate-fade-in">
-      <div className="mb-8">
-        <h1 className="text-3xl font-display font-bold text-slate-900 mb-2">{t('auth.welcome_back')}</h1>
-        <p className="text-slate-500">{t('auth.signin_desc')}</p>
-      </div>
-
-      {/* Login type toggle */}
-      <div className="mb-6 flex rounded-xl bg-slate-100 p-1">
-        <button
-          type="button"
-          onClick={() => switchType('customer')}
-          className={`flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all cursor-pointer ${
-            loginType === 'customer' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          {t('auth.customer')}
-        </button>
-        <button
-          type="button"
-          onClick={() => switchType('admin')}
-          className={`flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all cursor-pointer ${
-            loginType === 'admin' ? 'bg-white text-brand-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          {t('auth.admin_staff')}
-        </button>
+      <div className="mb-6">
+        <h1 className="text-3xl font-display font-bold text-slate-900">
+          {t('auth.welcome_back')}
+        </h1>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {loginType === 'admin' ? (
-          <Input
-            label={t('auth.email')}
-            type="email"
-            placeholder="admin@pharmatrace.vn"
-            error={errors.email?.message}
-            required
-            {...register('email')}
-          />
-        ) : (
-          <Input
-            label={t('auth.phone')}
-            type="tel"
-            placeholder="0909 123 456"
-            error={errors.phone?.message}
-            required
-            {...register('phone')}
-          />
-        )}
+        <Input
+          label={t('auth.email_or_phone')}
+          type="text"
+          placeholder="0909 123 456 hoặc name@example.com"
+          error={errors.identifier?.message}
+          required
+          {...register('identifier')}
+        />
         <Input
           label={t('auth.password')}
           type={showPw ? 'text' : 'password'}
@@ -118,14 +80,16 @@ export default function LoginPage() {
           required
           rightIcon={
             <button type="button" onClick={() => setShowPw(!showPw)} className="cursor-pointer">
-              {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showPw ? <EyeOff className="w-4 h-4 text-slate-400" /> : <Eye className="w-4 h-4 text-slate-400" />}
             </button>
           }
           {...register('password')}
         />
 
         <div className="flex justify-end">
-          <Link to="/forgot-password" className="text-sm text-brand-600 hover:underline">{t('auth.forgot_password')}</Link>
+          <Link to="/forgot-password" className="text-xs sm:text-sm text-brand-600 hover:underline font-medium">
+            {t('auth.forgot_password')}
+          </Link>
         </div>
 
         <Button type="submit" fullWidth size="lg" loading={isSubmitting} leftIcon={<LogIn className="w-4 h-4" />}>
@@ -133,12 +97,12 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      {loginType === 'customer' && (
-        <p className="mt-6 text-center text-sm text-slate-500">
-          {t('auth.no_account')}{' '}
-          <Link to="/register" className="text-brand-600 font-medium hover:underline">{t('auth.create_one')}</Link>
-        </p>
-      )}
+      <p className="mt-6 text-center text-sm text-slate-500">
+        {t('auth.no_account')}{' '}
+        <Link to="/register" className="font-semibold text-brand-600 hover:underline">
+          Đăng ký ngay
+        </Link>
+      </p>
     </div>
   )
 }

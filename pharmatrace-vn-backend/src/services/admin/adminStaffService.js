@@ -9,7 +9,7 @@ const addStaff = async (payload) => {
     const { don_vi_id, ho_ten, email, password, vai_tro } = payload;
 
     // Validate role 
-    const validRoles = ['SuperAdmin', 'QuanLyKho', 'NhanVienBanHang'];
+    const validRoles = ['SuperAdmin', 'QuanLyCuaHang', 'QuanLyKho', 'NhanVienBanHang'];
     if (!validRoles.includes(vai_tro)) {
         const error = new Error(`Invalid role! Please choose one of: ${validRoles.join(', ')}`);
         error.statusCode = 400;
@@ -36,13 +36,13 @@ const editStaff = async (id, payload) => {
 };
 
 const removeStaff = async (id) => {
-    const isDeleted = await adminStaffModel.softDeleteStaff(id);
+    const isDeleted = await adminStaffModel.hardDeleteStaff(id);
     if (!isDeleted) {
         const error = new Error('Employee not found!');
         error.statusCode = 404;
         throw error;
     }
-    return true;
+    return isDeleted;
 };
 
 export { fetchStaffList, addStaff, editStaff, removeStaff };

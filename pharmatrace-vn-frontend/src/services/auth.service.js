@@ -28,8 +28,11 @@ export const authService = {
     }
 
     // Customer login — backend returns { success: true, data: { user } }
+    const identity = credentials.identifier || credentials.phone || credentials.email || credentials.so_dien_thoai
     const { data } = await apiClient.post('/auth/login', {
-      so_dien_thoai: credentials.phone,
+      identifier:    identity,
+      so_dien_thoai: identity,
+      email:         identity,
       mat_khau:      credentials.password,
     })
     
@@ -46,11 +49,12 @@ export const authService = {
 
   async register(payload) {
     const { data } = await apiClient.post('/auth/register', {
-      ho_ten:        payload.name,
-      so_dien_thoai: payload.phone,
-      email:         payload.email || undefined,
-      mat_khau:      payload.password,
-      dia_chi:       payload.address || undefined,
+      ho_ten:           payload.name,
+      so_dien_thoai:    payload.phone,
+      email:            payload.email || undefined,
+      mat_khau:         payload.password,
+      dia_chi:          payload.address || undefined,
+      dia_chi_mac_dinh: payload.address || undefined,
     })
     
     const result = data.data || data

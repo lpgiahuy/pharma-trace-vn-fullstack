@@ -4,12 +4,16 @@ import { ChevronDown, ChevronUp, Check } from 'lucide-react'
 import { CategoryIcon } from '@/components/ui/CategoryIcon'
 import { cn } from '@/utils'
 
-const CategoryFilterItem = ({ cat, selectedCategory, onCategoryChange }) => {
+const CategoryFilterItem = ({ cat, selectedCategory, onCategoryToggle }) => {
+  const selectedIds = selectedCategory ? String(selectedCategory).split(',').filter(Boolean) : [];
   const hasChildren = cat.children && cat.children.length > 0;
-  const isParentActive = selectedCategory == cat.id || cat.children?.some(child => selectedCategory == child.id);
+  
+  const isParentSelected = selectedIds.includes(String(cat.id));
+  const hasChildSelected = cat.children?.some(child => selectedIds.includes(String(child.id)));
+  const isParentActive = isParentSelected || hasChildSelected;
+  
   const [expanded, setExpanded] = useState(isParentActive);
   
-  // Re-sync expansion when selection changes externally
   useEffect(() => {
     if (isParentActive) setExpanded(true);
   }, [isParentActive]);
@@ -18,19 +22,19 @@ const CategoryFilterItem = ({ cat, selectedCategory, onCategoryChange }) => {
     <div className="space-y-1">
       <div className="flex items-center gap-1 min-w-0">
         <button
-          onClick={() => onCategoryChange(cat.id)}
+          onClick={() => onCategoryToggle(cat.id)}
           className={cn(
-            "flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border text-[13px] font-medium transition-all group text-left min-w-0",
-            selectedCategory == cat.id
+            "flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border text-[13px] font-medium transition-all group text-left min-w-0 cursor-pointer",
+            isParentSelected
               ? "bg-brand-50 border-brand-200 text-brand-700 shadow-sm" 
               : "bg-surface-soft/50 border-slate-100 text-slate-600 hover:border-brand-200 hover:bg-white"
           )}
         >
           <div className={cn(
-            "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
-            selectedCategory == cat.id ? "border-brand-500 bg-brand-500" : "border-slate-300 group-hover:border-brand-400"
+            "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all shrink-0",
+            isParentSelected ? "border-brand-500 bg-brand-500" : "border-slate-300 group-hover:border-brand-400"
           )}>
-            {selectedCategory == cat.id ? (
+            {isParentSelected ? (
               <Check className="w-3 h-3 text-white" />
             ) : (
               <CategoryIcon 
@@ -49,7 +53,7 @@ const CategoryFilterItem = ({ cat, selectedCategory, onCategoryChange }) => {
             type="button"
             onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
             className={cn(
-              "w-10 h-11 flex items-center justify-center rounded-xl border border-slate-100 text-slate-400 hover:bg-white hover:text-brand-500 transition-all",
+              "w-10 h-11 flex items-center justify-center rounded-xl border border-slate-100 text-slate-400 hover:bg-white hover:text-brand-500 transition-all cursor-pointer",
               expanded && "bg-white text-brand-500 border-brand-100 shadow-sm"
             )}
           >
@@ -62,15 +66,15 @@ const CategoryFilterItem = ({ cat, selectedCategory, onCategoryChange }) => {
       {hasChildren && expanded && (
         <div className="pl-6 space-y-1 animate-in fade-in slide-in-from-top-2 duration-200">
           {cat.children.map(child => {
-            const isChildActive = selectedCategory == child.id
+            const isChildActive = selectedIds.includes(String(child.id));
             return (
               <button
                 key={child.id}
-                onClick={() => onCategoryChange(child.id)}
+                onClick={() => onCategoryToggle(child.id, cat.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-2 rounded-lg border text-[12px] font-medium transition-all group text-left min-w-0",
+                  "w-full flex items-center gap-3 px-4 py-2 rounded-lg border text-[12px] font-medium transition-all group text-left min-w-0 cursor-pointer",
                   isChildActive 
-                    ? "bg-brand-50 border-brand-100 text-brand-600 shadow-sm" 
+                    ? "bg-brand-50 border-brand-100 text-brand-600 shadow-sm font-semibold" 
                     : "bg-transparent border-transparent text-slate-500 hover:bg-brand-50/50 hover:text-brand-600"
                 )}
               >
@@ -93,7 +97,7 @@ const CategoryFilterItem = ({ cat, selectedCategory, onCategoryChange }) => {
 CategoryFilterItem.propTypes = {
   cat: PropTypes.object.isRequired,
   selectedCategory: PropTypes.string,
-  onCategoryChange: PropTypes.func.isRequired
+  onCategoryToggle: PropTypes.func.isRequired
 }
 
 export default CategoryFilterItem;

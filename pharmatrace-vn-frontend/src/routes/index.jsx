@@ -8,6 +8,8 @@ import { ProtectedRoute, GuestRoute } from './ProtectedRoute'
 
 // ── Auth ────────────────────────────────────────────────────────────────────
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
+const AdminLoginPage = lazy(() => import('@/pages/auth/AdminLoginPage'))
+const WarehouseLoginPage = lazy(() => import('@/pages/auth/WarehouseLoginPage'))
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'))
 const ForgotPassword = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
 const ResetPassword = lazy(() => import('@/pages/auth/ResetPasswordPage'))
@@ -65,8 +67,8 @@ const RecallPage = lazy(() => import('@/pages/warehouse/recall/RecallPage'))
 const ScannerPage = lazy(() => import('@/pages/warehouse/scanner/ScannerPage'))
 const WarehouseProfilePage = lazy(() => import('@/pages/warehouse/profile/WarehouseProfilePage'))
 
-const ADMIN_ROLES = ['SuperAdmin', 'NhanVienBanHang']
-const WAREHOUSE_ROLES = ['SuperAdmin', 'QuanLyKho']
+const ADMIN_ROLES = ['SuperAdmin', 'superadmin', 'NhanVienBanHang', 'Admin', 'admin', 'manager', 'staff', 'QuanLyCuaHang']
+const WAREHOUSE_ROLES = ['SuperAdmin', 'superadmin', 'QuanLyKho', 'NhanVienKho']
 
 /**
  * Loading component tạm thời trong khi chờ tải file JS
@@ -86,6 +88,8 @@ export const AppRoutes = () => (
       {/* Auth */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+        <Route path="/admin/login" element={<GuestRoute><AdminLoginPage /></GuestRoute>} />
+        <Route path="/warehouse/login" element={<GuestRoute><WarehouseLoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
         <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
         <Route path="/reset-password" element={<GuestRoute><ResetPassword /></GuestRoute>} />
@@ -116,9 +120,10 @@ export const AppRoutes = () => (
       {/* Admin */}
       <Route element={<ProtectedRoute roles={ADMIN_ROLES}><AdminLayout /></ProtectedRoute>}>
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/profile" element={<WarehouseProfilePage />} />
         <Route path="/admin/products" element={<AdminProducts />} />
-        <Route path="/admin/products/new" element={<AdminProductForm />} />
-        <Route path="/admin/products/:id/edit" element={<AdminProductForm />} />
+        <Route path="/admin/products/new" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang']}><AdminProductForm /></ProtectedRoute>} />
+        <Route path="/admin/products/:id/edit" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang']}><AdminProductForm /></ProtectedRoute>} />
         <Route path="/admin/categories" element={<AdminCategories />} />
         <Route path="/admin/orders" element={<AdminOrders />} />
         <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
@@ -128,14 +133,14 @@ export const AppRoutes = () => (
         <Route path="/admin/blog" element={<AdminBlog />} />
         <Route path="/admin/blog/new" element={<AdminBlogForm />} />
         <Route path="/admin/blog/:id/edit" element={<AdminBlogForm />} />
-        <Route path="/admin/staff" element={<AdminStaff />} />
-        <Route path="/admin/customers" element={<AdminCustomers />} />
+        <Route path="/admin/staff" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin']}><AdminStaff /></ProtectedRoute>} />
+        <Route path="/admin/customers" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'NhanVienBanHang']}><AdminCustomers /></ProtectedRoute>} />
         <Route path="/admin/prescriptions" element={<AdminPrescriptions />} />
         <Route path="/admin/procurement" element={<AdminProcurement />} />
         <Route path="/admin/inventory/lots" element={<AdminLotMonitor />} />
         <Route path="/admin/logistics/cod" element={<AdminLogisticsCod />} />
         <Route path="/admin/security/fraud-anomalies" element={<AdminFraudAnomaly />} />
-        <Route path="/admin/finance" element={<AdminFinance />} />
+        <Route path="/admin/finance" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin']}><AdminFinance /></ProtectedRoute>} />
         <Route path="/admin/help" element={<AdminHelp />} />
       </Route>
 

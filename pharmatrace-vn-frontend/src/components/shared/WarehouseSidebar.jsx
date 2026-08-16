@@ -5,7 +5,7 @@ import {
   DeleteOutlined, AlertOutlined, QrcodeOutlined, UserOutlined, DashboardOutlined
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 const Logo = 'https://res.cloudinary.com/dc64co0el/image/upload/v1777731026/Logo_ck5ouv.svg'
 
 const { Sider } = Layout
@@ -13,7 +13,9 @@ const { Sider } = Layout
 export const WarehouseSidebar = ({ collapsed, onCollapse }) => {
   const { pathname } = useLocation()
   const { t } = useTranslation()
-  const { user } = useAuthStore()
+  const { user } = useAuth()
+  const userRole = user?.role || user?.vai_tro
+  const isSuperAdmin = ['SuperAdmin', 'superadmin'].includes(userRole)
 
   const menuItems = [
     { key: '/warehouse/inbound',    icon: <InboxOutlined />,       label: <Link to="/warehouse/inbound">{t('warehouse.inbound')}</Link> },
@@ -24,7 +26,7 @@ export const WarehouseSidebar = ({ collapsed, onCollapse }) => {
     { key: '/warehouse/scanner',    icon: <QrcodeOutlined />,      label: <Link to="/warehouse/scanner">{t('warehouse.scanner')}</Link> },
     { type: 'divider' },
     { key: '/warehouse/profile',    icon: <UserOutlined />,        label: <Link to="/warehouse/profile">{t('warehouse.my_profile')}</Link> },
-    ...(['SuperAdmin', 'Admin', 'NhanVienBanHang', 'admin'].includes(user?.role) ? [
+    ...(isSuperAdmin ? [
       { key: '/admin',              icon: <DashboardOutlined />,   label: <Link to="/admin">Trang Admin Portal</Link> }
     ] : []),
   ]

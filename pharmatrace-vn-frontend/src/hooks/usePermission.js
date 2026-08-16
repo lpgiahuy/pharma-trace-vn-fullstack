@@ -1,7 +1,7 @@
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 
 export const usePermission = () => {
-  const { user, hasRole } = useAuthStore()
+  const { user, hasRole } = useAuth()
   return {
     can: (roles) => hasRole(roles),
     isAdmin:     hasRole(['admin']),

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Form, Input, InputNumber, Select, Switch, Button as AButton,
-  Card, Upload, Space, Divider, Tabs, DatePicker,
+  Card, Upload, Space, Divider, Tabs, DatePicker, AutoComplete,
 } from 'antd'
 import { UploadOutlined, SaveOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons'
 import { productService } from '@/services/product.service'
@@ -110,35 +110,102 @@ export default function ProductFormPage() {
 
   useEffect(() => {
     fetchCategories()
-    unitService.getAll().then(list => setUnits(list.filter(u => u.type === 'NhaMay'))).catch(() => {})
+    unitService.getAll().then(setUnits).catch(() => {})
     if (!isEdit) return
-    productService.getById(id)
+    productService.getAdminById(id)
       .then(p => {
+        const variants = p.quy_cach_dong_goi || p.packagingVariants || []
+        const chiTietObj = typeof p.chi_tiet_thuoc === 'string' ? JSON.parse(p.chi_tiet_thuoc) : (p.chi_tiet_thuoc || {})
+        const mfgName = p.nha_san_xuat || chiTietObj?.thong_tin_san_xuat?.nha_san_xuat || p.donvi?.ten_don_vi || ''
+
         const formData = {
-          ten_thuoc: p.name,
-          so_dang_ky: p.so_dang_ky,
-          danh_muc_id: p.categoryId,
+          ten_thuoc: p.ten_thuoc || p.name || '',
+          so_dang_ky: p.so_dang_ky || '',
+          danh_muc_id: p.danh_muc_id || p.categoryId || null,
           don_vi_san_xuat_id: p.don_vi_san_xuat_id || null,
-          hinh_anh_url: p.image,
-          la_thuoc_ke_don: p.isPrescription,
-          mo_ta_ngan: p.description,
-          trang_thai: p.isActive ?? true,
-          quy_cach: p.packagingVariants?.map(v => ({
-            ten_don_vi: v.label,
-            gia_ban: v.price,
-            gia_goc: v.gia_goc || null,
+          nha_san_xuat_input: mfgName,
+          hinh_anh_url: p.hinh_anh_url || p.image || '',
+          la_thuoc_ke_don: p.la_thuoc_ke_don ?? p.isPrescription ?? false,
+          mo_ta_ngan: p.mo_ta_ngan || p.description || '',
+          trang_thai: p.trang_thai ?? p.isActive ?? true,
+          quy_cach: variants.map(v => ({
+            ten_don_vi: v.ten_don_vi || v.label || '',
+            gia_ban: v.gia_ban !== undefined ? Number(v.gia_ban) : Number(v.price || 0),
+            gia_goc: v.gia_goc ? Number(v.gia_goc) : null,
             phan_tram_giam: v.phan_tram_giam || 0,
             thoi_gian_bat_dau_sale: v.thoi_gian_bat_dau_sale ? dayjs(v.thoi_gian_bat_dau_sale) : null,
             thoi_gian_ket_thuc_sale: v.thoi_gian_ket_thuc_sale ? dayjs(v.thoi_gian_ket_thuc_sale) : null,
-            la_don_vi_co_ban: v.isBase,
-          })) || [],
-          chi_tiet_thuoc: p.chi_tiet_thuoc || {},
+            la_don_vi_co_ban: v.la_don_vi_co_ban ?? v.isBase ?? false,
+          })),
+          chi_tiet_thuoc: chiTietObj,
         }
         form.setFieldsValue(formData)
-        setImageUrl(p.image)
+        setImageUrl(p.hinh_anh_url || p.image || '')
+      })
+      .catch((err) => {
+        console.error('[ProductFormPage load product error]', err)
+        toast.error('Không thể tải thông tin sản phẩm')
       })
       .finally(() => setInitLoading(false))
   }, [id, fetchCategories, form, isEdit])
+
+  const handleGiaBanChange = (fieldKey, val) => {
+    const giaBan = Number(val) || 0
+    const quyCachList = form.getFieldValue('quy_cach') || []
+    const row = quyCachList[fieldKey] || {}
+    const giaGoc = Number(row.gia_goc) || 0
+    const phanTramGiam = Number(row.phan_tram_giam) || 0
+
+    if (giaGoc > 0) {
+      if (giaBan > 0 && giaBan < giaGoc) {
+        const pct = Math.max(0, Math.round(((giaGoc - giaBan) / giaGoc) * 100))
+        form.setFieldValue(['quy_cach', fieldKey, 'phan_tram_giam'], pct)
+      } else {
+        form.setFieldValue(['quy_cach', fieldKey, 'phan_tram_giam'], 0)
+      }
+    } else if (phanTramGiam > 0 && phanTramGiam < 100 && giaBan > 0) {
+      const computedGoc = Math.round(giaBan / (1 - phanTramGiam / 100))
+      form.setFieldValue(['quy_cach', fieldKey, 'gia_goc'], computedGoc)
+    }
+  }
+
+  const handleGiaGocChange = (fieldKey, val) => {
+    const giaGoc = Number(val) || 0
+    const quyCachList = form.getFieldValue('quy_cach') || []
+    const row = quyCachList[fieldKey] || {}
+    const giaBan = Number(row.gia_ban) || 0
+    const phanTramGiam = Number(row.phan_tram_giam) || 0
+
+    if (giaGoc > 0) {
+      if (giaBan > 0) {
+        if (giaGoc > giaBan) {
+          const pct = Math.max(0, Math.round(((giaGoc - giaBan) / giaGoc) * 100))
+          form.setFieldValue(['quy_cach', fieldKey, 'phan_tram_giam'], pct)
+        } else {
+          form.setFieldValue(['quy_cach', fieldKey, 'phan_tram_giam'], 0)
+        }
+      } else if (phanTramGiam > 0 && phanTramGiam < 100) {
+        const computedBan = Math.max(0, Math.round(giaGoc * (1 - phanTramGiam / 100)))
+        form.setFieldValue(['quy_cach', fieldKey, 'gia_ban'], computedBan)
+      }
+    }
+  }
+
+  const handlePhanTramGiamChange = (fieldKey, val) => {
+    const pct = Number(val) || 0
+    const quyCachList = form.getFieldValue('quy_cach') || []
+    const row = quyCachList[fieldKey] || {}
+    const giaGoc = Number(row.gia_goc) || 0
+    const giaBan = Number(row.gia_ban) || 0
+
+    if (giaGoc > 0) {
+      const computedBan = Math.max(0, Math.round(giaGoc * (1 - pct / 100)))
+      form.setFieldValue(['quy_cach', fieldKey, 'gia_ban'], computedBan)
+    } else if (giaBan > 0 && pct > 0 && pct < 100) {
+      const computedGoc = Math.round(giaBan / (1 - pct / 100))
+      form.setFieldValue(['quy_cach', fieldKey, 'gia_goc'], computedGoc)
+    }
+  }
 
   const handleUpload = async (file) => {
     setUploading(true)
@@ -168,14 +235,22 @@ export default function ProductFormPage() {
         return
       }
 
-      const chi_tiet_thuoc = buildChiTietThuoc(values.chi_tiet_thuoc)
+      const mfgInput = (values.nha_san_xuat_input || '').trim()
+      const matchedUnit = units.find(u => u.name?.toLowerCase() === mfgInput.toLowerCase())
+      const don_vi_san_xuat_id = matchedUnit ? matchedUnit.id : (values.don_vi_san_xuat_id || null)
+
+      const chi_tiet_thuoc = buildChiTietThuoc(values.chi_tiet_thuoc) || {}
+      if (mfgInput) {
+        if (!chi_tiet_thuoc.thong_tin_san_xuat) chi_tiet_thuoc.thong_tin_san_xuat = {}
+        chi_tiet_thuoc.thong_tin_san_xuat.nha_san_xuat = mfgInput
+      }
 
       const payload = {
         thong_tin_thuoc: {
           ten_thuoc: values.ten_thuoc,
           so_dang_ky: values.so_dang_ky,
           danh_muc_id: values.danh_muc_id,
-          don_vi_san_xuat_id: values.don_vi_san_xuat_id || null,
+          don_vi_san_xuat_id: don_vi_san_xuat_id,
           hinh_anh_url: values.hinh_anh_url || '',
           la_thuoc_ke_don: values.la_thuoc_ke_don ?? false,
           mo_ta_ngan: values.mo_ta_ngan || '',
@@ -410,12 +485,15 @@ export default function ProductFormPage() {
                     ))}
                   </Select>
                 </Form.Item>
-                <Form.Item label="Nhà sản xuất" name="don_vi_san_xuat_id" className="sm:col-span-2">
-                  <Select placeholder="Chọn đơn vị sản xuất" allowClear showSearch optionFilterProp="children">
-                    {units.map(u => (
-                      <Select.Option key={u.id} value={u.id}>{u.name}</Select.Option>
-                    ))}
-                  </Select>
+                <Form.Item label="Nhà sản xuất" name="nha_san_xuat_input" className="sm:col-span-2">
+                  <AutoComplete
+                    placeholder="Chọn nhà sản xuất (VD: Pfizer, AstraZeneca, Hasan - Demarpharm...)"
+                    options={units.map(u => ({ value: u.name, label: `${u.name} (${u.type === 'NhaMay' ? 'Nhà máy' : (u.type === 'NhaPhanPhoi' ? 'NPP' : 'Nhà thuốc')})` }))}
+                    filterOption={(inputValue, option) =>
+                      option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                    }
+                    allowClear
+                  />
                 </Form.Item>
                 <Form.Item label="Mô tả ngắn" name="mo_ta_ngan" className="sm:col-span-2">
                   <TextArea rows={3} placeholder="Mô tả ngắn về thuốc…" />
@@ -443,13 +521,32 @@ export default function ProductFormPage() {
                             <Input placeholder="VD: Hộp, Vỉ, Viên" />
                           </Form.Item>
                           <Form.Item {...restField} label="Giá bán (₫)" name={[name, 'gia_ban']} rules={[{ required: true, message: 'Giá bán là bắt buộc' }]}>
-                            <InputNumber min={0} style={{ width: '100%' }} formatter={v => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
+                            <InputNumber
+                              min={0}
+                              style={{ width: '100%' }}
+                              formatter={v => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                              parser={v => v.replace(/\$\s?|(,*)/g, '')}
+                              onChange={val => handleGiaBanChange(name, val)}
+                            />
                           </Form.Item>
                           <Form.Item {...restField} label="Giá gốc (₫)" name={[name, 'gia_goc']}>
-                            <InputNumber min={0} style={{ width: '100%' }} formatter={v => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} placeholder="Trước giảm giá" />
+                            <InputNumber
+                              min={0}
+                              style={{ width: '100%' }}
+                              formatter={v => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                              parser={v => v.replace(/\$\s?|(,*)/g, '')}
+                              placeholder="Trước giảm giá"
+                              onChange={val => handleGiaGocChange(name, val)}
+                            />
                           </Form.Item>
                           <Form.Item {...restField} label="Giảm giá %" name={[name, 'phan_tram_giam']} initialValue={0}>
-                            <InputNumber min={0} max={100} style={{ width: '100%' }} addonAfter="%" />
+                            <InputNumber
+                              min={0}
+                              max={100}
+                              style={{ width: '100%' }}
+                              addonAfter="%"
+                              onChange={val => handlePhanTramGiamChange(name, val)}
+                            />
                           </Form.Item>
                           <Form.Item {...restField} label="Bắt đầu giảm" name={[name, 'thoi_gian_bat_dau_sale']}>
                             <DatePicker showTime style={{ width: '100%' }} placeholder="Bắt đầu sale" />

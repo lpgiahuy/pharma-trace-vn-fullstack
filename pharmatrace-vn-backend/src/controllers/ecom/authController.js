@@ -2,10 +2,11 @@ import * as authService from '../../services/ecom/authService.js';
 
 const register = async (req, res, next) => {
     try {
-        let { ho_ten, so_dien_thoai, mat_khau } = req.body;
+        let { ho_ten, so_dien_thoai, mat_khau, email, dia_chi, dia_chi_mac_dinh, address } = req.body;
 
-        // Optimization: sanitize and validate phone number
+        // Optimization: sanitize and validate phone number and email
         if (so_dien_thoai) so_dien_thoai = so_dien_thoai.trim();
+        if (email) email = email.trim();
 
         if (!ho_ten || !so_dien_thoai || !mat_khau) {
             res.status(400);
@@ -18,7 +19,9 @@ const register = async (req, res, next) => {
             throw new Error('Invalid phone number format (must be 10-11 digits)');
         }
 
-        const data = await authService.registerUser(ho_ten, so_dien_thoai, mat_khau);
+        const userAddress = dia_chi_mac_dinh || dia_chi || address || null;
+
+        const data = await authService.registerUser(ho_ten, so_dien_thoai, mat_khau, email, userAddress);
 
 
 
@@ -38,17 +41,16 @@ const register = async (req, res, next) => {
 
 const login = async (req, res, next) => {
     try {
-        let { so_dien_thoai, mat_khau } = req.body;
+        let { so_dien_thoai, email, identifier, phone, mat_khau, password } = req.body;
+        const identity = (identifier || phone || email || so_dien_thoai || '').toString().trim();
+        const pwd = mat_khau || password;
 
-        // Optimization: sanitize phone number
-        if (so_dien_thoai) so_dien_thoai = so_dien_thoai.trim();
-
-        if (!so_dien_thoai || !mat_khau) {
+        if (!identity || !pwd) {
             res.status(400);
-            throw new Error('Please enter phone number and password');
+            throw new Error('Vui lòng nhập Email / Số điện thoại và mật khẩu');
         }
 
-        const data = await authService.loginUser(so_dien_thoai, mat_khau);
+        const data = await authService.loginUser(identity, pwd);
 
 
 

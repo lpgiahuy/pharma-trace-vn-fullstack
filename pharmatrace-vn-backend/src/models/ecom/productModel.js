@@ -24,23 +24,36 @@ const getProducts = async (categoryId, search, sort, limit, offset, userId = nul
     if (sort === 'price_desc') orderBy = 'qc.gia_ban DESC NULLS LAST';
     if (sort === 'best_selling') orderBy = 'dp.so_luong_da_ban DESC NULLS LAST';
 
+    let catIds = [];
+    if (Array.isArray(categoryId)) {
+        catIds = categoryId.map(id => parseInt(id)).filter(id => !isNaN(id));
+    } else if (typeof categoryId === 'string' && categoryId.trim()) {
+        catIds = categoryId.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+    } else if (typeof categoryId === 'number' && !isNaN(categoryId)) {
+        catIds = [categoryId];
+    }
+
+    const hasCatFilter = catIds.length > 0;
+
     const query = `
         SELECT dp.id, dp.ten_thuoc, dp.slug, dp.hinh_anh_url, dp.la_thuoc_ke_don, 
                 dp.mo_ta_ngan, dp.so_luong_da_ban, dp.diem_danh_gia,
                 qc.gia_ban, qc.gia_goc, qc.phan_tram_giam, qc.ten_don_vi AS don_vi_ban,
-                (SELECT COALESCE(MAX(tk.so_luong_ton), 0) FROM TonKho tk JOIN DonVi dv_tk ON tk.don_vi_id = dv_tk.id WHERE tk.duoc_pham_id = dp.id AND dv_tk.loai_don_vi = 'NhaThuoc') AS total_stock,
+                (SELECT COALESCE(SUM(tk.so_luong_ton), 0) FROM TonKho tk JOIN DonVi dv_tk ON tk.don_vi_id = dv_tk.id WHERE tk.duoc_pham_id = dp.id AND dv_tk.loai_don_vi = 'NhaThuoc' AND dv_tk.la_don_vi_noi_bo = TRUE) AS total_stock,
                 (SELECT EXISTS(SELECT 1 FROM SanPhamYeuThich WHERE khach_hang_id = $5 AND duoc_pham_id = dp.id)) AS is_favorited
         FROM DuocPham dp
         LEFT JOIN QuyCachDongGoi qc ON dp.id = qc.duoc_pham_id 
-        WHERE ($1::INT IS NULL OR dp.danh_muc_id = $1)
+        WHERE (${!hasCatFilter} OR dp.danh_muc_id IN (
+            SELECT id FROM DanhMuc WHERE id = ANY($1::INT[]) OR danh_muc_cha_id = ANY($1::INT[])
+        ))
             AND ($2::VARCHAR IS NULL OR dp.ten_thuoc ILIKE '%' || $2 || '%')
             AND dp.trang_thai = TRUE
-            AND ($6::BOOLEAN IS FALSE OR (SELECT COALESCE(MAX(tk.so_luong_ton), 0) FROM TonKho tk JOIN DonVi dv_tk ON tk.don_vi_id = dv_tk.id WHERE tk.duoc_pham_id = dp.id AND dv_tk.loai_don_vi = 'NhaThuoc') > 0)
+            AND ($6::BOOLEAN IS FALSE OR (SELECT COALESCE(SUM(tk.so_luong_ton), 0) FROM TonKho tk JOIN DonVi dv_tk ON tk.don_vi_id = dv_tk.id WHERE tk.duoc_pham_id = dp.id AND dv_tk.loai_don_vi = 'NhaThuoc' AND dv_tk.la_don_vi_noi_bo = TRUE) > 0)
             ${isFlashSale ? `AND qc.phan_tram_giam > 0 AND CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh' BETWEEN qc.thoi_gian_bat_dau_sale AND qc.thoi_gian_ket_thuc_sale` : ''}
         ORDER BY ${orderBy}
         LIMIT $3 OFFSET $4;
     `;
-    const result = await prisma.$queryRawUnsafe(query, categoryId, search, limit, offset, userId, inStock);
+    const result = await prisma.$queryRawUnsafe(query, hasCatFilter ? catIds : [0], search, limit, offset, userId, inStock);
     return serializeBigInt(result);
 };
 
@@ -57,7 +70,7 @@ const getProductByIdOrSlug = async (identifier, userId = null) => {
         SELECT dp.id, dp.ten_thuoc, dp.slug, dp.so_dang_ky, dp.hinh_anh_url, dp.la_thuoc_ke_don, 
                dp.mo_ta_ngan, dp.chi_tiet_thuoc, dp.so_luong_da_ban, dp.diem_danh_gia,
                dm.ten_danh_muc, dv.ten_don_vi AS nha_san_xuat,
-               (SELECT COALESCE(MAX(tk.so_luong_ton), 0) FROM TonKho tk JOIN DonVi dv_tk ON tk.don_vi_id = dv_tk.id WHERE tk.duoc_pham_id = dp.id AND dv_tk.loai_don_vi = 'NhaThuoc') AS total_stock,
+               (SELECT COALESCE(SUM(tk.so_luong_ton), 0) FROM TonKho tk JOIN DonVi dv_tk ON tk.don_vi_id = dv_tk.id WHERE tk.duoc_pham_id = dp.id AND dv_tk.loai_don_vi = 'NhaThuoc' AND dv_tk.la_don_vi_noi_bo = TRUE) AS total_stock,
                (SELECT EXISTS(SELECT 1 FROM SanPhamYeuThich WHERE khach_hang_id = $2 AND duoc_pham_id = dp.id)) AS is_favorited
         FROM DuocPham dp
         LEFT JOIN DanhMuc dm ON dp.danh_muc_id = dm.id
@@ -119,7 +132,7 @@ const getUniqueBrands = async () => {
     return result.map(r => r.ten_don_vi);
 };
 
-export const findStoreWithAllItems = async (items) => {
+export const findStoreWithAllItems = async (items, lat = null, lng = null) => {
     if (!items || items.length === 0) return null;
 
     const consolidated = items.reduce((acc, item) => {
@@ -138,11 +151,18 @@ export const findStoreWithAllItems = async (items) => {
 
     const params = uniqueItems.flatMap(item => [item.duoc_pham_id, item.so_luong]);
 
+    let orderBy = 'dv.id ASC';
+    if (lat && lng) {
+        params.push(parseFloat(lat), parseFloat(lng));
+        orderBy = `fn_tinh_khoang_cach_km($${params.length - 1}, $${params.length}, dv.toa_do_lat, dv.toa_do_lng) ASC`;
+    }
+
     const query = `
         SELECT dv.id as don_vi_id, dv.ten_don_vi, dv.dia_chi
         FROM DonVi dv
         WHERE dv.loai_don_vi = 'NhaThuoc'
           AND ${conditions}
+        ORDER BY ${orderBy}
         LIMIT 1
     `;
     const result = await prisma.$queryRawUnsafe(query, ...params);

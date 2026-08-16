@@ -3,7 +3,6 @@ import prisma from '../../config/prisma.js';
 // get list of all staff members (including their assigned unit)
 const getAllStaff = async () => {
     const staff = await prisma.nhanvien.findMany({
-        where: { trang_thai: true },
         include: {
             donvi: {
                 select: { ten_don_vi: true }
@@ -25,13 +24,24 @@ const getAllStaff = async () => {
 
 // create new staff account
 const createStaff = async (don_vi_id, ho_ten, email, mat_khau_hash, vai_tro) => {
+    const existing = await prisma.nhanvien.findUnique({
+        where: { email }
+    });
+
+    if (existing) {
+        const error = new Error('Email đã tồn tại!');
+        error.code = 'P2002';
+        throw error;
+    }
+
     return await prisma.nhanvien.create({
         data: {
             don_vi_id,
             ho_ten,
             email,
             mat_khau_hash,
-            vai_tro
+            vai_tro,
+            trang_thai: true
         },
         select: {
             id: true,
@@ -62,13 +72,16 @@ const updateStaff = async (id, don_vi_id, ho_ten, vai_tro, trang_thai) => {
     });
 };
 
-// disable staff account (soft delete)
-const softDeleteStaff = async (id) => {
-    const updated = await prisma.nhanvien.update({
-        where: { id: Number(id) },
-        data: { trang_thai: false }
+// permanently delete staff account from DB
+const hardDeleteStaff = async (id) => {
+    const staffId = Number(id);
+    await prisma.$executeRawUnsafe(`UPDATE baiviet SET nhan_vien_dang_id = NULL WHERE nhan_vien_dang_id = $1;`, staffId);
+    await prisma.$executeRawUnsafe(`UPDATE phieunhap SET nguoi_tao_id = NULL WHERE nguoi_tao_id = $1;`, staffId);
+
+    const deleted = await prisma.nhanvien.delete({
+        where: { id: staffId }
     });
-    return !!updated;
+    return !!deleted;
 };
 
-export { getAllStaff, createStaff, updateStaff, softDeleteStaff };
+export { getAllStaff, createStaff, updateStaff, hardDeleteStaff as softDeleteStaff, hardDeleteStaff };

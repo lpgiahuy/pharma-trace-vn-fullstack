@@ -27,7 +27,8 @@ export const createSupplier = async (req, res) => {
 
 export const getPurchaseOrders = async (req, res) => {
     try {
-        const orders = await getPurchaseOrdersService();
+        const type = req.query.type || 'all';
+        const orders = await getPurchaseOrdersService(req.user, type);
         res.status(200).json({ success: true, data: orders });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -58,6 +59,13 @@ export const createPurchaseOrder = async (req, res) => {
 
 export const updatePurchaseOrderStatus = async (req, res) => {
     try {
+        const userRole = req.user?.role || req.user?.vai_tro;
+        if (userRole === 'NhanVienBanHang') {
+            return res.status(403).json({
+                success: false,
+                message: 'Nhân viên bán hàng không có quyền duyệt phiếu mua hàng PO! Vui lòng liên hệ Quản lý cửa hàng.'
+            });
+        }
         const { trang_thai } = req.body;
         const order = await updatePurchaseOrderStatusService(req.params.id, trang_thai);
         res.status(200).json({ success: true, message: 'Cập nhật trạng thái thành công', data: order });

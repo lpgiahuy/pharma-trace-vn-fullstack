@@ -11,7 +11,7 @@ import { authorizeRoles } from '../../middlewares/roleMiddleware.js';
 const router = express.Router();
 
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienBanHang'));
+router.use(authorizeRoles('SuperAdmin', 'QuanLyCuaHang', 'QuanLyKho', 'NhanVienBanHang'));
 
 router.get('/', getLots);
 router.get('/stats', getLotStats);

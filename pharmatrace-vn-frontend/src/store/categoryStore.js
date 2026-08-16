@@ -23,12 +23,13 @@ const ICON_MAPPING = {
   'cơ xương khớp': 'Bone',
   'thần kinh': 'Brain',
   'ung thư': 'Radiation',
-  'kháng sinh': 'Bacteriophage',
+  'kháng sinh': 'Pill',
 
   // Vitamins & functional foods
   'vitamin': 'Leaf',
   'thực phẩm chức năng': 'Milk',
   'giảm cân': 'Scale',
+  'thể thao': 'Dumbbell',
 
   // Sexual health
   'nam': 'UserPlus',
@@ -42,6 +43,7 @@ const ICON_MAPPING = {
 };
 
 const getIconForCategory = (name) => {
+  if (!name) return 'Package';
   const lowerName = name.toLowerCase();
   for (const [keyword, icon] of Object.entries(ICON_MAPPING)) {
     if (lowerName.includes(keyword)) return icon;
@@ -53,8 +55,8 @@ export const useCategoryStore = create((set, get) => ({
   categories: [],
   loading: false,
   fetched: false,
-  fetchCategories: async () => {
-    if (get().fetched || get().loading) return
+  fetchCategories: async (force = false) => {
+    if (!force && (get().fetched || get().loading)) return
     set({ loading: true })
     try {
       const data = await productService.getCategories()
@@ -62,7 +64,7 @@ export const useCategoryStore = create((set, get) => ({
         id: c.id,
         name: c.ten_danh_muc || c.name,
         slug: c.slug || `cat-${c.id}`,
-        iconName: getIconForCategory(c.ten_danh_muc || c.name),
+        iconName: c.hinh_anh_icon || getIconForCategory(c.ten_danh_muc || c.name),
         parentId: c.danh_muc_cha_id,
         children: c.children ? c.children.map((child, j) => mapCategory(child, j)) : []
       })

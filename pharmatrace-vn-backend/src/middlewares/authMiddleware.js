@@ -49,7 +49,9 @@ const optionalProtect = async (req, res, next) => {
 
 const restrictTo = (...roles) => {
     return (req, res, next) => {
-        if (!req.user || !roles.includes(req.user.role)) {
+        const userRole = (req.user?.role || req.user?.vai_tro || '').toString().trim();
+        const allowedLower = roles.map(r => r.toLowerCase());
+        if (!req.user || !userRole || !allowedLower.includes(userRole.toLowerCase())) {
             const err = new Error('You do not have permission to perform this action.');
             err.statusCode = 403;
             return next(err);

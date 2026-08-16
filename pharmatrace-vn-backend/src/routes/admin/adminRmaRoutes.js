@@ -14,7 +14,7 @@ const router = express.Router();
 
 // Require authentication and role-based authorization (Admin, Sales, Accountant)
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'NhanVienBanHang'));
+router.use(authorizeRoles('SuperAdmin', 'QuanLyCuaHang', 'NhanVienBanHang'));
 
 /**
  * @swagger

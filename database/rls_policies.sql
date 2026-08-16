@@ -22,7 +22,7 @@ RETURNS BOOLEAN AS $$
 BEGIN
     RETURN (
         current_setting('app.bypass_rls', true) = 'on'
-        OR current_setting('app.current_user_role', true) IN ('Admin', 'SuperAdmin')
+        OR current_setting('app.current_user_role', true) IN ('SuperAdmin')
         -- Allow queries when no session user context is specified (e.g. initial connection / migrations)
         OR (
             NULLIF(current_setting('app.current_user_id', true), '') IS NULL
