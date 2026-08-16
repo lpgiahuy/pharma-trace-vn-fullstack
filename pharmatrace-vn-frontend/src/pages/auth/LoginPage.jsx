@@ -19,18 +19,24 @@ export default function LoginPage() {
   const from = location.state?.from?.pathname || '/'
 
   const customerSchema = z.object({
-    phone:    z.string().min(9, t('auth.validation.invalid_phone')),
+    identifier: z.string().min(3, 'Vui lòng nhập Email hoặc Số điện thoại'),
     password: z.string().min(6, t('auth.validation.pw_min')),
   })
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(customerSchema),
-    defaultValues: { phone: '', password: '' },
+    defaultValues: { identifier: '', password: '' },
   })
 
   const onSubmit = async (data) => {
     try {
-      const credentials = { loginType: 'customer', phone: data.phone, password: data.password }
+      const credentials = {
+        loginType: 'customer',
+        identifier: data.identifier,
+        phone: data.identifier,
+        email: data.identifier,
+        password: data.password
+      }
       const result = await login(credentials)
       const userRole = result.user?.role || result.user?.vai_tro
 
@@ -59,12 +65,12 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input
-          label={t('auth.phone')}
-          type="tel"
-          placeholder="0909 123 456"
-          error={errors.phone?.message}
+          label={t('auth.email_or_phone')}
+          type="text"
+          placeholder="0909 123 456 hoặc name@example.com"
+          error={errors.identifier?.message}
           required
-          {...register('phone')}
+          {...register('identifier')}
         />
         <Input
           label={t('auth.password')}

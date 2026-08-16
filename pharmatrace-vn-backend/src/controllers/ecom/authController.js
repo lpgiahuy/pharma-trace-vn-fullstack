@@ -41,17 +41,16 @@ const register = async (req, res, next) => {
 
 const login = async (req, res, next) => {
     try {
-        let { so_dien_thoai, mat_khau } = req.body;
+        let { so_dien_thoai, email, identifier, phone, mat_khau, password } = req.body;
+        const identity = (identifier || phone || email || so_dien_thoai || '').toString().trim();
+        const pwd = mat_khau || password;
 
-        // Optimization: sanitize phone number
-        if (so_dien_thoai) so_dien_thoai = so_dien_thoai.trim();
-
-        if (!so_dien_thoai || !mat_khau) {
+        if (!identity || !pwd) {
             res.status(400);
-            throw new Error('Vui lòng nhập số điện thoại và mật khẩu');
+            throw new Error('Vui lòng nhập Email / Số điện thoại và mật khẩu');
         }
 
-        const data = await authService.loginUser(so_dien_thoai, mat_khau);
+        const data = await authService.loginUser(identity, pwd);
 
 
 

@@ -21,11 +21,11 @@ const registerUser = async (ho_ten, so_dien_thoai, mat_khau, email = null, dia_c
     return { user: newUser, token };
 };
 
-const loginUser = async (so_dien_thoai, mat_khau) => {
-    // find user by phone number
-    const user = await authModel.findUserByPhone(so_dien_thoai);
+const loginUser = async (identifier, mat_khau) => {
+    // find user by phone number or email
+    const user = await authModel.findUserByIdentifier(identifier);
     if (!user) {
-        const error = new Error('Số điện thoại hoặc mật khẩu không chính xác');
+        const error = new Error('Tài khoản hoặc mật khẩu không chính xác');
         error.statusCode = 401;
         throw error;
     }
@@ -33,7 +33,7 @@ const loginUser = async (so_dien_thoai, mat_khau) => {
     // compare password
     const isMatch = await comparePassword(mat_khau, user.mat_khau_hash);
     if (!isMatch) {
-        const error = new Error('Số điện thoại hoặc mật khẩu không chính xác');
+        const error = new Error('Tài khoản hoặc mật khẩu không chính xác');
         error.statusCode = 401;
         throw error;
     }

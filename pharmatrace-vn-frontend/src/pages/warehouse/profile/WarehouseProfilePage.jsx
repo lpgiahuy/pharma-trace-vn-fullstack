@@ -1,21 +1,31 @@
-import { User, Mail, Shield, Building2, Hash, CheckCircle } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
+import { User, Mail, Shield, Building2, Hash, CheckCircle, Store, Warehouse } from 'lucide-react'
+import { useAuth } from '@/store/authStore'
 import { useTranslation } from 'react-i18next'
+import { useLocation } from 'react-router-dom'
 
 const ROLE_COLORS = {
   SuperAdmin:        { bg: 'bg-purple-100', text: 'text-purple-700', dot: 'bg-purple-500' },
-  QuanLyKho:        { bg: 'bg-teal-100',   text: 'text-teal-700',   dot: 'bg-teal-500'   },
-  NhanVienBanHang:  { bg: 'bg-blue-100',   text: 'text-blue-700',   dot: 'bg-blue-500'   },
-  admin:            { bg: 'bg-purple-100', text: 'text-purple-700', dot: 'bg-purple-500' },
-  manager:          { bg: 'bg-teal-100',   text: 'text-teal-700',   dot: 'bg-teal-500'   },
-  staff:            { bg: 'bg-blue-100',   text: 'text-blue-700',   dot: 'bg-blue-500'   },
+  Admin:             { bg: 'bg-purple-100', text: 'text-purple-700', dot: 'bg-purple-500' },
+  QuanLyCuaHang:     { bg: 'bg-amber-100',  text: 'text-amber-700',  dot: 'bg-amber-500'  },
+  QuanLyKho:         { bg: 'bg-teal-100',   text: 'text-teal-700',   dot: 'bg-teal-500'   },
+  NhanVienKho:       { bg: 'bg-teal-100',   text: 'text-teal-700',   dot: 'bg-teal-500'   },
+  NhanVienBanHang:   { bg: 'bg-blue-100',   text: 'text-blue-700',   dot: 'bg-blue-500'   },
+  admin:             { bg: 'bg-purple-100', text: 'text-purple-700', dot: 'bg-purple-500' },
+  manager:           { bg: 'bg-teal-100',   text: 'text-teal-700',   dot: 'bg-teal-500'   },
+  staff:             { bg: 'bg-blue-100',   text: 'text-blue-700',   dot: 'bg-blue-500'   },
 }
 
-const getRoleKey = (vai_tro, role) => {
-  if (vai_tro === 'SuperAdmin' || role === 'admin')          return 'role_superadmin'
-  if (vai_tro === 'QuanLyKho' || role === 'manager')         return 'role_manager'
-  if (vai_tro === 'NhanVienBanHang' || role === 'staff')     return 'role_staff'
-  return 'role_admin'
+const getRoleDisplay = (vai_tro, role) => {
+  const r = vai_tro || role || ''
+  switch (r) {
+    case 'SuperAdmin': return 'Super Administrator'
+    case 'Admin': return 'Admin Chi Nhánh'
+    case 'QuanLyCuaHang': return 'Quản Lý Cửa Hàng'
+    case 'QuanLyKho': return 'Quản Lý Kho (WMS)'
+    case 'NhanVienKho': return 'Nhân Viên Kho'
+    case 'NhanVienBanHang': return 'Nhân Viên Bán Hàng / Dược Sĩ'
+    default: return r || 'Nhân viên'
+  }
 }
 
 const getColorScheme = (vai_tro, role) => {
@@ -28,8 +38,10 @@ const getInitials = (name) => {
 }
 
 export default function WarehouseProfilePage() {
-  const { user } = useAuthStore()
+  const { user } = useAuth()
   const { t } = useTranslation()
+  const location = useLocation()
+  const isAdminPortal = location.pathname.startsWith('/admin')
 
   const vai_tro = user?.vai_tro || ''
   const role    = user?.role || ''
@@ -39,12 +51,16 @@ export default function WarehouseProfilePage() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-slate-800">{t('warehouse.profile_title')}</h1>
-        <p className="text-sm text-slate-500 mt-0.5">{t('warehouse.profile_desc')}</p>
+        <h1 className="text-xl font-bold text-slate-800">
+          {isAdminPortal ? 'Hồ sơ Quản trị viên & Nhân viên' : t('warehouse.profile_title')}
+        </h1>
+        <p className="text-sm text-slate-500 mt-0.5">
+          {isAdminPortal ? 'Thông tin tài khoản nội bộ trên hệ thống PharmaTrace Admin' : t('warehouse.profile_desc')}
+        </p>
       </div>
 
       {/* Employee Card */}
-      <div className="bg-gradient-to-br from-teal-600 to-teal-800 rounded-2xl p-6 mb-6 shadow-lg shadow-teal-200/40 relative overflow-hidden">
+      <div className={`bg-gradient-to-br ${isAdminPortal ? 'from-indigo-600 to-indigo-800 shadow-indigo-200/40' : 'from-teal-600 to-teal-800 shadow-teal-200/40'} rounded-2xl p-6 mb-6 shadow-lg relative overflow-hidden`}>
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full translate-y-1/2 -translate-x-1/4" />
 
@@ -55,8 +71,9 @@ export default function WarehouseProfilePage() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <p className="text-teal-200 text-[10px] font-bold uppercase tracking-widest mb-0.5">
-              PharmaTrace VN — WMS
+            <p className={`${isAdminPortal ? 'text-indigo-200' : 'text-teal-200'} text-[10px] font-bold uppercase tracking-widest mb-0.5 flex items-center gap-1.5`}>
+              {isAdminPortal ? <Store className="w-3.5 h-3.5" /> : <Warehouse className="w-3.5 h-3.5" />}
+              {isAdminPortal ? 'PharmaTrace VN — Admin Portal' : 'PharmaTrace VN — WMS Portal'}
             </p>
             <h2 className="text-white text-xl font-black truncate">
               {user?.ho_ten || user?.name || '—'}
@@ -64,17 +81,17 @@ export default function WarehouseProfilePage() {
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold ${colors.bg} ${colors.text}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} />
-                {t(`warehouse.${getRoleKey(vai_tro, role)}`)}
+                {getRoleDisplay(vai_tro, role)}
               </span>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/15 text-white">
                 <CheckCircle className="w-3 h-3" />
-                {t('warehouse.active')}
+                {t('warehouse.active', { defaultValue: 'Đang hoạt động' })}
               </span>
             </div>
           </div>
 
           <div className="text-right hidden sm:block flex-shrink-0">
-            <p className="text-teal-200 text-[10px] font-bold uppercase tracking-widest">{t('warehouse.employee_id')}</p>
+            <p className={`${isAdminPortal ? 'text-indigo-200' : 'text-teal-200'} text-[10px] font-bold uppercase tracking-widest`}>{t('warehouse.employee_id', { defaultValue: 'Mã NV' })}</p>
             <p className="text-white font-black text-lg">#{String(user?.id || 0).padStart(4, '0')}</p>
           </div>
         </div>

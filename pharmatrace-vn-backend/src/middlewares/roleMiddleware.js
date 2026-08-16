@@ -6,11 +6,14 @@ const authorizeRoles = (...allowedRoles) => {
             return next(new Error('Vui lòng đăng nhập!'));
         }
 
-        // check if user's role is in the allowedRoles array
-        if (!allowedRoles.includes(req.user.role)) {
+        const userRole = (req.user.role || req.user.vai_tro || '').toString().trim();
+        const allowedLower = allowedRoles.map(r => r.toLowerCase());
+
+        // check if user's role is in the allowedRoles array (case-insensitive)
+        if (!userRole || !allowedLower.includes(userRole.toLowerCase())) {
             res.status(403); // 403 Forbidden: already authenticated but does not have permission
             return next(
-                new Error(`Quyền truy cập bị từ chối! Role của bạn là '${req.user.role}', tính năng này yêu cầu: ${allowedRoles.join(' hoặc ')}`)
+                new Error(`Quyền truy cập bị từ chối! Vai trò của bạn là '${userRole}', tính năng này yêu cầu: ${allowedRoles.join(' hoặc ')}`)
             );
         }
 

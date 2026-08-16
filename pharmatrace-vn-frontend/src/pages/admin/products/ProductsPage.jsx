@@ -5,12 +5,12 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant
 import { productService } from '@/services/product.service'
 import { formatCurrency } from '@/utils'
 import { StockBadge } from '@/components/ui/Badge'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 
 const { useBreakpoint } = Grid
 
 export default function AdminProductsPage() {
-  const user = useAuthStore(s => s.user)
+  const { user } = useAuth()
   const isSuperAdmin = ['SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho'].includes(user?.vai_tro || user?.role)
 
   const [data, setData]       = useState([])

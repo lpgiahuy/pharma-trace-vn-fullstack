@@ -1,14 +1,14 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { AppRoutes } from '@/routes'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 import { useUIStore } from '@/store/uiStore'
 import { useCartStore } from '@/store/cartStore'
 import { Spinner } from '@/components/ui/Spinner'
 import { authService } from '@/services/auth.service'
 
 export default function App() {
-  const { isAuthenticated, updateUser, logout } = useAuthStore()
+  const { isAuthenticated, updateUser, logout } = useAuth()
   const { globalLoading } = useUIStore()
   const { pathname } = useLocation()
 

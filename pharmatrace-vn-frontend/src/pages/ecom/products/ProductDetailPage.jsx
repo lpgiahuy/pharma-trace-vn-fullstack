@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import { ShoppingCart, Heart, Star, Shield, Truck, RotateCcw, Plus, Minus, ChevronRight } from 'lucide-react'
+import { ShoppingCart, Heart, Star, Shield, Truck, RotateCcw, Plus, Minus, ChevronRight, Award, Building2, Globe, Package, Thermometer } from 'lucide-react'
 import { productService } from '@/services/product.service'
 import { wishlistService } from '@/services/wishlist.service'
 import { useCartStore } from '@/store/cartStore'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 import { PageLoader } from '@/components/ui/Spinner'
 import { ErrorState } from '@/components/ui/EmptyState'
 import { Badge } from '@/components/ui/Badge'
@@ -84,7 +84,7 @@ export default function ProductDetailPage() {
   const [reviewSubmitting, setReviewSubmitting] = useState(false)
   
   const addItem = useCartStore(s => s.addItem)
-  const user = useAuthStore(s => s.user)
+  const { user } = useAuth()
   const [isFavorite, setIsFavorite] = useState(false)
   const [isToggling, setIsToggling] = useState(false)
 
@@ -542,14 +542,14 @@ export default function ProductDetailPage() {
           {activeTab === 'thong_tin_san_xuat' && product.chi_tiet_thuoc?.thong_tin_san_xuat && (
             <div className="grid gap-5 sm:grid-cols-2 animate-fade-in">
               {[
-                { label: t('product.manufacturing.brand'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.thuong_hieu },
-                { label: t('product.manufacturing.manufacturer'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.nha_san_xuat },
-                { label: t('product.manufacturing.origin'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.xuat_xu },
-                { label: t('product.manufacturing.packaging'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.quy_cach },
-                { label: t('product.manufacturing.storage'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.bao_quan },
+                { label: t('product.manufacturing.brand'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.thuong_hieu, icon: <Award className="w-5 h-5 text-brand-600" /> },
+                { label: t('product.manufacturing.manufacturer'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.nha_san_xuat, icon: <Building2 className="w-5 h-5 text-brand-600" /> },
+                { label: t('product.manufacturing.origin'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.xuat_xu, icon: <Globe className="w-5 h-5 text-brand-600" /> },
+                { label: t('product.manufacturing.packaging'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.quy_cach, icon: <Package className="w-5 h-5 text-brand-600" /> },
+                { label: t('product.manufacturing.storage'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.bao_quan, icon: <Thermometer className="w-5 h-5 text-brand-600" /> },
               ].filter(i => i.value).map(item => (
                 <div key={item.label} className="flex items-start gap-4 p-5 bg-white rounded-3xl border border-slate-100 shadow-sm hover:border-brand-200 hover:shadow-md transition-all group">
-                  <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-xl group-hover:bg-brand-50 transition-colors">
+                  <div className="w-10 h-10 rounded-2xl bg-brand-50 flex items-center justify-center text-xl group-hover:bg-brand-100 transition-colors flex-shrink-0">
                     {item.icon}
                   </div>
                   <div className="flex flex-col">

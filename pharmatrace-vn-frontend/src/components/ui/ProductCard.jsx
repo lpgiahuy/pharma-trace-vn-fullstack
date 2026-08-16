@@ -4,7 +4,7 @@ import { Heart, ShoppingCart, Star, Plus, Truck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { cn, formatCurrency } from '@/utils'
 import { useCartStore } from '@/store/cartStore'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 import { wishlistService } from '@/services/wishlist.service'
 import { useTranslation } from 'react-i18next'
 import { Button } from './Button'
@@ -12,7 +12,7 @@ import { Button } from './Button'
 export const ProductCard = memo(({ product, className }) => {
   const { t } = useTranslation()
   const addItem = useCartStore(s => s.addItem)
-  const user = useAuthStore(s => s.user)
+  const { user } = useAuth()
   
   const [isFavorite, setIsFavorite] = useState(product.isFavorited)
   const [isToggling, setIsToggling] = useState(false)

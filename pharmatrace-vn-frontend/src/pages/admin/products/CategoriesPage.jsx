@@ -3,7 +3,7 @@ import { Table, Button as AButton, Modal, Form, Input, Popconfirm, Space, Grid, 
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { productService } from '@/services/product.service'
 import toast from 'react-hot-toast'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 
 const { useBreakpoint } = Grid
 
@@ -64,7 +64,7 @@ const buildCategoryTree = (flatList) => {
 };
 
 export default function CategoriesPage() {
-  const user = useAuthStore(s => s.user)
+  const { user } = useAuth()
   const isSuperAdmin = ['SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho'].includes(user?.vai_tro || user?.role)
 
   const [cats, setCats] = useState([])

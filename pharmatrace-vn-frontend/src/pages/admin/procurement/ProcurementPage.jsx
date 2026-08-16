@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { Table, Tabs, Button, Modal, Form, Input, Select, InputNumber, Tag, message, Card, Space, Tooltip, Alert } from 'antd'
 import { PlusOutlined, ShoppingCartOutlined, ShopOutlined, ReloadOutlined } from '@ant-design/icons'
 import apiClient from '@/services/apiClient'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 
 export default function ProcurementPage() {
-  const { user: currentUser } = useAuthStore()
+  const { user: currentUser } = useAuth()
   const currentUserRole = currentUser?.role || currentUser?.vai_tro
   const canApprovePo = ['SuperAdmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho'].includes(currentUserRole)
 

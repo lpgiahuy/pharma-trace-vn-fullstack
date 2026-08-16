@@ -39,7 +39,7 @@ router.use(protect);
  *       403:
  *         description: Forbidden - Insufficient permissions
  */
-router.get('/', authorizeRoles('SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho', 'NhanVienBanHang'), getAllProductsAdmin);
+router.get('/', authorizeRoles('SuperAdmin', 'Admin', 'QuanLyCuaHang', 'NhanVienBanHang'), getAllProductsAdmin);
 
 /**
  * @swagger
@@ -62,7 +62,7 @@ router.get('/', authorizeRoles('SuperAdmin', 'superadmin', 'Admin', 'admin', 'Qu
  *       404:
  *         description: Product not found
  */
-router.get('/:id', authorizeRoles('SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho', 'NhanVienBanHang'), getProductDetailAdmin);
+router.get('/:id', authorizeRoles('SuperAdmin', 'Admin', 'QuanLyCuaHang', 'NhanVienBanHang'), getProductDetailAdmin);
 
 /**
  * @swagger
@@ -153,7 +153,7 @@ router.get('/:id', authorizeRoles('SuperAdmin', 'superadmin', 'Admin', 'admin', 
  *       400:
  *         description: Duplicate registration number or missing packaging unit
  */
-router.post('/', authorizeRoles('SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho'), createProduct);
+router.post('/', authorizeRoles('SuperAdmin', 'Admin', 'QuanLyCuaHang'), createProduct);
 
 /**
  * @swagger
@@ -223,7 +223,7 @@ router.post('/', authorizeRoles('SuperAdmin', 'superadmin', 'Admin', 'admin', 'Q
  *       404:
  *         description: Product not found
  */
-router.put('/:id', authorizeRoles('SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho'), updateProduct);
+router.put('/:id', authorizeRoles('SuperAdmin', 'Admin', 'QuanLyCuaHang'), updateProduct);
 
 /**
  * @swagger
@@ -244,7 +244,7 @@ router.put('/:id', authorizeRoles('SuperAdmin', 'superadmin', 'Admin', 'admin', 
  *       200:
  *         description: Status toggled successfully
  */
-router.patch('/:id/status', authorizeRoles('SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho'), toggleProductStatus);
+router.patch('/:id/status', authorizeRoles('SuperAdmin', 'Admin', 'QuanLyCuaHang'), toggleProductStatus);
 
 /**
  * @swagger
@@ -267,6 +267,6 @@ router.patch('/:id/status', authorizeRoles('SuperAdmin', 'superadmin', 'Admin', 
  *       404:
  *         description: Product not found
  */
-router.delete('/:id', authorizeRoles('SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'QuanLyKho'), deleteProduct);
+router.delete('/:id', authorizeRoles('SuperAdmin', 'Admin', 'QuanLyCuaHang'), deleteProduct);
 
 export default router;

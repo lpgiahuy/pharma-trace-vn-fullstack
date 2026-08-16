@@ -28,8 +28,11 @@ export const authService = {
     }
 
     // Customer login — backend returns { success: true, data: { user } }
+    const identity = credentials.identifier || credentials.phone || credentials.email || credentials.so_dien_thoai
     const { data } = await apiClient.post('/auth/login', {
-      so_dien_thoai: credentials.phone,
+      identifier:    identity,
+      so_dien_thoai: identity,
+      email:         identity,
       mat_khau:      credentials.password,
     })
     

@@ -22,6 +22,24 @@ export const getPortalToken = (portal = getPortalKey()) => {
   return token
 }
 
+export const getPortalUser = (portal = getPortalKey()) => {
+  const keys = getPortalStorageKeys(portal)
+  const raw = localStorage.getItem(keys.USER)
+  if (raw) {
+    try { return JSON.parse(raw) } catch {}
+  }
+  if (portal === 'customer') {
+    const saved = localStorage.getItem('pharma-auth')
+    if (saved) {
+      try {
+        const { state } = JSON.parse(saved)
+        if (state?.user) return state.user
+      } catch {}
+    }
+  }
+  return null
+}
+
 export const setPortalAuth = (portal, user, accessToken, refreshToken, expiresAt) => {
   const keys = getPortalStorageKeys(portal)
   if (accessToken) localStorage.setItem(keys.ACCESS_TOKEN, accessToken)

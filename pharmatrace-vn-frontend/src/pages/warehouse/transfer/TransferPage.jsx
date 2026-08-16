@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react'
 import { Form, InputNumber, Select, Button as AButton, Card, Table, Tag, Alert, Modal, Descriptions, Popconfirm } from 'antd'
 import { SwapOutlined, EyeOutlined, CheckCircleOutlined, CarOutlined, CloseCircleOutlined } from '@ant-design/icons'
 import { warehouseService } from '@/services/warehouse.service'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 import { formatDateTime, formatDate } from '@/utils'
 import toast from 'react-hot-toast'
 
 export default function TransferPage() {
-  const { user } = useAuthStore()
+  const { user } = useAuth()
   const sourceUnitId = user?.don_vi_id ? Number(user.don_vi_id) : null
 
   const [form] = Form.useForm()

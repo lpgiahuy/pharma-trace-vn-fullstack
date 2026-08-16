@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Table, Button as AButton, Modal, Form, Input, Select, Switch, Popconfirm, Tag } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { userService, unitService } from '@/services/user.service'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 import { Avatar } from '@/components/ui/Avatar'
 import toast from 'react-hot-toast'
 
@@ -15,7 +15,7 @@ const ROLE_COLORS = {
 }
 
 export default function StaffPage() {
-  const { user: currentUser } = useAuthStore()
+  const { user: currentUser } = useAuth()
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)

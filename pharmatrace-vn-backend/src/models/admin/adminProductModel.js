@@ -82,13 +82,18 @@ const toggleProductStatus = async (id) => {
 };
 
 const getAllAdminProducts = async (filters = {}) => {
-    const { search, sort, don_vi_id } = filters;
+    const { search, sort, don_vi_id, is_super_admin } = filters;
     const params = [];
 
-    let stockSubquery = `SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE duoc_pham_id = dp.id`;
-    if (don_vi_id) {
+    let stockSubquery;
+    if (is_super_admin) {
+        // SuperAdmin: sum stock across ALL internal PharmaTrace units
+        stockSubquery = `SELECT COALESCE(SUM(tk2.so_luong_ton), 0) FROM TonKho tk2 JOIN DonVi dv2 ON tk2.don_vi_id = dv2.id WHERE tk2.duoc_pham_id = dp.id AND dv2.la_don_vi_noi_bo = TRUE`;
+    } else if (don_vi_id) {
         params.push(Number(don_vi_id));
-        stockSubquery += ` AND don_vi_id = $${params.length}`;
+        stockSubquery = `SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE duoc_pham_id = dp.id AND don_vi_id = $${params.length}`;
+    } else {
+        stockSubquery = `SELECT COALESCE(SUM(so_luong_ton), 0) FROM TonKho WHERE duoc_pham_id = dp.id`;
     }
 
     let query = `

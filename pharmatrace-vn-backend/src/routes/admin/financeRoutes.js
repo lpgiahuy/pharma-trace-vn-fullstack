@@ -14,7 +14,7 @@ import { authorizeRoles } from '../../middlewares/roleMiddleware.js';
 const router = express.Router();
 
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'superadmin'));
+router.use(authorizeRoles('SuperAdmin'));
 
 router.get('/stats', getFinanceStats);
 router.get('/cashbook', getCashbook);

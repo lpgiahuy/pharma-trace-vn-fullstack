@@ -264,6 +264,7 @@
     "customer": "Khách hàng",
     "admin_staff": "Quản trị / Nhân viên",
     "phone": "Số điện thoại",
+    "email_or_phone": "Số điện thoại hoặc Email",
     "email": "Địa chỉ Email",
     "password": "Mật khẩu",
     "confirm_password": "Xác nhận mật khẩu",

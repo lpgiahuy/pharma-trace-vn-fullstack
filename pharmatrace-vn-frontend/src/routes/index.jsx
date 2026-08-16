@@ -122,8 +122,8 @@ export const AppRoutes = () => (
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/profile" element={<WarehouseProfilePage />} />
         <Route path="/admin/products" element={<AdminProducts />} />
-        <Route path="/admin/products/new" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin']}><AdminProductForm /></ProtectedRoute>} />
-        <Route path="/admin/products/:id/edit" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin']}><AdminProductForm /></ProtectedRoute>} />
+        <Route path="/admin/products/new" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang']}><AdminProductForm /></ProtectedRoute>} />
+        <Route path="/admin/products/:id/edit" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang']}><AdminProductForm /></ProtectedRoute>} />
         <Route path="/admin/categories" element={<AdminCategories />} />
         <Route path="/admin/orders" element={<AdminOrders />} />
         <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
@@ -134,7 +134,7 @@ export const AppRoutes = () => (
         <Route path="/admin/blog/new" element={<AdminBlogForm />} />
         <Route path="/admin/blog/:id/edit" element={<AdminBlogForm />} />
         <Route path="/admin/staff" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin']}><AdminStaff /></ProtectedRoute>} />
-        <Route path="/admin/customers" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin']}><AdminCustomers /></ProtectedRoute>} />
+        <Route path="/admin/customers" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'NhanVienBanHang']}><AdminCustomers /></ProtectedRoute>} />
         <Route path="/admin/prescriptions" element={<AdminPrescriptions />} />
         <Route path="/admin/procurement" element={<AdminProcurement />} />
         <Route path="/admin/inventory/lots" element={<AdminLotMonitor />} />

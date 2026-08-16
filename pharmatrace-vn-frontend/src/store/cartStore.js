@@ -77,13 +77,8 @@ export const useCartStore = create(
 
       // ── Server cart sync ──────────────────────────────────────────────────
       fetchCart: async () => {
-        const accessToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
-        if (!accessToken) return
-
-        // Cart API is customer-only — skip for admin/manager/warehouse roles
-        const { useAuthStore } = await import('./authStore')
-        const user = useAuthStore.getState().user
-        if (user && user.role !== 'customer') return
+        const customerToken = getPortalToken('customer')
+        if (!customerToken) return
 
         try {
           const { data } = await apiClient.get('/cart')

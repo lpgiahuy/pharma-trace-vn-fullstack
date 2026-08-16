@@ -4,7 +4,7 @@ import { InboxOutlined, PrinterOutlined, CheckCircleOutlined, CarOutlined, Safet
 import { warehouseService } from '@/services/warehouse.service'
 import { productService } from '@/services/product.service'
 import { formatDateTime } from '@/utils'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 import toast from 'react-hot-toast'
 import { QRCodeSVG } from 'qrcode.react'
 
@@ -30,7 +30,7 @@ const SUPPLIERS = [
 ].map(s => ({ value: s }))
 
 export default function InboundPage() {
-  const { user } = useAuthStore()
+  const { user } = useAuth()
   const [form] = Form.useForm()
   const watchQty = Form.useWatch('so_luong_hop', form)
   const watchPrice = Form.useWatch('don_gia', form)

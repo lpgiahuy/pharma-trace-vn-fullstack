@@ -2,17 +2,35 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { authService } from '@/services/auth.service'
 import { STORAGE_KEYS } from '@/constants'
-import { getPortalKey, setPortalAuth, clearPortalAuth } from '@/utils/portalAuth'
+import { getPortalKey, getPortalUser, getPortalToken, setPortalAuth, clearPortalAuth } from '@/utils/portalAuth'
 
 export const useAuthStore = create(
   persist(
     (set, get) => ({
-      user: null,
-      accessToken: null,
-      refreshToken: null,
-      isAuthenticated: false,
+      customerSession: null,
+      adminSession: null,
+      warehouseSession: null,
       isLoading: false,
       error: null,
+
+      // Portal-aware dynamic getters
+      getUser: () => {
+        if (typeof window === 'undefined') return null
+        const portal = getPortalKey(window.location.pathname)
+        return get()[`${portal}Session`]?.user || getPortalUser(portal) || null
+      },
+      getAccessToken: () => {
+        if (typeof window === 'undefined') return null
+        const portal = getPortalKey(window.location.pathname)
+        return get()[`${portal}Session`]?.accessToken || getPortalToken(portal) || null
+      },
+      getIsAuthenticated: () => {
+        if (typeof window === 'undefined') return false
+        const portal = getPortalKey(window.location.pathname)
+        const u = get()[`${portal}Session`]?.user || getPortalUser(portal)
+        const t = get()[`${portal}Session`]?.accessToken || getPortalToken(portal)
+        return !!u && !!t
+      },
 
       login: async (credentials) => {
         set({ isLoading: true, error: null })
@@ -26,11 +44,11 @@ export const useAuthStore = create(
 
           setPortalAuth(portal, result.user, accessToken, refreshToken, expiresAt)
 
+          const sessionKey = `${portal}Session`
+          const sessionData = { user: result.user, accessToken, refreshToken }
+
           set({
-            user: result.user,
-            accessToken,
-            refreshToken,
-            isAuthenticated: !!result.user,
+            [sessionKey]: sessionData,
             isLoading: false,
           })
           return result
@@ -42,10 +60,10 @@ export const useAuthStore = create(
       },
 
       logout: async () => {
-        const currentUser = get().user
+        const portal = getPortalKey(window.location.pathname)
+        const sessionKey = `${portal}Session`
+        const currentUser = get()[sessionKey]?.user || getPortalUser(portal)
         const userRole = currentUser?.role || currentUser?.vai_tro
-        const pathname = window.location.pathname
-        const portal = getPortalKey(pathname)
 
         let redirectUrl = '/login'
         if (['QuanLyKho', 'NhanVienKho'].includes(userRole) || portal === 'warehouse') {
@@ -58,7 +76,9 @@ export const useAuthStore = create(
         
         clearPortalAuth(portal)
 
-        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false })
+        set({
+          [sessionKey]: null,
+        })
         
         if (portal === 'customer') {
           const { useCartStore } = await import('./cartStore')
@@ -69,19 +89,23 @@ export const useAuthStore = create(
         window.location.href = redirectUrl
       },
 
-      updateUser: (updates) => set(state => ({ user: { ...state.user, ...updates } })),
-
-      setTokens: (accessToken, refreshToken) => {
-        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken)
-        if (refreshToken) localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken)
-        set({ accessToken, refreshToken: refreshToken || get().refreshToken })
+      updateUser: (updates) => {
+        const portal = getPortalKey(window.location.pathname)
+        const sessionKey = `${portal}Session`
+        const currentSession = get()[sessionKey] || {}
+        const updatedUser = { ...currentSession.user, ...updates }
+        setPortalAuth(portal, updatedUser)
+        set({
+          [sessionKey]: { ...currentSession, user: updatedUser },
+        })
       },
 
       hasRole: (roles) => {
-        const { user } = get()
+        const portal = getPortalKey(window.location.pathname)
+        const user = get()[`${portal}Session`]?.user || getPortalUser(portal)
         if (!user) return false
         const allowed = Array.isArray(roles) ? roles : [roles]
-        return allowed.includes(user.role)
+        return allowed.includes(user.role || user.vai_tro)
       },
 
       clearError: () => set({ error: null }),
@@ -89,11 +113,26 @@ export const useAuthStore = create(
     {
       name: 'pharma-auth',
       partialize: (state) => ({
-        user: state.user,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-        isAuthenticated: state.isAuthenticated,
+        customerSession: state.customerSession,
+        adminSession: state.adminSession,
+        warehouseSession: state.warehouseSession,
       }),
     }
   )
 )
+
+export const useAuth = () => {
+  const store = useAuthStore()
+  const portal = typeof window !== 'undefined' ? getPortalKey(window.location.pathname) : 'customer'
+  const session = store[`${portal}Session`] || null
+  const user = session?.user || getPortalUser(portal) || null
+  const accessToken = session?.accessToken || getPortalToken(portal) || null
+  const isAuthenticated = !!user && !!accessToken
+
+  return {
+    ...store,
+    user,
+    accessToken,
+    isAuthenticated,
+  }
+}

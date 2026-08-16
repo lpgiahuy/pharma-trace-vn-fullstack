@@ -1,8 +1,8 @@
 import { Navigate, useLocation } from 'react-router-dom'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 
 export const ProtectedRoute = ({ children, roles = [] }) => {
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, user } = useAuth()
   const location = useLocation()
   const userRole = user?.role || user?.vai_tro
 
@@ -38,7 +38,7 @@ export const ProtectedRoute = ({ children, roles = [] }) => {
 }
 
 export const GuestRoute = ({ children }) => {
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, user } = useAuth()
   const userRole = user?.role || user?.vai_tro
 
   if (isAuthenticated) {

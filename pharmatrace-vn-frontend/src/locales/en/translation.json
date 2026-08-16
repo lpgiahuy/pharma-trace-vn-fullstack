@@ -264,6 +264,7 @@
     "customer": "Customer Account",
     "admin_staff": "Administration / Staff",
     "phone": "Mobile Number",
+    "email_or_phone": "Mobile Number or Email",
     "email": "Email Address",
     "password": "Password",
     "confirm_password": "Confirm Password",

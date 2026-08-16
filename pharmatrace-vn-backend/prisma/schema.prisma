@@ -126,6 +126,7 @@ model donvi {
   dia_chi                                            String?
   toa_do_lat                                         Decimal?         @db.Decimal(10, 8)
   toa_do_lng                                         Decimal?         @db.Decimal(11, 8)
+  la_don_vi_noi_bo                                   Boolean?         @default(false)
   chitietdonhang                                     chitietdonhang[]
   duocpham                                           duocpham[]
   hopthuoc                                           hopthuoc[]

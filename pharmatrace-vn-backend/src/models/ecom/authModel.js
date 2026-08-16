@@ -7,6 +7,20 @@ const findUserByPhone = async (phone) => {
     });
 };
 
+// Check if user exists by phone number OR email
+const findUserByIdentifier = async (identifier) => {
+    if (!identifier) return null;
+    const clean = identifier.toString().trim();
+    return await prisma.khachhang.findFirst({
+        where: {
+            OR: [
+                { so_dien_thoai: clean },
+                { email: { equals: clean, mode: 'insensitive' } }
+            ]
+        }
+    });
+};
+
 const createUser = async (name, phone, hashedPassword, email = null, address = null) => {
     const user = await prisma.khachhang.create({
         data: {
@@ -119,4 +133,4 @@ const getLoyaltyUpgradeProgress = async (id) => {
     return serializeBigInt(result[0]);
 };
 
-export { findUserByPhone, createUser, findUserById, findStaffById, findFullUserById, updateUserProfile, updateUserPassword, getLoyaltyUpgradeProgress };
+export { findUserByPhone, findUserByIdentifier, createUser, findUserById, findStaffById, findFullUserById, updateUserProfile, updateUserPassword, getLoyaltyUpgradeProgress };

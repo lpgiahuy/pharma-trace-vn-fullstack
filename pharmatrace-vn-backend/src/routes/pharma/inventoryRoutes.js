@@ -72,14 +72,14 @@ const router = express.Router();
 router.post(
   '/nhap-kho',
   protect,
-  authorizeRoles('SuperAdmin', 'QuanLyKho'),
+  authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienKho'),
   importInventory
 );
 
 router.get(
   '/nhap-kho',
   protect,
-  authorizeRoles('SuperAdmin', 'QuanLyKho'),
+  authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienKho'),
   getInventoryList
 );
 
@@ -112,7 +112,7 @@ router.get(
 router.get(
   '/batch/:batchId/qrs',
   protect,
-  authorizeRoles('SuperAdmin', 'QuanLyKho'),
+  authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienKho'),
   getBatchQRs
 );
 

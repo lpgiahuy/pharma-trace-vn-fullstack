@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useCartStore } from '@/store/cartStore'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 import { orderService } from '@/services/order.service'
 import { voucherService } from '@/services/voucher.service'
 import { userService } from '@/services/user.service'
@@ -19,7 +19,7 @@ export default function CheckoutPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { items, getTotal, getSubtotal, getDiscount, shippingFee, voucher, applyVoucher, removeVoucher, clearCart, fetchCart } = useCartStore()
-  const { user, isAuthenticated, updateUser } = useAuthStore()
+  const { user, isAuthenticated, updateUser } = useAuth()
   const [payMethod, setPayMethod] = useState('cod')
   const [voucherCode, setVoucherCode] = useState('')
   const [applyingVoucher, setApplyingVoucher] = useState(false)

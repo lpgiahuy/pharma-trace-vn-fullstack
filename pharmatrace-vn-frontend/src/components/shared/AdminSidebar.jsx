@@ -10,7 +10,7 @@ import { Pill as PillIcon } from 'lucide-react'
 const Logo = 'https://res.cloudinary.com/dc64co0el/image/upload/v1777731026/Logo_ck5ouv.svg'
 
 import { useTranslation } from 'react-i18next'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 
 const { Sider } = Layout
 
@@ -18,7 +18,7 @@ export function AdminSidebar({ collapsed: collapsedProp, isCollapsed, onCollapse
   const collapsed = collapsedProp ?? isCollapsed ?? false
   const location = useLocation()
   const { t } = useTranslation()
-  const { user } = useAuthStore()
+  const { user } = useAuth()
   const userRole = user?.role || user?.vai_tro
   const isSuperAdmin = ['SuperAdmin', 'superadmin'].includes(userRole)
 
@@ -33,7 +33,7 @@ export function AdminSidebar({ collapsed: collapsedProp, isCollapsed, onCollapse
     },
     { key: '/admin/orders',         icon: <OrderedListOutlined />, label: <Link to="/admin/orders">Quản lý Đơn hàng</Link> },
     { key: '/admin/rma',            icon: <HistoryOutlined />,     label: <Link to="/admin/rma">Quản lý Đổi trả RMA</Link> },
-    ...(['SuperAdmin', 'Admin', 'QuanLyKho', 'admin', 'manager'].includes(userRole) ? [
+    ...(isSuperAdmin ? [
       { key: '/warehouse/inbound',   icon: <BankOutlined />,      label: <Link to="/warehouse/inbound">Quản lý Kho (WMS)</Link> }
     ] : []),
     { key: '/admin/vouchers',       icon: <TagOutlined />,       label: <Link to="/admin/vouchers">{t('admin.vouchers')}</Link> },

@@ -1,6 +1,6 @@
 import { Layout, Dropdown } from 'antd'
 import { MenuFoldOutlined, MenuUnfoldOutlined, BellOutlined, MenuOutlined } from '@ant-design/icons'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 import { useNavigate } from 'react-router-dom'
 import { Avatar } from '@/components/ui/Avatar'
 import { useTranslation } from 'react-i18next'
@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next'
 const { Header } = Layout
 
 export const AdminHeader = ({ collapsed, onToggle, portal = 'Admin', isMobile }) => {
-  const { user, logout } = useAuthStore()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const { t, i18n } = useTranslation()
 
@@ -16,15 +16,15 @@ export const AdminHeader = ({ collapsed, onToggle, portal = 'Admin', isMobile })
   const toggleLang = () => i18n.changeLanguage(currentLang === 'vi' ? 'en' : 'vi')
 
   const userRole = user?.role || user?.vai_tro
-  const isStaff = ['SuperAdmin', 'Admin', 'NhanVienBanHang', 'QuanLyKho', 'admin', 'manager', 'staff'].includes(userRole)
-  const profilePath = portal === 'Warehouse' ? '/warehouse/profile' : (isStaff ? '/admin/profile' : '/account/profile')
+  const isSuperAdmin = ['SuperAdmin', 'superadmin'].includes(userRole)
+  const profilePath = portal === 'Warehouse' ? '/warehouse/profile' : '/admin/profile'
 
   const menuItems = [
     { key: 'profile', label: t('admin.my_profile'), onClick: () => navigate(profilePath) },
-    ...(portal === 'Admin' && ['SuperAdmin', 'superadmin'].includes(userRole) ? [
+    ...(portal === 'Admin' && isSuperAdmin ? [
       { key: 'warehouse', label: '📦 Quản lý Kho (WMS Portal)', onClick: () => navigate('/warehouse/inbound') }
     ] : []),
-    ...(portal === 'Warehouse' && ['SuperAdmin', 'superadmin'].includes(userRole) ? [
+    ...(portal === 'Warehouse' && isSuperAdmin ? [
       { key: 'admin', label: '📊 Trang Quản trị (Admin Portal)', onClick: () => navigate('/admin') }
     ] : []),
     { key: 'store',   label: t('admin.back_to_store'), onClick: () => navigate('/') },

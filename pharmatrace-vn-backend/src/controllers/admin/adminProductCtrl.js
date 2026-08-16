@@ -50,9 +50,13 @@ const toggleProductStatus = async (req, res, next) => {
 
 const getAllProductsAdmin = async (req, res, next) => {
     try {
+        const userRole = req.user?.vai_tro || req.user?.role;
+        const isSuperAdmin = userRole === 'SuperAdmin' || userRole === 'superadmin';
         const filters = {
             ...req.query,
-            don_vi_id: req.query.don_vi_id || req.user?.don_vi_id || null
+            // SuperAdmin sees all internal units (no don_vi_id filter); others see only their unit
+            don_vi_id: isSuperAdmin ? null : (req.query.don_vi_id || req.user?.don_vi_id || null),
+            is_super_admin: isSuperAdmin,
         };
         const data = await adminProductService.fetchAdminProducts(filters) || [];
         res.status(200).json({ success: true, data });

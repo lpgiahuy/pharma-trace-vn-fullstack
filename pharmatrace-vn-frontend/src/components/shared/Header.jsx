@@ -14,7 +14,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore, useAuth } from "@/store/authStore";
 import { useUIStore } from "@/store/uiStore";
 import { Avatar } from "@/components/ui/Avatar";
 import { useCategoryStore } from "@/store/categoryStore";
@@ -43,7 +43,7 @@ export const Header = () => {
     setCartDrawerOpen,
   } = useUIStore();
   const itemCount = useCartStore((s) => s.getItemCount());
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuth();
   const userRole = user?.role || user?.vai_tro;
   const isInternalStaff = ["SuperAdmin", "superadmin", "Admin", "admin", "NhanVienBanHang", "QuanLyCuaHang", "QuanLyKho", "NhanVienKho", "manager", "staff"].includes(userRole);
   const isCustomerLoggedIn = isAuthenticated && !isInternalStaff;
