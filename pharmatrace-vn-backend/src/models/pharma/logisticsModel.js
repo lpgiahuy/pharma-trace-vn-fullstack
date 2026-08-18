@@ -58,7 +58,7 @@ const confirmStockTransferReceipt = async (tu_don_vi_id, den_don_vi_id, mang_uid
     );
     await pool.query(`
         UPDATE public.lichsuphanphoi
-        SET ghi_chu = 'HoanThanh' || COALESCE(SUBSTRING(ghi_chu FROM '\\|price:.*'), '')
+        SET ghi_chu = 'HoanThanh' || COALESCE(SUBSTRING(ghi_chu FROM '\\|.*'), '')
         WHERE hop_thuoc_uid = ANY($1::uuid[]) AND den_don_vi_id = $2 AND (ghi_chu = 'DangVanChuyen' OR ghi_chu LIKE 'DangVanChuyen%')
     `, [mang_uid, Number(den_don_vi_id)]);
     return true;
@@ -99,13 +99,14 @@ const getTransferHistory = async (filter = null) => {
                 'Hộp'
             ) AS don_vi_tinh,
             COALESCE(
-                NULLIF(SPLIT_PART(MAX(ls.ghi_chu), 'price:', 2), ''),
+                NULLIF(SPLIT_PART(SPLIT_PART(MAX(ls.ghi_chu), 'price:', 2), '|', 1), ''),
                 '0'
             )::numeric AS don_gia,
             (COUNT(DISTINCT ls.hop_thuoc_uid)::int * COALESCE(
-                NULLIF(SPLIT_PART(MAX(ls.ghi_chu), 'price:', 2), ''),
+                NULLIF(SPLIT_PART(SPLIT_PART(MAX(ls.ghi_chu), 'price:', 2), '|', 1), ''),
                 '0'
             )::numeric) AS tong_tien,
+            NULLIF(SPLIT_PART(MAX(ls.ghi_chu), 'po:', 2), '') AS po_code,
             array_agg(DISTINCT ls.hop_thuoc_uid) AS mang_uid
         FROM public.lichsuphanphoi ls
         LEFT JOIN public.donvi dv_tu ON ls.tu_don_vi_id = dv_tu.id
@@ -139,13 +140,14 @@ const getPendingIncomingTransfers = async (den_don_vi_id) => {
                 'Hộp'
             ) AS don_vi_tinh,
             COALESCE(
-                NULLIF(SPLIT_PART(MAX(ls.ghi_chu), 'price:', 2), ''),
+                NULLIF(SPLIT_PART(SPLIT_PART(MAX(ls.ghi_chu), 'price:', 2), '|', 1), ''),
                 '0'
             )::numeric AS don_gia,
             (COUNT(DISTINCT ls.hop_thuoc_uid)::int * COALESCE(
-                NULLIF(SPLIT_PART(MAX(ls.ghi_chu), 'price:', 2), ''),
+                NULLIF(SPLIT_PART(SPLIT_PART(MAX(ls.ghi_chu), 'price:', 2), '|', 1), ''),
                 '0'
             )::numeric) AS tong_tien,
+            NULLIF(SPLIT_PART(MAX(ls.ghi_chu), 'po:', 2), '') AS po_code,
             array_agg(DISTINCT ls.hop_thuoc_uid) AS mang_uid
         FROM public.lichsuphanphoi ls
         LEFT JOIN public.donvi dv_tu ON ls.tu_don_vi_id = dv_tu.id
@@ -153,12 +155,10 @@ const getPendingIncomingTransfers = async (den_don_vi_id) => {
         LEFT JOIN public.hopthuoc h ON ls.hop_thuoc_uid = h.uid
         LEFT JOIN public.lothuoc lt ON h.lo_thuoc_id = lt.id
         LEFT JOIN public.duocpham dp ON lt.duoc_pham_id = dp.id
-        WHERE ls.den_don_vi_id = $1 
-          AND ls.den_don_vi_id IS NOT NULL 
-          AND ls.tu_don_vi_id IS NOT NULL
+        WHERE ls.loai_giao_dich = 'LuanChuyen'
+          AND ls.den_don_vi_id = $1
           AND (ls.ghi_chu = 'DangVanChuyen' OR ls.ghi_chu LIKE 'DangVanChuyen%')
-          AND ls.ghi_chu != 'DaHuy'
-        GROUP BY ls.tu_don_vi_id, dv_tu.ten_don_vi, ls.den_don_vi_id, dv_den.ten_don_vi, lt.so_lo, dp.ten_thuoc, dp.id, ls.thoi_gian
+        GROUP BY ls.tu_don_vi_id, dv_tu.ten_don_vi, ls.den_don_vi_id, dv_den.ten_don_vi, ls.ghi_chu, lt.so_lo, dp.ten_thuoc, dp.id, ls.thoi_gian
         ORDER BY MIN(ls.thoi_gian) DESC;
     `;
     const { rows } = await pool.query(query, [Number(den_don_vi_id)]);

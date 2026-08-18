@@ -39,3 +39,51 @@ export function verifySignature(uid, signature) {
         return false;
     }
 }
+
+/**
+ * Generate a 6-character alphanumeric PIN for a medication box UID (e.g. 9K3N8A)
+ * Deterministically derived via HMAC-SHA256
+ * @param {string} uid 
+ * @returns {string} 6-character PIN
+ */
+export function generateBoxPin(uid) {
+    if (!uid) return '';
+    const hmac = crypto.createHmac('sha256', SECRET_KEY).update(`pin-${uid}`).digest('hex');
+    const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    let pin = '';
+    for (let i = 0; i < 6; i++) {
+        const byte = parseInt(hmac.substring(i * 2, i * 2 + 2), 16);
+        pin += alphabet[byte % alphabet.length];
+    }
+    return pin;
+}
+
+/**
+ * Compute SHA-256 hash of a normalized PIN
+ * @param {string} pin 
+ * @returns {string} hex hash
+ */
+export function hashPin(pin) {
+    if (!pin) return '';
+    const clean = pin.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    return crypto.createHash('sha256').update(clean).digest('hex');
+}
+
+/**
+ * Verify if provided PIN matches stored hash or expected derived PIN
+ * @param {string} uid 
+ * @param {string} pin 
+ * @param {string|null} storedHash 
+ * @returns {boolean}
+ */
+export function verifyBoxPin(uid, pin, storedHash = null) {
+    if (!uid || !pin) return false;
+    const cleanPin = pin.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const clientHash = hashPin(cleanPin);
+    
+    if (storedHash) {
+        return storedHash === clientHash;
+    }
+    const expectedPin = generateBoxPin(uid);
+    return cleanPin === expectedPin;
+}

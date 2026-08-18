@@ -1,4 +1,5 @@
 import prisma, { serializeBigInt } from '../../config/prisma.js';
+import { generateBoxPin, hashPin } from '../../utils/qrCrypto.js';
 
 const callImportProcedure = async (duocPhamId, donViId, soLo, ngaySx, hsd, soLuong, quyCachId = null, donGia = 0) => {
     // If quy_cach_id is not provided, default to the first packaging unit of the product
@@ -44,6 +45,20 @@ const callImportProcedure = async (duocPhamId, donViId, soLo, ngaySx, hsd, soLuo
               AND h.lo_thuoc_id = $2::int 
               AND ls.loai_giao_dich = 'KhoiTao'
         `, Number(donGia), loThuoc.id);
+    }
+
+    // Initialize secret PIN hashes for all created boxes in this batch
+    const boxes = await prisma.hopthuoc.findMany({
+        where: { lo_thuoc_id: loThuoc.id },
+        select: { uid: true }
+    });
+    for (const b of boxes) {
+        const pin = generateBoxPin(b.uid);
+        const pinHash = hashPin(pin);
+        await prisma.hopthuoc.update({
+            where: { uid: b.uid },
+            data: { secret_pin_hash: pinHash, trang_thai_kich_hoat: 'ChuaKichHoat' }
+        });
     }
 
     return loThuoc;

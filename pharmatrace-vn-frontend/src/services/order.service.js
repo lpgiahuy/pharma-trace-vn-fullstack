@@ -119,6 +119,11 @@ export const orderService = {
     return data.data || data
   },
 
+  async confirmReceipt(id) {
+    const { data } = await apiClient.patch(`/orders/${id}/confirm-receipt`)
+    return data.data || data
+  },
+
   async getMyOrders(params = {}) {
     const { data } = await apiClient.get(`/orders/my-orders?${buildQueryString(params)}`)
     return normalizeList(data, normalizeOrder)

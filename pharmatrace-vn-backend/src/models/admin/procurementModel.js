@@ -22,20 +22,23 @@ export const createSupplierModel = async ({ ten_don_vi, loai_don_vi = 'NhaPhanPh
     return rows[0];
 };
 
-export const getPurchaseOrdersModel = async (userContext = null, type = 'all') => {
+export const getPurchaseOrdersModel = async (userContext = null, type = 'inbound') => {
     let whereClause = '';
     const params = [];
-    const unitId = (userContext && userContext.role === 'SuperAdmin' && userContext.force_unit_id)
+    const role = userContext?.role || userContext?.vai_tro;
+    const isSuperAdmin = ['SuperAdmin', 'superadmin'].includes(role);
+    const unitId = (isSuperAdmin && userContext?.force_unit_id)
         ? Number(userContext.force_unit_id)
-        : (userContext && userContext.role !== 'SuperAdmin' && userContext.don_vi_id ? Number(userContext.don_vi_id) : null);
+        : (!isSuperAdmin && userContext?.don_vi_id ? Number(userContext.don_vi_id) : null);
 
     if (unitId) {
-        if (type === 'inbound') {
-            whereClause = ' WHERE nv.don_vi_id = $1 ';
-        } else if (type === 'supplier') {
+        if (type === 'supplier') {
             whereClause = ' WHERE pn.nha_cung_cap_id = $1 ';
-        } else {
+        } else if (type === 'all' && isSuperAdmin) {
             whereClause = ' WHERE nv.don_vi_id = $1 OR pn.nha_cung_cap_id = $1 ';
+        } else {
+            // Chỉ hiển thị đơn mua hàng của chính đơn vị hiện tại (nơi đặt mua)
+            whereClause = ' WHERE nv.don_vi_id = $1 ';
         }
         params.push(unitId);
     }
@@ -48,18 +51,69 @@ export const getPurchaseOrdersModel = async (userContext = null, type = 'all') =
             dv.ten_don_vi AS ten_nha_cung_cap,
             pn.nguoi_tao_id,
             nv.ho_ten AS ten_nguoi_tao,
+            nv.don_vi_id AS den_don_vi_id,
+            dv_den.ten_don_vi AS ten_don_vi_nhan,
             pn.tong_tien,
             pn.trang_thai,
             pn.ghi_chu,
             pn.ngay_nhap,
             pn.created_at,
-            COUNT(ct.id)::int AS so_luong_mat_hang
+            COUNT(ct.id)::int AS so_luong_mat_hang,
+            COALESCE(SUM(ct.so_luong)::int, 0) AS tong_so_luong_dat,
+            CASE 
+              WHEN pn.trang_thai = 'ChoDuyet' OR pn.trang_thai = 'DaHuy' THEN 0
+              ELSE COALESCE(
+                (SELECT COUNT(DISTINCT ls.hop_thuoc_uid)::int 
+                 FROM public.lichsuphanphoi ls 
+                 JOIN public.hopthuoc h ON ls.hop_thuoc_uid = h.uid
+                 JOIN public.lothuoc lt ON h.lo_thuoc_id = lt.id
+                 WHERE (ls.ghi_chu LIKE 'DangVanChuyen%' OR ls.ghi_chu = 'DangVanChuyen') 
+                   AND ls.tu_don_vi_id = pn.nha_cung_cap_id 
+                   AND (nv.don_vi_id IS NULL OR ls.den_don_vi_id = nv.don_vi_id)
+                   AND ls.thoi_gian >= pn.created_at
+                   AND (
+                     ls.ghi_chu LIKE '%po:' || pn.ma_phieu_nhap || '%'
+                     OR (
+                       lt.duoc_pham_id IN (SELECT duoc_pham_id FROM public.chitietphieunhap WHERE phieu_nhap_id = pn.id)
+                       AND NOT (ls.ghi_chu LIKE '%po:%' AND ls.ghi_chu NOT LIKE '%po:' || pn.ma_phieu_nhap || '%')
+                     )
+                   )
+                ),
+                0
+              )
+            END AS so_luong_dang_giao,
+            CASE 
+              WHEN pn.trang_thai = 'DaNhapKho' THEN
+                COALESCE(SUM(ct.so_luong)::int, 0)
+              WHEN pn.trang_thai = 'ChoDuyet' OR pn.trang_thai = 'DaHuy' THEN 0
+              ELSE 
+                COALESCE(
+                    (SELECT COUNT(DISTINCT ls.hop_thuoc_uid)::int 
+                     FROM public.lichsuphanphoi ls 
+                     JOIN public.hopthuoc h ON ls.hop_thuoc_uid = h.uid
+                     JOIN public.lothuoc lt ON h.lo_thuoc_id = lt.id
+                     WHERE (ls.ghi_chu LIKE 'HoanThanh%' OR ls.ghi_chu = 'HoanThanh') 
+                       AND ls.tu_don_vi_id = pn.nha_cung_cap_id 
+                       AND (nv.don_vi_id IS NULL OR ls.den_don_vi_id = nv.don_vi_id)
+                       AND ls.thoi_gian >= pn.created_at
+                       AND (
+                         ls.ghi_chu LIKE '%po:' || pn.ma_phieu_nhap || '%'
+                         OR (
+                           lt.duoc_pham_id IN (SELECT duoc_pham_id FROM public.chitietphieunhap WHERE phieu_nhap_id = pn.id)
+                           AND NOT (ls.ghi_chu LIKE '%po:%' AND ls.ghi_chu NOT LIKE '%po:' || pn.ma_phieu_nhap || '%')
+                         )
+                       )
+                    ),
+                    0
+                )
+            END AS so_luong_da_nhan
         FROM public.phieunhap pn
         LEFT JOIN public.donvi dv ON pn.nha_cung_cap_id = dv.id
         LEFT JOIN public.nhanvien nv ON pn.nguoi_tao_id = nv.id
+        LEFT JOIN public.donvi dv_den ON nv.don_vi_id = dv_den.id
         LEFT JOIN public.chitietphieunhap ct ON pn.id = ct.phieu_nhap_id
         ${whereClause}
-        GROUP BY pn.id, dv.ten_don_vi, nv.ho_ten
+        GROUP BY pn.id, dv.ten_don_vi, nv.ho_ten, nv.don_vi_id, dv_den.ten_don_vi
         ORDER BY pn.created_at DESC;
     `;
     const { rows } = await pool.query(query, params);
@@ -76,17 +130,77 @@ export const getPurchaseOrderByIdModel = async (id) => {
             dv.loai_don_vi AS loai_nha_cung_cap,
             pn.nguoi_tao_id,
             nv.ho_ten AS ten_nguoi_tao,
+            nv.don_vi_id AS den_don_vi_id,
             pn.tong_tien,
             pn.trang_thai,
             pn.ghi_chu,
             pn.ngay_nhap,
             pn.created_at,
-            EXISTS (
+            (
+              pn.trang_thai = 'DaDuyet'
+              AND EXISTS (
                 SELECT 1 
                 FROM public.lichsuphanphoi ls
+                JOIN public.hopthuoc h ON ls.hop_thuoc_uid = h.uid
+                JOIN public.lothuoc lt ON h.lo_thuoc_id = lt.id
                 WHERE (ls.ghi_chu LIKE 'DangVanChuyen%' OR ls.ghi_chu = 'DangVanChuyen')
-                  AND (ls.tu_don_vi_id = pn.nha_cung_cap_id OR ls.ghi_chu LIKE '%po:' || pn.ma_phieu_nhap || '%')
+                  AND ls.tu_don_vi_id = pn.nha_cung_cap_id
+                  AND (nv.don_vi_id IS NULL OR ls.den_don_vi_id = nv.don_vi_id)
+                  AND ls.thoi_gian >= pn.created_at
+                  AND (
+                    lt.duoc_pham_id IN (SELECT duoc_pham_id FROM public.chitietphieunhap WHERE phieu_nhap_id = pn.id)
+                    OR ls.ghi_chu LIKE '%po:' || pn.ma_phieu_nhap || '%'
+                  )
+              )
             ) AS is_in_transit,
+            CASE 
+              WHEN pn.trang_thai = 'ChoDuyet' OR pn.trang_thai = 'DaHuy' THEN 0
+              ELSE COALESCE((
+                SELECT COUNT(DISTINCT ls.hop_thuoc_uid)::int
+                FROM public.lichsuphanphoi ls
+                JOIN public.hopthuoc h ON ls.hop_thuoc_uid = h.uid
+                JOIN public.lothuoc lt ON h.lo_thuoc_id = lt.id
+                WHERE (ls.ghi_chu LIKE 'DangVanChuyen%' OR ls.ghi_chu = 'DangVanChuyen')
+                  AND ls.tu_don_vi_id = pn.nha_cung_cap_id
+                  AND (nv.don_vi_id IS NULL OR ls.den_don_vi_id = nv.don_vi_id)
+                  AND ls.thoi_gian >= pn.created_at
+                  AND (
+                    ls.ghi_chu LIKE '%po:' || pn.ma_phieu_nhap || '%'
+                    OR (
+                      lt.duoc_pham_id IN (SELECT duoc_pham_id FROM public.chitietphieunhap WHERE phieu_nhap_id = pn.id)
+                      AND NOT (ls.ghi_chu LIKE '%po:%' AND ls.ghi_chu NOT LIKE '%po:' || pn.ma_phieu_nhap || '%')
+                    )
+                  )
+              ), 0)
+            END AS so_luong_dang_giao,
+            CASE 
+              WHEN pn.trang_thai = 'DaNhapKho' THEN
+                COALESCE((SELECT SUM(ct.so_luong)::int FROM public.chitietphieunhap ct WHERE ct.phieu_nhap_id = pn.id), 0)
+              WHEN pn.trang_thai = 'ChoDuyet' OR pn.trang_thai = 'DaHuy' THEN 0
+              ELSE 
+                COALESCE((
+                    SELECT COUNT(DISTINCT ls.hop_thuoc_uid)::int
+                    FROM public.lichsuphanphoi ls
+                    JOIN public.hopthuoc h ON ls.hop_thuoc_uid = h.uid
+                    JOIN public.lothuoc lt ON h.lo_thuoc_id = lt.id
+                    WHERE (ls.ghi_chu LIKE 'HoanThanh%' OR ls.ghi_chu = 'HoanThanh')
+                      AND ls.tu_don_vi_id = pn.nha_cung_cap_id
+                      AND (nv.don_vi_id IS NULL OR ls.den_don_vi_id = nv.don_vi_id)
+                      AND ls.thoi_gian >= pn.created_at
+                      AND (
+                        ls.ghi_chu LIKE '%po:' || pn.ma_phieu_nhap || '%'
+                        OR (
+                          lt.duoc_pham_id IN (SELECT duoc_pham_id FROM public.chitietphieunhap WHERE phieu_nhap_id = pn.id)
+                          AND NOT (ls.ghi_chu LIKE '%po:%' AND ls.ghi_chu NOT LIKE '%po:' || pn.ma_phieu_nhap || '%')
+                        )
+                      )
+                ), 0)
+            END AS so_luong_da_nhan,
+            COALESCE((
+                SELECT SUM(ct.so_luong)::int
+                FROM public.chitietphieunhap ct
+                WHERE ct.phieu_nhap_id = pn.id
+            ), 0) AS tong_so_luong_dat,
             (dv.id IS NOT NULL) AS is_internal_supplier
         FROM public.phieunhap pn
         LEFT JOIN public.donvi dv ON pn.nha_cung_cap_id = dv.id
@@ -113,13 +227,81 @@ export const getPurchaseOrderByIdModel = async (id) => {
         WHERE ct.phieu_nhap_id = $1;
     `;
 
+    const shipmentsQuery = `
+        SELECT 
+            MIN(ls.id) AS id,
+            ls.tu_don_vi_id,
+            MIN(dv_tu.ten_don_vi) AS ten_tu_kho,
+            ls.den_don_vi_id,
+            MIN(dv_den.ten_don_vi) AS ten_den_kho,
+            ls.ghi_chu AS trang_thai,
+            ls.thoi_gian,
+            COUNT(DISTINCT ls.hop_thuoc_uid)::int AS so_luong_hop,
+            STRING_AGG(DISTINCT lt.so_lo, ', ') AS so_lo,
+            MIN(dp.ten_thuoc) AS ten_duoc_pham,
+            COALESCE(
+                NULLIF(SPLIT_PART(SPLIT_PART(MAX(ls.ghi_chu), 'price:', 2), '|', 1), ''),
+                (SELECT ct.don_gia::text FROM public.chitietphieunhap ct WHERE ct.phieu_nhap_id = $4 AND (ct.duoc_pham_id = MIN(dp.id) OR ct.lo_thuoc_id = MIN(lt.id)) LIMIT 1),
+                '0'
+            )::numeric AS don_gia,
+            (COUNT(DISTINCT ls.hop_thuoc_uid)::int * COALESCE(
+                NULLIF(SPLIT_PART(SPLIT_PART(MAX(ls.ghi_chu), 'price:', 2), '|', 1), ''),
+                (SELECT ct.don_gia::text FROM public.chitietphieunhap ct WHERE ct.phieu_nhap_id = $4 AND (ct.duoc_pham_id = MIN(dp.id) OR ct.lo_thuoc_id = MIN(lt.id)) LIMIT 1),
+                '0'
+            )::numeric) AS tong_tien,
+            NULLIF(SPLIT_PART(MAX(ls.ghi_chu), 'po:', 2), '') AS po_code,
+            array_agg(DISTINCT ls.hop_thuoc_uid) AS mang_uid
+        FROM public.lichsuphanphoi ls
+        LEFT JOIN public.donvi dv_tu ON ls.tu_don_vi_id = dv_tu.id
+        LEFT JOIN public.donvi dv_den ON ls.den_don_vi_id = dv_den.id
+        LEFT JOIN public.hopthuoc h ON ls.hop_thuoc_uid = h.uid
+        LEFT JOIN public.lothuoc lt ON h.lo_thuoc_id = lt.id
+        LEFT JOIN public.duocpham dp ON lt.duoc_pham_id = dp.id
+        WHERE ls.loai_giao_dich = 'LuanChuyen'
+          AND ls.tu_don_vi_id = $1
+          AND ($2::int IS NULL OR ls.den_don_vi_id = $2)
+          AND ls.thoi_gian >= $3::timestamp
+          AND (
+            ls.ghi_chu LIKE '%po:' || $5 || '%'
+            OR (
+              dp.id IN (SELECT duoc_pham_id FROM public.chitietphieunhap WHERE phieu_nhap_id = $4 AND duoc_pham_id IS NOT NULL)
+              AND NOT (ls.ghi_chu LIKE '%po:%' AND ls.ghi_chu NOT LIKE '%po:' || $5 || '%')
+            )
+          )
+        GROUP BY ls.tu_don_vi_id, ls.den_don_vi_id, ls.ghi_chu, ls.thoi_gian
+        ORDER BY ls.thoi_gian DESC;
+    `;
+
     const poResult = await pool.query(poQuery, [id]);
     if (poResult.rows.length === 0) return null;
 
+    const poData = poResult.rows[0];
+
     const itemsResult = await pool.query(itemsQuery, [id]);
+
+    if (poData.trang_thai === 'ChoDuyet' || poData.trang_thai === 'DaHuy') {
+        return {
+            ...poData,
+            is_in_transit: false,
+            so_luong_dang_giao: 0,
+            so_luong_da_nhan: 0,
+            chi_tiet: itemsResult.rows,
+            shipments: []
+        };
+    }
+
+    const shipmentsResult = await pool.query(shipmentsQuery, [
+        poData.nha_cung_cap_id, 
+        poData.den_don_vi_id, 
+        poData.created_at, 
+        poData.id, 
+        poData.ma_phieu_nhap
+    ]);
+
     return {
-        ...poResult.rows[0],
-        chi_tiet: itemsResult.rows
+        ...poData,
+        chi_tiet: itemsResult.rows,
+        shipments: shipmentsResult.rows
     };
 };
 
@@ -245,16 +427,20 @@ export const updatePurchaseOrderStatusModel = async (id, trang_thai) => {
                     WHERE ht.lo_thuoc_id = ANY($1::int[])
                       AND ls.loai_giao_dich = 'LuanChuyen'
                       AND (ls.ghi_chu LIKE 'DangVanChuyen%' OR ls.ghi_chu = 'DangVanChuyen')
+                      AND ht.trang_thai = 'DangLuanChuyen'
                     GROUP BY ls.tu_don_vi_id, ls.den_don_vi_id
                 `, [loThuocIds]);
             } else {
                 transferLogsRes = await client.query(`
                     SELECT ls.tu_don_vi_id, ls.den_don_vi_id, array_agg(DISTINCT ls.hop_thuoc_uid) AS uids
                     FROM public.lichsuphanphoi ls
+                    JOIN public.hopthuoc ht ON ls.hop_thuoc_uid = ht.uid
                     WHERE ls.loai_giao_dich = 'LuanChuyen'
-                      AND (ls.ghi_chu LIKE 'DangVanChuyen%' OR ls.ghi_chu LIKE '%po:' || $1 || '%')
+                      AND (ls.ghi_chu LIKE 'DangVanChuyen%' OR ls.ghi_chu = 'DangVanChuyen')
+                      AND (ls.ghi_chu LIKE '%po:' || $1 || '%' OR ls.tu_don_vi_id = $2)
+                      AND ht.trang_thai = 'DangLuanChuyen'
                     GROUP BY ls.tu_don_vi_id, ls.den_don_vi_id
-                `, [po.ma_phieu_nhap]);
+                `, [po.ma_phieu_nhap, po.nha_cung_cap_id]);
             }
 
             for (const row of transferLogsRes.rows) {

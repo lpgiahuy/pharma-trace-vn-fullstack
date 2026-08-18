@@ -131,7 +131,7 @@ export const updateShipmentStatusModel = async (id, trang_thai_giao) => {
 
         const shipment = shipRes.rows[0];
 
-        // Tự động đồng bộ trạng thái đơn hàng khi Giao thành công
+        // Tự động đồng bộ trạng thái đơn hàng và ghi nhận lịch sử phân phối
         if (trang_thai_giao === 'GiaoThanhCong') {
             await client.query(`
                 UPDATE public.donhang
@@ -142,12 +142,38 @@ export const updateShipmentStatusModel = async (id, trang_thai_giao) => {
                     END
                 WHERE id = $1;
             `, [shipment.don_hang_id]);
+
+            await client.query(`
+                UPDATE public.hopthuoc
+                SET trang_thai = 'DaBan'
+                WHERE don_hang_id = $1;
+            `, [shipment.don_hang_id]);
+
+            await client.query(`
+                INSERT INTO public.lichsuphanphoi (hop_thuoc_uid, loai_giao_dich, ghi_chu)
+                SELECT uid, 'GiaoHangThanhCong', 'Giao hàng thành công đến tay khách hàng (Mã vận đơn: ' || $2 || ')'
+                FROM public.hopthuoc
+                WHERE don_hang_id = $1;
+            `, [shipment.don_hang_id, shipment.ma_van_don]);
         } else if (trang_thai_giao === 'DangVanChuyen') {
             await client.query(`
                 UPDATE public.donhang
                 SET trang_thai_don = 'DangGiao'
                 WHERE id = $1;
             `, [shipment.don_hang_id]);
+
+            await client.query(`
+                UPDATE public.hopthuoc
+                SET trang_thai = 'DangGiao'
+                WHERE don_hang_id = $1;
+            `, [shipment.don_hang_id]);
+
+            await client.query(`
+                INSERT INTO public.lichsuphanphoi (hop_thuoc_uid, loai_giao_dich, ghi_chu)
+                SELECT uid, 'GiaoChoKhach', 'Bàn giao cho đơn vị vận chuyển ' || $2 || ' (Mã vận đơn: ' || $3 || ')'
+                FROM public.hopthuoc
+                WHERE don_hang_id = $1;
+            `, [shipment.don_hang_id, shipment.don_vi_van_chuyen || 'Logistics', shipment.ma_van_don]);
         }
 
         await client.query('COMMIT');

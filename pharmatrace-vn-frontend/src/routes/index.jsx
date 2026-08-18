@@ -148,6 +148,7 @@ export const AppRoutes = () => (
       <Route element={<ProtectedRoute roles={WAREHOUSE_ROLES}><WarehouseLayout /></ProtectedRoute>}>
         <Route path="/warehouse" element={<Navigate to="/warehouse/inbound" replace />} />
         <Route path="/warehouse/inbound" element={<InboundPage />} />
+        <Route path="/warehouse/procurement" element={<AdminProcurement />} />
         <Route path="/warehouse/fulfillment" element={<FulfillmentPage />} />
         <Route path="/warehouse/transfer" element={<TransferPage />} />
         <Route path="/warehouse/disposal" element={<DisposalPage />} />

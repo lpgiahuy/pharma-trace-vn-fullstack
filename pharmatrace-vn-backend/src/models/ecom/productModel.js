@@ -37,7 +37,7 @@ const getProducts = async (categoryId, search, sort, limit, offset, userId = nul
 
     const query = `
         SELECT dp.id, dp.ten_thuoc, dp.slug, dp.hinh_anh_url, dp.la_thuoc_ke_don, 
-                dp.mo_ta_ngan, dp.so_luong_da_ban, dp.diem_danh_gia,
+                dp.mo_ta_ngan, COALESCE(dp.so_luong_da_ban, 0) AS so_luong_da_ban, dp.diem_danh_gia,
                 qc.gia_ban, qc.gia_goc, qc.phan_tram_giam, qc.ten_don_vi AS don_vi_ban,
                 (SELECT COALESCE(SUM(tk.so_luong_ton), 0) FROM TonKho tk JOIN DonVi dv_tk ON tk.don_vi_id = dv_tk.id WHERE tk.duoc_pham_id = dp.id AND dv_tk.loai_don_vi = 'NhaThuoc' AND dv_tk.la_don_vi_noi_bo = TRUE) AS total_stock,
                 (SELECT EXISTS(SELECT 1 FROM SanPhamYeuThich WHERE khach_hang_id = $5 AND duoc_pham_id = dp.id)) AS is_favorited
@@ -68,7 +68,7 @@ const getProductByIdOrSlug = async (identifier, userId = null) => {
 
     const productQuery = `
         SELECT dp.id, dp.ten_thuoc, dp.slug, dp.so_dang_ky, dp.hinh_anh_url, dp.la_thuoc_ke_don, 
-               dp.mo_ta_ngan, dp.chi_tiet_thuoc, dp.so_luong_da_ban, dp.diem_danh_gia,
+               dp.mo_ta_ngan, dp.chi_tiet_thuoc, COALESCE(dp.so_luong_da_ban, 0) AS so_luong_da_ban, dp.diem_danh_gia,
                dm.ten_danh_muc, dv.ten_don_vi AS nha_san_xuat,
                (SELECT COALESCE(SUM(tk.so_luong_ton), 0) FROM TonKho tk JOIN DonVi dv_tk ON tk.don_vi_id = dv_tk.id WHERE tk.duoc_pham_id = dp.id AND dv_tk.loai_don_vi = 'NhaThuoc' AND dv_tk.la_don_vi_noi_bo = TRUE) AS total_stock,
                (SELECT EXISTS(SELECT 1 FROM SanPhamYeuThich WHERE khach_hang_id = $2 AND duoc_pham_id = dp.id)) AS is_favorited

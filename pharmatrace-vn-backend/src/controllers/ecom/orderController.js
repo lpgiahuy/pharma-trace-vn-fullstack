@@ -46,3 +46,13 @@ export const cancelMyOrder = async (req, res, next) => {
         next(error);
     }
 };
+
+export const confirmMyOrderReceipt = async (req, res, next) => {
+    try {
+        const data = await orderService.confirmReceipt(req.params.id, req.user.id);
+        res.status(200).json({ success: true, message: 'Đã xác nhận nhận hàng thành công.', data });
+    } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
+        next(error);
+    }
+};

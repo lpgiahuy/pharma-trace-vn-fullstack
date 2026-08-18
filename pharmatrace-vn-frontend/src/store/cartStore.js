@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import toast from 'react-hot-toast'
 import apiClient from '@/services/apiClient'
 import { STORAGE_KEYS } from '@/constants'
+import { getPortalKey, getPortalToken } from '@/utils/portalAuth'
 
 export const useCartStore = create(
   persist(
@@ -77,6 +78,9 @@ export const useCartStore = create(
 
       // ── Server cart sync ──────────────────────────────────────────────────
       fetchCart: async () => {
+        const portal = getPortalKey(window.location.pathname)
+        if (portal !== 'customer') return
+
         const customerToken = getPortalToken('customer')
         if (!customerToken) return
 

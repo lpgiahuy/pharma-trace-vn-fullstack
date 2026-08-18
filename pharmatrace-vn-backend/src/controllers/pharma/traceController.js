@@ -3,7 +3,7 @@ import { verifySignature } from '../../utils/qrCrypto.js';
 
 const scanQR = async (req, res, next) => {
     try {
-        const { uid, sig, toa_do_lat, toa_do_lng } = req.body;
+        const { uid, sig, pin, toa_do_lat, toa_do_lng } = req.body;
         
         // --- PRODUCTION-SAFE IP EXTRACTION ---
         let ip_address = req.ip;
@@ -24,20 +24,17 @@ const scanQR = async (req, res, next) => {
             throw new Error('Missing medication box UID');
         }
 
-        // Only require signature verification for public/anonymous users
-        if (!req.user) {
-            if (!sig || !verifySignature(uid, sig)) {
-                res.status(400);
-                throw new Error('Invalid QR code signature. Authenticity could not be verified.');
-            }
+        // If a signature is provided, verify it
+        if (sig && !verifySignature(uid, sig)) {
+            res.status(400);
+            throw new Error('Chữ ký mã QR không hợp lệ. Tính xác thực không thể được xác minh.');
         }
 
-
-        const data = await traceService.processQRScan(uid, toa_do_lat, toa_do_lng, ip_address);
+        const data = await traceService.processQRScan(uid, pin, toa_do_lat, toa_do_lng, ip_address);
 
         res.status(200).json({
             success: true,
-            message: data.is_authentic ? 'Authentication successful!' : 'ALERT: Suspicious QR code detected!',
+            message: data.is_authentic ? 'Truy xuất thông tin thành công!' : 'CẢNH BÁO: Phát hiện bất thường đối với mã này!',
             data: data
         });
 

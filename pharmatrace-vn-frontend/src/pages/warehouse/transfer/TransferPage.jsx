@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Form, InputNumber, Select, Button as AButton, Card, Table, Tag, Alert, Modal, Descriptions, Popconfirm } from 'antd'
-import { SwapOutlined, EyeOutlined, CheckCircleOutlined, CarOutlined, CloseCircleOutlined } from '@ant-design/icons'
+import { SwapOutlined, EyeOutlined, CheckCircleOutlined, CarOutlined, CloseCircleOutlined, SendOutlined, ShopOutlined, MedicineBoxOutlined, BarcodeOutlined, UnorderedListOutlined, DollarOutlined, DollarCircleOutlined, FileTextOutlined, HistoryOutlined, RocketOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import { warehouseService } from '@/services/warehouse.service'
+import apiClient from '@/services/apiClient'
 import { useAuth } from '@/store/authStore'
 import { formatDateTime, formatDate } from '@/utils'
 import toast from 'react-hot-toast'
@@ -24,6 +25,7 @@ export default function TransferPage() {
   const [loadingProducts, setLoadingProducts] = useState(false)
   const [loadingBatches, setLoadingBatches] = useState(false)
   const [detailRecord, setDetailRecord] = useState(null)
+  const [purchaseOrders, setPurchaseOrders] = useState([])
 
   const fetchHistory = async () => {
     if (!sourceUnitId) return
@@ -38,9 +40,27 @@ export default function TransferPage() {
     }
   }
 
+  const refreshPOs = () => {
+    warehouseService.getPurchaseOrders('supplier')
+      .then(res => {
+        const list = (res || []).filter(po => {
+          if (po.trang_thai !== 'DaDuyet') return false
+          if (sourceUnitId && Number(po.nha_cung_cap_id) !== Number(sourceUnitId)) return false
+          const total = Number(po.tong_so_luong_dat || 0)
+          const received = Number(po.so_luong_da_nhan || 0)
+          const inTransit = Number(po.so_luong_dang_giao || 0)
+          const remainingToShip = total - received - inTransit
+          return remainingToShip > 0
+        })
+        setPurchaseOrders(list)
+      })
+      .catch(() => {})
+  }
+
   useEffect(() => {
     warehouseService.getUnits().then(setUnits).catch(() => { })
     fetchHistory()
+    refreshPOs()
   }, [sourceUnitId])
 
   // Load medicines available in the staff's unit when the page mounts
@@ -73,7 +93,7 @@ export default function TransferPage() {
   }
 
   const handleTransfer = async (vals) => {
-    const { den_don_vi_id, lo_thuoc_id, so_luong, don_gia, ly_do } = vals
+    const { den_don_vi_id, lo_thuoc_id, so_luong, don_gia, ly_do, po_code } = vals
     if (sourceUnitId === den_don_vi_id) {
       toast.error('Đơn vị nguồn và đích không được trùng nhau')
       return
@@ -85,12 +105,13 @@ export default function TransferPage() {
         toast.error('Không tìm thấy hộp thuốc phù hợp để chuyển')
         return
       }
-      await warehouseService.transferStock({ tu_don_vi_id: sourceUnitId, den_don_vi_id, mang_uid, ly_do, don_gia })
+      await warehouseService.transferStock({ tu_don_vi_id: sourceUnitId, den_don_vi_id, mang_uid, ly_do, don_gia, po_code })
       toast.success(`Đã phát lệnh chuyển ${mang_uid.length} ${selectedBatch?.don_vi_tinh || 'đơn vị'} thuốc (Tổng: ${(so_luong * (don_gia || 0)).toLocaleString('vi-VN')} đ). Đang chờ kho đích xác nhận!`)
       form.resetFields()
       setBatches([])
       setSelectedBatch(null)
       fetchHistory()
+      refreshPOs()
       warehouseService.getProductsInUnit(sourceUnitId).then(setProducts).catch(() => { })
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Chuyển kho thất bại')
@@ -130,6 +151,12 @@ export default function TransferPage() {
         return <span className="font-semibold text-slate-800">{val ? `${val.toLocaleString('vi-VN')} đ` : '0 đ'}</span>
       }
     },
+    {
+      title: 'Đơn PO',
+      dataIndex: 'po_code',
+      key: 'po_code',
+      render: (v) => v ? <Tag color="purple">{v}</Tag> : <span className="text-slate-400 text-xs">-</span>
+    },
     { title: 'Từ đơn vị', dataIndex: 'ten_tu_kho', key: 'fromLocation', render: (v, r) => <Tag color="orange">{v || r.fromLocation || `Đơn vị #${r.tu_don_vi_id}`}</Tag> },
     { title: 'Đến đơn vị', dataIndex: 'ten_den_kho', key: 'toLocation', render: (v, r) => <Tag color="blue">{v || r.toLocation || `Đơn vị #${r.den_don_vi_id}`}</Tag> },
     {
@@ -162,7 +189,7 @@ export default function TransferPage() {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-xl font-display font-bold text-slate-900 flex items-center gap-2">
-          <SwapOutlined /> Luân chuyển kho
+          <SwapOutlined className="text-blue-600" /> Luân chuyển kho
         </h1>
         <p className="text-slate-500 text-sm mt-1">
           Tạo lệnh chuyển hàng giữa các kho/nhà thuốc và lưu lịch sử giao dịch vào cơ sở dữ liệu
@@ -172,6 +199,70 @@ export default function TransferPage() {
       <Card title={`Tạo lệnh chuyển kho (Kho hiện tại: ${user?.ten_don_vi || `Đơn vị #${sourceUnitId}`})`}>
         <Form form={form} layout="vertical" onFinish={handleTransfer}>
           <div className="grid sm:grid-cols-2 gap-x-4">
+
+            {/* Direct PO Fulfillment Selector (Optional) */}
+            <div className="sm:col-span-2 mb-2">
+              <Form.Item 
+                label="Theo Phiếu Đặt Hàng PO (Tùy chọn — Tự động điền Đơn vị, Thuốc, Số lượng & Đơn giá)" 
+                name="po_code"
+              >
+                <Select
+                  allowClear
+                  showSearch
+                  placeholder="-- Chọn đơn đặt hàng PO cần chuyển giao (hoặc để trống nếu chuyển tự do) --"
+                  optionFilterProp="label"
+                  onChange={async (poCode) => {
+                    if (!poCode) {
+                      return
+                    }
+                    const po = purchaseOrders.find(p => p.ma_phieu_nhap === poCode)
+                    if (!po) return
+
+                    try {
+                      const { data } = await apiClient.get(`/admin/procurement/orders/${po.id}`)
+                      const poDetail = data?.data || po
+                      const firstItem = poDetail.chi_tiet?.[0]
+                      const remQty = Math.max(1, (poDetail.tong_so_luong_dat || 0) - (poDetail.so_luong_da_nhan || 0) - (poDetail.so_luong_dang_giao || 0))
+                      
+                      form.setFieldsValue({
+                        den_don_vi_id: poDetail.den_don_vi_id,
+                        duoc_pham_id: firstItem?.duoc_pham_id,
+                        don_gia: firstItem?.don_gia ? Number(firstItem.don_gia) : undefined,
+                        so_luong: remQty,
+                        ly_do: `Phân phối theo đơn hàng ${poDetail.ma_phieu_nhap}`
+                      })
+
+                      if (firstItem?.duoc_pham_id) {
+                        handleProductChange(firstItem.duoc_pham_id)
+                      }
+                    } catch (err) {
+                      console.error('Error fetching PO detail:', err)
+                    }
+                  }}
+                  options={purchaseOrders.map(po => {
+                    const total = po.tong_so_luong_dat || 0
+                    const received = po.so_luong_da_nhan || 0
+                    const inTransit = po.so_luong_dang_giao || 0
+                    const remainingToShip = Math.max(0, total - received - inTransit)
+                    const destName = po.ten_don_vi_nhan || (units.find(u => u.id === po.den_don_vi_id)?.ten_don_vi) || (po.ten_nguoi_tao ? `Chi nhánh (${po.ten_nguoi_tao})` : 'Chi nhánh nhận')
+                    
+                    let statusParts = []
+                    statusParts.push(`Cần chuyển thêm: ${remainingToShip} hộp`)
+                    if (inTransit > 0) {
+                      statusParts.push(`${inTransit} hộp đang đi đường`)
+                    }
+                    if (received > 0) {
+                      statusParts.push(`${received} hộp đã nhận`)
+                    }
+
+                    return {
+                      value: po.ma_phieu_nhap,
+                      label: `${po.ma_phieu_nhap} — Nhận: ${destName} — ${statusParts.join(' • ')} (Tổng: ${total} hộp)`
+                    }
+                  })}
+                />
+              </Form.Item>
+            </div>
 
             {/* Destination unit */}
             <Form.Item label="Đơn vị đích (Kho/Nhà thuốc nhận)" name="den_don_vi_id" rules={[{ required: true, message: 'Chọn đơn vị nhận' }]}>
@@ -233,8 +324,8 @@ export default function TransferPage() {
               <InputNumber
                 min={0}
                 step={1000}
-                formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={value => value.replace(/\s?\(?\$?\)?\s?|,/g, '')}
+                formatter={value => value ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : ''}
+                parser={value => value ? value.replace(/\D/g, '') : ''}
                 style={{ width: '100%' }}
                 placeholder={`Nhập đơn giá cho mỗi ${selectedBatch?.don_vi_tinh || 'đơn vị'} (tùy chọn)`}
               />
@@ -280,6 +371,7 @@ export default function TransferPage() {
         <Table dataSource={history} columns={cols} rowKey="id" pagination={{ pageSize: 10 }} loading={loadingHistory} size="small" scroll={{ x: 700 }} />
       </Card>
 
+      {/* Modal Xem Chi Tiết Lịch Sử Chuyển Kho - Enriched with Icons */}
       <Modal
         title={
           <div className="flex items-center gap-2 text-slate-800 text-lg font-bold">
@@ -318,11 +410,13 @@ export default function TransferPage() {
         {detailRecord && (
           <div className="space-y-4 pt-2">
             {/* Header info & Status */}
-            <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <div className="flex items-center justify-between bg-slate-50 p-3.5 rounded-xl border border-slate-200 shadow-sm">
               <div>
-                <div className="text-xs text-slate-500 font-medium">Mã lệnh / Thời gian</div>
-                <div className="text-sm font-semibold text-slate-800 flex items-center gap-2 mt-0.5">
-                  <span>#{detailRecord.id || 'TRF'}</span>
+                <div className="text-xs text-slate-500 font-semibold flex items-center gap-1.5">
+                  <FileTextOutlined className="text-blue-500" /> Mã lệnh / Thời gian
+                </div>
+                <div className="text-sm font-bold text-slate-800 flex items-center gap-2 mt-1">
+                  <span className="font-mono">#{detailRecord.id || 'TRF'}</span>
                   <span className="text-slate-300">•</span>
                   <span>{formatDateTime(detailRecord.thoi_gian || detailRecord.transferredAt)}</span>
                 </div>
@@ -336,7 +430,7 @@ export default function TransferPage() {
                         ? 'processing'
                         : 'success'
                   }
-                  className="px-3 py-1 text-xs font-semibold rounded-full"
+                  className="px-3.5 py-1.5 text-xs font-bold rounded-full border shadow-sm"
                 >
                   {detailRecord.trang_thai === 'DaHuy'
                     ? 'Đã hủy'
@@ -348,13 +442,17 @@ export default function TransferPage() {
             </div>
 
             {/* Product & Batch Card */}
-            <div className="bg-blue-50/60 p-4 rounded-xl border border-blue-100">
-              <div className="text-xs font-semibold uppercase tracking-wider text-blue-600 mb-1">Dược phẩm & Lô sản xuất</div>
+            <div className="bg-blue-50/70 p-4 rounded-xl border border-blue-200/80 shadow-sm">
+              <div className="text-xs font-bold uppercase tracking-wider text-blue-700 mb-1 flex items-center gap-1.5">
+                <MedicineBoxOutlined className="text-blue-600" /> Dược phẩm & Lô sản xuất
+              </div>
               <div className="text-base font-bold text-slate-900 leading-snug">
                 {detailRecord.ten_duoc_pham || detailRecord.productName}
               </div>
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs text-slate-500 font-medium">Số lô:</span>
+                <span className="text-xs text-slate-500 font-semibold flex items-center gap-1">
+                  <BarcodeOutlined className="text-purple-600" /> Số lô:
+                </span>
                 <span className="font-mono bg-white px-2.5 py-0.5 rounded border border-blue-200 text-xs font-bold text-blue-800 shadow-sm">
                   {detailRecord.so_lo || detailRecord.batchNumber}
                 </span>
@@ -363,20 +461,20 @@ export default function TransferPage() {
 
             {/* Origin -> Destination Flow Card */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="bg-amber-50/60 p-3 rounded-xl border border-amber-100">
-                <div className="text-xs text-amber-700 font-semibold mb-1">
-                  Từ đơn vị (Gửi)
+              <div className="bg-amber-50/70 p-3.5 rounded-xl border border-amber-200/80 shadow-sm">
+                <div className="text-xs text-amber-800 font-bold mb-1 flex items-center gap-1.5">
+                  <ShopOutlined className="text-amber-600" /> Từ đơn vị (Gửi)
                 </div>
-                <div className="text-sm font-semibold text-slate-800 break-words">
+                <div className="text-sm font-bold text-slate-800 break-words">
                   {detailRecord.ten_tu_kho || detailRecord.fromLocation || `Đơn vị #${detailRecord.tu_don_vi_id}`}
                 </div>
               </div>
 
-              <div className="bg-sky-50/60 p-3 rounded-xl border border-sky-100">
-                <div className="text-xs text-sky-700 font-semibold mb-1">
-                  Đến đơn vị (Nhận)
+              <div className="bg-sky-50/70 p-3.5 rounded-xl border border-sky-200/80 shadow-sm">
+                <div className="text-xs text-sky-800 font-bold mb-1 flex items-center gap-1.5">
+                  <ShopOutlined className="text-sky-600" /> Đến đơn vị (Nhận)
                 </div>
-                <div className="text-sm font-semibold text-slate-800 break-words">
+                <div className="text-sm font-bold text-slate-800 break-words">
                   {detailRecord.ten_den_kho || detailRecord.toLocation || `Đơn vị #${detailRecord.den_don_vi_id}`}
                 </div>
               </div>
@@ -384,23 +482,29 @@ export default function TransferPage() {
 
             {/* Quantities & Price Metrics */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
-                <div className="text-xs text-slate-500 font-medium mb-1">Số lượng chuyển</div>
-                <div className="text-base font-bold text-slate-900">
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-center shadow-sm">
+                <div className="text-xs text-slate-500 font-semibold mb-1 flex items-center justify-center gap-1">
+                  <UnorderedListOutlined className="text-slate-500" /> Số lượng
+                </div>
+                <div className="text-base font-extrabold text-slate-900">
                   {detailRecord.so_luong_hop || detailRecord.quantity || 0} <span className="text-xs font-normal text-slate-500">{detailRecord.don_vi_tinh || 'hộp'}</span>
                 </div>
               </div>
 
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
-                <div className="text-xs text-slate-500 font-medium mb-1">Đơn giá chuyển</div>
-                <div className="text-base font-bold text-slate-800">
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-center shadow-sm">
+                <div className="text-xs text-slate-500 font-semibold mb-1 flex items-center justify-center gap-1">
+                  <DollarOutlined className="text-slate-500" /> Đơn giá
+                </div>
+                <div className="text-base font-extrabold text-slate-800">
                   {Number(detailRecord.don_gia || 0) ? `${Number(detailRecord.don_gia).toLocaleString('vi-VN')} đ` : '0 đ'}
                 </div>
               </div>
 
-              <div className="bg-emerald-50/80 p-3 rounded-xl border border-emerald-200 text-center">
-                <div className="text-xs text-emerald-700 font-semibold mb-1">Tổng tiền</div>
-                <div className="text-base font-extrabold text-emerald-700">
+              <div className="bg-emerald-50/90 p-3.5 rounded-xl border border-emerald-200/90 text-center shadow-sm">
+                <div className="text-xs text-emerald-800 font-bold mb-1 flex items-center justify-center gap-1">
+                  <DollarCircleOutlined className="text-emerald-600" /> Tổng tiền
+                </div>
+                <div className="text-base font-black text-emerald-700">
                   {Number(detailRecord.tong_tien || (Number(detailRecord.don_gia || 0) * Number(detailRecord.so_luong_hop || detailRecord.quantity || 0)))
                     ? `${Number(detailRecord.tong_tien || (Number(detailRecord.don_gia || 0) * Number(detailRecord.so_luong_hop || detailRecord.quantity || 0))).toLocaleString('vi-VN')} đ`
                     : '0 đ'}
@@ -409,8 +513,11 @@ export default function TransferPage() {
             </div>
 
             {detailRecord.ly_do && (
-              <div className="text-xs text-slate-500 italic bg-slate-50 p-3 rounded-xl border border-slate-200">
-                <span className="font-semibold not-italic text-slate-700">Lý do chuyển:</span> {detailRecord.ly_do}
+              <div className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-start gap-2 shadow-sm">
+                <InfoCircleOutlined className="text-blue-500 mt-0.5 shrink-0" />
+                <div>
+                  <span className="font-bold text-slate-800">Lý do chuyển:</span> {detailRecord.ly_do}
+                </div>
               </div>
             )}
           </div>

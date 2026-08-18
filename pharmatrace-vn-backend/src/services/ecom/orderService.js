@@ -97,16 +97,35 @@ const processCheckout = async (userId, payload) => {
         }
 
         // 5. Create the order using stored procedure
-        await tx.$queryRawUnsafe(
-            `CALL sp_tao_don_hang_tu_gio($1, $2, $3, $4, $5, $6, $7)`,
-            Number(userId),
-            nearestStoreId ? Number(nearestStoreId) : null,
-            dia_chi_giao_hang,
-            phuong_thuc_thanh_toan,
-            dbVoucher || null,
-            points,
-            Number(phiShip)
-        );
+        try {
+            await tx.$queryRawUnsafe(
+                `CALL sp_tao_don_hang_tu_gio($1, $2, $3, $4, $5, $6, $7)`,
+                Number(userId),
+                nearestStoreId ? Number(nearestStoreId) : null,
+                dia_chi_giao_hang,
+                phuong_thuc_thanh_toan,
+                dbVoucher || null,
+                points,
+                Number(phiShip)
+            );
+        } catch (procErr) {
+            const msg = procErr.message || '';
+            if (msg.includes('P0001') || msg.includes('không có sản phẩm') || msg.includes('Tồn kho không đủ')) {
+                const error = new Error('Rất tiếc, sản phẩm trong giỏ hàng hiện đang hết hàng tại nhà thuốc. Vui lòng chọn sản phẩm khác hoặc nhập thêm kho.');
+                error.statusCode = 400;
+                throw error;
+            }
+            throw procErr;
+        }
+
+        // Update sold count on DuocPham table for ordered products
+        for (const item of cartItems) {
+            await tx.$executeRawUnsafe(
+                `UPDATE DuocPham SET so_luong_da_ban = COALESCE(so_luong_da_ban, 0) + $1 WHERE id = $2`,
+                Number(item.so_luong),
+                Number(item.duoc_pham_id)
+            );
+        }
 
         // Fetch the newly created order
         const createdOrder = await tx.donhang.findFirst({
@@ -209,6 +228,59 @@ const fetchUserOrderDetail = async (orderId, userId) => {
     return serializeBigInt(orderData);
 };
 
+const confirmReceipt = async (orderId, userId) => {
+    const order = await prisma.donhang.findFirst({
+        where: { id: Number(orderId), khach_hang_id: Number(userId) }
+    });
+    if (!order) {
+        const error = new Error('Không tìm thấy đơn hàng.');
+        error.statusCode = 404;
+        throw error;
+    }
 
-export { processCheckout, cancelUserOrder, fetchUserOrders, fetchUserOrderDetail };
+    if (order.trang_thai_don === 'DaHuy') {
+        const error = new Error('Đơn hàng đã bị hủy, không thể xác nhận nhận hàng.');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (order.trang_thai_don === 'HoanThanh') {
+        return serializeBigInt(order);
+    }
+
+    const updated = await prisma.donhang.update({
+        where: { id: Number(orderId) },
+        data: {
+            trang_thai_don: 'HoanThanh',
+            trang_thai_thanh_toan: 'DaThanhToan'
+        }
+    });
+
+    try {
+        await prisma.$executeRawUnsafe(
+            `UPDATE vanchuyen SET trang_thai_giao = 'GiaoThanhCong', trang_thai_cod = 'ChuaDoiSoat', ngay_giao_thuc_te = NOW() WHERE don_hang_id = $1`,
+            Number(orderId)
+        );
+
+        // Record delivery success into LichSuPhanPhoi for customer's medicine boxes
+        await prisma.$executeRawUnsafe(
+            `INSERT INTO LichSuPhanPhoi (hop_thuoc_uid, loai_giao_dich, ghi_chu)
+             SELECT uid, 'GiaoHangThanhCong', 'Khách hàng xác nhận đã nhận hàng thành công (Đơn hàng #' || $1 || ')'
+             FROM HopThuoc
+             WHERE don_hang_id = $1`,
+            Number(orderId)
+        );
+
+        await prisma.$executeRawUnsafe(
+            `UPDATE HopThuoc SET trang_thai = 'DaBan' WHERE don_hang_id = $1`,
+            Number(orderId)
+        );
+    } catch (e) {
+        console.error('[confirmReceipt] update vanchuyen or LichSuPhanPhoi error:', e.message);
+    }
+
+    return serializeBigInt(updated);
+};
+
+export { processCheckout, cancelUserOrder, fetchUserOrders, fetchUserOrderDetail, confirmReceipt };
 

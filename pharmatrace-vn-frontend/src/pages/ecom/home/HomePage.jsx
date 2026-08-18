@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, Shield, HeartPulse, ShieldCheck, Eye, Search, MapPin, Pill, ChevronLeft, ChevronRight, Tag, Activity } from 'lucide-react'
+import { ArrowRight, Shield, HeartPulse, ShieldCheck, Eye, Search, MapPin, Pill, ChevronLeft, ChevronRight, Tag, Activity, Info } from 'lucide-react'
 import { productService } from '@/services/product.service'
 import { blogService } from '@/services/analytics.service'
 import { ProductCard, ProductCardSkeleton } from '@/components/ui/ProductCard'
@@ -504,56 +504,37 @@ export default function HomePage() {
                 {t('home.trace_desc')}
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-3 w-full">
-                <div className="flex-1 relative group/input">
-                    <input 
-                        value={traceUid}
-                        onChange={(e) => setTraceUid(e.target.value)}
-                        onKeyDown={handleTraceEnter}
-                        placeholder={t('home.uid_placeholder')}
-                        className="w-full h-12 sm:h-14 pl-11 sm:pl-12 pr-4 bg-white/10 border border-white/20 rounded-xl sm:rounded-2xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-brand-300 transition-all font-mono text-sm"
-                    />
-                    <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/50 group-focus-within/input:text-brand-300 transition-colors" />
-                </div>
-                <button 
-                  onClick={() => traceUid && navigate('/trace', { state: { uid: traceUid.trim() } })}
-                  className="h-12 sm:h-14 px-8 bg-medical-green hover:bg-green-600 text-white font-black rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 transition-all shadow-xl shadow-green-900/20 whitespace-nowrap uppercase text-sm"
-                >
-                  {t('home.check_now')} <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-              </div>
-              
-              {/* Trust Badges - Wrapped for mobile */}
-              <div className="mt-6 sm:mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-[10px] sm:text-[11px] font-bold text-brand-200 uppercase tracking-widest">
-                  <span className="flex items-center gap-1.5"><ShieldCheck className="w-3 h-3" /> {t('home.transparency')}</span>
-                  <span className="flex items-center gap-1.5"><ShieldCheck className="w-3 h-3" /> {t('home.security')}</span>
-                  <span className="flex items-center gap-1.5"><ShieldCheck className="w-3 h-3" /> {t('home.tamper_proof')}</span>
+              {/* Trust Badges */}
+              <div className="pt-6 border-t border-white/15 flex flex-wrap items-center gap-x-8 gap-y-3 text-[11px] sm:text-xs font-bold text-brand-100 uppercase tracking-wider">
+                  <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-emerald-400" /> {t('home.transparency')}</span>
+                  <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-sky-300" /> {t('home.security')}</span>
+                  <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-amber-300" /> {t('home.tamper_proof')}</span>
               </div>
             </div>
             
-            {/* QR Card - Interactive & Clickable */}
+            {/* Interactive QR Forward Card on Right */}
             <div 
-              onClick={() => navigate('/trace', { state: { openScanner: true } })}
+              onClick={() => navigate('/trace')}
               className="relative shrink-0 w-full sm:w-72 lg:w-80 h-auto sm:h-80 flex items-center justify-center mt-4 lg:mt-0 cursor-pointer group/card select-none"
               role="button"
               tabIndex={0}
-              aria-label={t('home.scan_qr')}
+              aria-label={t('home.check_now')}
             >
-                <div className="absolute inset-0 bg-white/5 rounded-3xl rotate-3 sm:rotate-6 group-hover/card:rotate-12 transition-transform duration-500 border border-white/10 hidden sm:block" />
-                <div className="relative z-10 w-full max-w-[280px] sm:w-full bg-white rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col items-center justify-center transition-transform group-hover/card:scale-105 duration-300">
-                    <div className="w-full aspect-square border-4 border-slate-50 flex items-center justify-center rounded-2xl mb-3 sm:mb-4 relative overflow-hidden group/qr">
-                        <div className="text-[80px] sm:text-[120px] filter grayscale group-hover/card:grayscale-0 transition-all duration-500 text-brand-500">
-                          <span className="material-symbols-outlined text-[100px] sm:text-[140px]">qr_code_scanner</span>
-                        </div>
-                        <div className="absolute inset-0 bg-brand-500/10 flex items-center justify-center opacity-90 group-hover/card:opacity-100 transition-opacity">
-                            <span className="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-full text-xs font-black uppercase shadow-lg shadow-brand-500/30 transition-all flex items-center gap-1.5 cursor-pointer">
-                              <span className="material-symbols-outlined text-sm">center_focus_weak</span>
-                              {t('home.scan_qr')}
-                            </span>
-                        </div>
-                    </div>
-                    <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center">{t('home.qr_desc')}</p>
+              <div className="absolute inset-0 bg-white/5 rounded-3xl rotate-3 sm:rotate-6 group-hover/card:rotate-12 transition-transform duration-500 border border-white/10 hidden sm:block" />
+              <div className="relative z-10 w-full max-w-[280px] sm:w-full bg-white rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col items-center justify-center transition-transform group-hover/card:scale-105 duration-300">
+                <div className="w-full aspect-square border-4 border-slate-50 flex items-center justify-center rounded-2xl mb-3 sm:mb-4 relative overflow-hidden group/qr">
+                  <div className="text-[80px] sm:text-[120px] filter grayscale group-hover/card:grayscale-0 transition-all duration-500 text-brand-500">
+                    <span className="material-symbols-outlined text-[100px] sm:text-[140px]">qr_code_scanner</span>
+                  </div>
+                  <div className="absolute inset-0 bg-brand-500/10 flex items-center justify-center opacity-90 group-hover/card:opacity-100 transition-opacity">
+                    <span className="bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-full text-xs font-black uppercase shadow-lg shadow-brand-500/30 transition-all flex items-center gap-1.5 cursor-pointer">
+                      <span className="material-symbols-outlined text-sm">center_focus_weak</span>
+                      {t('home.check_now')}
+                    </span>
+                  </div>
                 </div>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider text-center">{t('home.qr_desc')}</p>
+              </div>
             </div>
           </div>
         </div>

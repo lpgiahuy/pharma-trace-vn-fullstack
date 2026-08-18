@@ -1,5 +1,5 @@
 import * as inventoryModel from '../../models/pharma/inventoryModel.js';
-import { generateSignature } from '../../utils/qrCrypto.js';
+import { generateSignature, generateBoxPin } from '../../utils/qrCrypto.js';
 
 const importNewBatch = async (payload) => {
     const { duoc_pham_id, don_vi_id, so_lo, ngay_sx, hsd, so_luong_hop, don_gia } = payload;
@@ -34,11 +34,17 @@ const importNewBatch = async (payload) => {
 
 const getBatchQRDetails = async (batchId) => {
     const boxes = await inventoryModel.getBoxesByBatch(batchId);
-    return boxes.map(box => ({
-        uid: box.uid,
-        trang_thai: box.trang_thai,
-        sig: generateSignature(box.uid)
-    }));
+    return boxes.map(box => {
+        const pin = generateBoxPin(box.uid);
+        return {
+            uid: box.uid,
+            trang_thai: box.trang_thai,
+            sig: generateSignature(box.uid),
+            logistics_barcode: box.uid,
+            secret_pin: pin,
+            auth_url: `/trace?uid=${box.uid}&pin=${pin}`
+        };
+    });
 };
 
 const fetchInventoryList = async (userContext) => {

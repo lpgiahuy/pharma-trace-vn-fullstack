@@ -1,5 +1,5 @@
 import express from 'express';
-import { checkoutOrder, getMyOrders, getMyOrderDetail, cancelMyOrder } from '../../controllers/ecom/orderController.js';
+import { checkoutOrder, getMyOrders, getMyOrderDetail, cancelMyOrder, confirmMyOrderReceipt } from '../../controllers/ecom/orderController.js';
 import { protect, restrictTo } from '../../middlewares/authMiddleware.js';
 import { checkoutLimiter } from '../../middlewares/rateLimitMiddleware.js';
 
@@ -252,5 +252,6 @@ router.get('/:id', ...customerOnly, getMyOrderDetail);
  */
 router.patch('/:id/cancel', ...customerOnly, cancelMyOrder);
 router.delete('/:id/cancel', ...customerOnly, cancelMyOrder); // Alias for backward compatibility
+router.patch('/:id/confirm-receipt', ...customerOnly, confirmMyOrderReceipt);
 
 export default router;
