@@ -12,9 +12,9 @@ import { authorizeRoles } from '../../middlewares/roleMiddleware.js';
 
 const router = express.Router();
 
-// Tất cả endpoints đều yêu cầu đăng nhập Admin
+// Tất cả endpoints đều yêu cầu đăng nhập Admin hoặc Nhân viên/Quản lý kho
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'QuanLyCuaHang', 'QuanLyKho', 'NhanVienBanHang'));
+router.use(authorizeRoles('SuperAdmin', 'QuanLyCuaHang', 'QuanLyKho', 'NhanVienKho', 'NhanVienBanHang', 'Admin', 'admin'));
 
 // Routes Quản lý Nhà cung cấp
 router.get('/suppliers', getSuppliers);

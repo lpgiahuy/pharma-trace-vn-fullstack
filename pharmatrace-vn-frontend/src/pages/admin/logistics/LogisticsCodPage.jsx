@@ -106,7 +106,10 @@ export default function LogisticsCodPage() {
     return <Tag color={item.color} icon={item.icon}>{item.text}</Tag>
   }
 
-  const renderCodTag = (status) => {
+  const renderCodTag = (status, deliveryStatus) => {
+    if (['GiaoThatBai', 'TraHang'].includes(deliveryStatus)) {
+      return <Tag color="default" icon={<CloseCircleOutlined />}>KHÔNG PHÁT SINH COD</Tag>
+    }
     if (status === 'DaDoiSoat') {
       return <Tag color="green" icon={<FileDoneOutlined />}>ĐÃ ĐỐI SOÁT COD</Tag>
     }
@@ -124,13 +127,14 @@ export default function LogisticsCodPage() {
       render: (v) => <Tag color="blue">{v}</Tag> 
     },
     { 
-      title: 'Tiền COD (₫)', 
+      title: 'Số Tiền COD', 
       dataIndex: 'tien_cod', 
-      key: 'tien_cod',
-      render: (val) => Number(val) > 0 ? <strong>{Number(val).toLocaleString('vi-VN')} ₫</strong> : <span className="text-slate-400">0 ₫</span>
+      key: 'tien_cod', 
+      align: 'right',
+      render: (val, r) => (['GiaoThatBai', 'TraHang'].includes(r.trang_thai_giao)) ? <span className="text-slate-400 line-through">0 ₫</span> : (Number(val) > 0 ? <strong>{Number(val).toLocaleString('vi-VN')} ₫</strong> : <span className="text-slate-400">0 ₫</span>)
     },
     { title: 'Trạng Thái Giao', key: 'deliveryStatus', render: (_, r) => renderDeliveryTag(r.trang_thai_giao) },
-    { title: 'Trạng Thái COD', key: 'codStatus', render: (_, r) => renderCodTag(r.trang_thai_cod) },
+    { title: 'Trạng Thái COD', key: 'codStatus', render: (_, r) => renderCodTag(r.trang_thai_cod, r.trang_thai_giao) },
     {
       title: 'Hành Động',
       key: 'action',
@@ -150,7 +154,7 @@ export default function LogisticsCodPage() {
               ]}
             />
           )}
-          {r.trang_thai_cod === 'ChuaDoiSoat' && Number(r.tien_cod) > 0 && (
+          {r.trang_thai_giao === 'GiaoThanhCong' && r.trang_thai_cod === 'ChuaDoiSoat' && Number(r.tien_cod) > 0 && (
             <Popconfirm
               title="Xác nhận Đối Soát Tiền COD?"
               description={`Xác nhận đã nhận đủ ${Number(r.tien_cod).toLocaleString('vi-VN')} ₫ từ đơn vị giao hàng.`}

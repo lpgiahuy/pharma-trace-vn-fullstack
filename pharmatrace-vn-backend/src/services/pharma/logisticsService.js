@@ -1,7 +1,7 @@
 import * as logisticsModel from '../../models/pharma/logisticsModel.js';
 
 const transferStock = async (payload) => {
-    const { tu_don_vi_id, den_don_vi_id, mang_uid, ly_do, don_gia } = payload;
+    const { tu_don_vi_id, den_don_vi_id, mang_uid, ly_do, don_gia, po_code } = payload;
 
     if (tu_don_vi_id === den_don_vi_id) {
         const error = new Error('Source and destination warehouses cannot be the same!');
@@ -21,7 +21,7 @@ const transferStock = async (payload) => {
         throw error;
     }
 
-    const data = await logisticsModel.createStockTransferRequest(tu_don_vi_id, den_don_vi_id, mang_uid, ly_do, don_gia);
+    const data = await logisticsModel.createStockTransferRequest(tu_don_vi_id, den_don_vi_id, mang_uid, ly_do, don_gia, po_code);
     return data;
 };
 

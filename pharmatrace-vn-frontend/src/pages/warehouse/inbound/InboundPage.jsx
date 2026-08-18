@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Form, Input, InputNumber, Select, AutoComplete, Button as AButton, Card, Table, Tag, DatePicker, Modal, Spin, Tabs, Popconfirm } from 'antd'
-import { InboxOutlined, PrinterOutlined, CheckCircleOutlined, CarOutlined, SafetyCertificateOutlined, FileTextOutlined, HistoryOutlined, CloseCircleOutlined, EyeOutlined } from '@ant-design/icons'
+import { InboxOutlined, PrinterOutlined, CheckCircleOutlined, CarOutlined, SafetyCertificateOutlined, FileTextOutlined, HistoryOutlined, CloseCircleOutlined, EyeOutlined, ShopOutlined, MedicineBoxOutlined, DollarOutlined, DollarCircleOutlined } from '@ant-design/icons'
 import { warehouseService } from '@/services/warehouse.service'
 import { productService } from '@/services/product.service'
 import { formatDateTime } from '@/utils'
@@ -303,31 +303,44 @@ export default function InboundPage() {
     win.document.write(`
       <html>
         <head>
-          <title>In mã QR Tem phụ PharmaTrace - Lô ${printBatchNumber}</title>
+          <title>In nhãn tem kép Dual-Code PharmaTrace - Lô ${printBatchNumber}</title>
           <style>
             body { font-family: sans-serif; padding: 20px; text-align: center; }
-            .grid-print { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; justify-items: center; }
-            .qr-card { border: 1px solid #ccc; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; page-break-inside: avoid; border-radius: 8px; width: 140px; }
-            .qr-text { font-size: 8px; font-family: monospace; margin-top: 5px; word-break: break-all; }
-            .qr-batch { font-size: 9px; color: #333; font-weight: bold; margin-top: 2px; }
+            .grid-print { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; justify-items: center; }
+            .dual-label-card { border: 1.5px dashed #000; padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; border-radius: 8px; width: 340px; page-break-inside: avoid; }
+            .label-col { display: flex; flex-direction: column; align-items: center; text-align: center; }
+            .label-badge { font-size: 8px; font-weight: bold; padding: 2px 4px; border-radius: 4px; margin-bottom: 4px; }
+            .badge-logistics { background: #e0f2fe; color: #0369a1; }
+            .badge-security { background: #fef3c7; color: #b45309; }
+            .qr-text { font-size: 7.5px; font-family: monospace; margin-top: 4px; word-break: break-all; }
+            .pin-scratch-box { font-size: 9px; font-weight: bold; background: #e2e8f0; border: 1px solid #94a3b8; padding: 2px 6px; border-radius: 4px; margin-top: 3px; font-family: monospace; }
             @media print {
-              .qr-card { border: 1px solid #000; }
+              .dual-label-card { border: 1px solid #000; }
             }
           </style>
         </head>
         <body>
-          <h2 style="margin-bottom: 5px;">Tem Phụ Truy Xuất & Chống Giả PharmaTrace</h2>
-          <p style="margin-bottom: 20px; font-size: 12px; color: #666;">Lô Thuốc: ${printBatchNumber}</p>
+          <h2 style="margin-bottom: 5px;">Mẫu In Tem Nhãn Kép (Dual-Code Architecture) PharmaTrace</h2>
+          <p style="margin-bottom: 15px; font-size: 12px; color: #666;">Lô Thuốc: ${printBatchNumber} — (Barcode Vận Hành + Tem Phủ Cào Chống Giả)</p>
           <div class="grid-print">
             ${printQRs.map(qr => {
-      const svgEl = document.getElementById('qr-svg-' + qr.uid)
-      const svgHtml = svgEl ? svgEl.outerHTML : ''
-      return '<div class="qr-card">' +
-        svgHtml +
-        '<div class="qr-text">' + qr.uid + '</div>' +
-        '<div class="qr-batch">Lô: ' + printBatchNumber + '</div>' +
-        '</div>'
-    }).join('')}
+              const svgLogistics = document.getElementById('qr-svg-logistics-' + qr.uid)?.outerHTML || ''
+              const svgSecurity = document.getElementById('qr-svg-security-' + qr.uid)?.outerHTML || ''
+              return `
+                <div class="dual-label-card">
+                  <div class="label-col" style="border-right: 1px dashed #ccc; padding-right: 8px;">
+                    <span class="label-badge badge-logistics">1. MÃ VẬN HÀNH</span>
+                    ${svgLogistics}
+                    <div class="qr-text">${qr.uid}</div>
+                  </div>
+                  <div class="label-col">
+                    <span class="label-badge badge-security">2. TEM PHỦ CÀO</span>
+                    ${svgSecurity}
+                    <div class="pin-scratch-box">PIN: ${qr.secret_pin || '••••••'}</div>
+                  </div>
+                </div>
+              `
+            }).join('')}
           </div>
         </body>
       </html>
@@ -587,8 +600,8 @@ export default function InboundPage() {
                             step={1000}
                             placeholder="Ví dụ: 4000"
                             style={{ width: '100%' }}
-                            formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                            parser={value => value.replace(/\$\s?|(,*)/g, '')}
+                            formatter={value => value ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : ''}
+                            parser={value => value ? value.replace(/\D/g, '') : ''}
                           />
                         </Form.Item>
 
@@ -655,38 +668,58 @@ export default function InboundPage() {
 
       {/* Print QR Modal */}
       <Modal
-        title={`In nhãn tem phụ QR PharmaTrace - Lô ${printBatchNumber}`}
+        title={`In nhãn tem kép (Dual-Code) PharmaTrace - Lô ${printBatchNumber}`}
         open={printModalVisible}
         onCancel={() => setPrintModalVisible(false)}
-        width={750}
+        width={850}
         footer={[
           <AButton key="close" onClick={() => setPrintModalVisible(false)}>
             Đóng
           </AButton>,
           <AButton key="print" type="primary" icon={<PrinterOutlined />} onClick={handlePrint} disabled={printQRs.length === 0}>
-            In dải tem phụ QR hàng loạt
+            In dải tem kép Dual-Code hàng loạt
           </AButton>,
         ]}
       >
         {loadingQRs ? (
           <div className="py-12 text-center">
-            <Spin size="large" tip="Đang tải danh dải mã UIDs tem phụ..." />
+            <Spin size="large" tip="Đang tải danh dải mã UIDs tem nhãn..." />
             <p className="text-slate-400 mt-2 text-sm">Vui lòng đợi trong giây lát</p>
           </div>
         ) : (
           <div>
-            <div className="bg-slate-50 border p-3 rounded-lg text-slate-600 text-xs mb-4">
-              Mỗi mã QR tem phụ được tự động liên kết với URL truy xuất kèm chữ ký số xác thực chống giả của PharmaTrace VN.
+            <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg text-blue-900 text-xs mb-4 flex items-start gap-2">
+              <span className="material-symbols-outlined text-blue-600 text-base shrink-0">verified_user</span>
+              <div>
+                <strong>Cơ chế Tem Kép (Dual-Code Security):</strong>
+                <ul className="list-disc ml-4 mt-1 space-y-0.5 text-blue-800">
+                  <li><strong>Mã Vận Hành (Trái):</strong> Quét nhanh ngoài vỏ hộp khi Nhập/Xuất/Đóng gói không cần cào lớp bạc.</li>
+                  <li><strong>Tem Chống Giả (Phải):</strong> Phủ bạc bảo mật chứa URL kèm mã PIN bí mật dành riêng cho Khách hàng cuối cào và xác thực.</li>
+                </ul>
+              </div>
             </div>
 
-            <div id="qr-print-area" className="grid grid-cols-3 gap-4 max-h-[400px] overflow-y-auto p-2 border rounded-lg bg-white">
+            <div id="qr-print-area" className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[420px] overflow-y-auto p-2 border rounded-lg bg-slate-50">
               {printQRs.map(qr => {
-                const traceUrl = `${window.location.origin}/trace?uid=${qr.uid}&sig=${qr.sig}`;
+                const logisticsUrl = qr.uid;
+                const securityUrl = `${window.location.origin}/trace?uid=${qr.uid}&pin=${qr.secret_pin}`;
                 return (
-                  <div key={qr.uid} className="border p-3 flex flex-col items-center justify-center bg-white rounded-lg text-center">
-                    <QRCodeSVG id={`qr-svg-${qr.uid}`} value={traceUrl} size={110} level="M" includeMargin={true} />
-                    <div className="text-[9px] font-mono mt-1 text-slate-500 truncate w-full">{qr.uid}</div>
-                    <div className="text-[10px] font-semibold text-slate-700 mt-0.5">Lô: {printBatchNumber}</div>
+                  <div key={qr.uid} className="border border-slate-300 bg-white p-3 rounded-xl shadow-sm grid grid-cols-2 gap-3 items-center">
+                    {/* Left: Logistics Code */}
+                    <div className="flex flex-col items-center justify-center text-center border-r border-dashed border-slate-200 pr-2">
+                      <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded mb-1">1. VẬN HÀNH</span>
+                      <QRCodeSVG id={`qr-svg-logistics-${qr.uid}`} value={logisticsUrl} size={90} level="M" includeMargin={true} />
+                      <div className="text-[9px] font-mono mt-1 text-slate-500 truncate w-full">{qr.uid}</div>
+                    </div>
+
+                    {/* Right: Consumer Scratch-off QR */}
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded mb-1">2. TEM PHỦ CÀO</span>
+                      <QRCodeSVG id={`qr-svg-security-${qr.uid}`} value={securityUrl} size={90} level="M" includeMargin={true} />
+                      <div className="text-[10px] font-mono font-bold bg-slate-100 border border-slate-300 text-slate-700 px-2 py-0.5 rounded mt-1">
+                        PIN: {qr.secret_pin || '••••••'}
+                      </div>
+                    </div>
                   </div>
                 );
               })}
@@ -749,45 +782,55 @@ export default function InboundPage() {
       >
         {selectedShipment && (
           <div className="space-y-4 pt-2">
-            <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <div className="flex items-center justify-between bg-slate-50 p-3.5 rounded-xl border border-slate-200 shadow-sm">
               <div>
-                <div className="text-xs text-slate-500 font-medium">Mã phiếu / Thời gian tạo</div>
-                <div className="text-sm font-semibold text-slate-800 flex items-center gap-2 mt-0.5">
-                  <span>{selectedShipment.ma_phieu_nhap}</span>
+                <div className="text-xs text-slate-500 font-semibold flex items-center gap-1.5">
+                  <FileTextOutlined className="text-blue-500" /> Mã phiếu / Thời gian tạo
+                </div>
+                <div className="text-sm font-bold text-slate-800 flex items-center gap-2 mt-1">
+                  <span className="font-mono">{selectedShipment.ma_phieu_nhap}</span>
                   <span className="text-slate-300">•</span>
                   <span>{selectedShipment.created_at ? formatDateTime(selectedShipment.created_at) : '-'}</span>
                 </div>
               </div>
               <div>
-                <Tag color="processing" icon={<CarOutlined />} className="px-3 py-1 text-xs font-semibold rounded-full">
+                <Tag color="processing" icon={<CarOutlined />} className="px-3.5 py-1.5 text-xs font-bold rounded-full border border-blue-200 shadow-sm">
                   Đang vận chuyển (Chờ nhận)
                 </Tag>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="bg-amber-50/60 p-3 rounded-xl border border-amber-100">
-                <div className="text-xs text-amber-700 font-semibold mb-1">Nguồn hàng / Kho gửi</div>
-                <div className="text-sm font-semibold text-slate-800 break-words">{selectedShipment.ten_nha_cung_cap}</div>
+              <div className="bg-amber-50/70 p-3.5 rounded-xl border border-amber-200/80 shadow-sm">
+                <div className="text-xs text-amber-800 font-bold mb-1 flex items-center gap-1.5">
+                  <ShopOutlined className="text-amber-600" /> Nguồn hàng / Kho gửi
+                </div>
+                <div className="text-sm font-bold text-slate-800 break-words">{selectedShipment.ten_nha_cung_cap}</div>
               </div>
 
-              <div className="bg-blue-50/60 p-3 rounded-xl border border-blue-100">
-                <div className="text-xs text-blue-700 font-semibold mb-1">Sản phẩm & Số lượng</div>
-                <div className="text-sm font-semibold text-slate-800 break-words">{selectedShipment.so_luong_mat_hang}</div>
+              <div className="bg-blue-50/70 p-3.5 rounded-xl border border-blue-200/80 shadow-sm">
+                <div className="text-xs text-blue-800 font-bold mb-1 flex items-center gap-1.5">
+                  <MedicineBoxOutlined className="text-blue-600" /> Sản phẩm & Số lượng
+                </div>
+                <div className="text-sm font-bold text-slate-800 break-words">{selectedShipment.so_luong_mat_hang}</div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
-                <div className="text-xs text-slate-500 font-medium mb-1">Đơn giá nhập</div>
-                <div className="text-base font-bold text-slate-800">
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-center shadow-sm">
+                <div className="text-xs text-slate-500 font-semibold mb-1 flex items-center justify-center gap-1">
+                  <DollarOutlined className="text-slate-500" /> Đơn giá nhập
+                </div>
+                <div className="text-base font-extrabold text-slate-800">
                   {selectedShipment.don_gia ? `${Number(selectedShipment.don_gia).toLocaleString('vi-VN')} đ` : '0 đ'}
                 </div>
               </div>
 
-              <div className="bg-emerald-50/80 p-3 rounded-xl border border-emerald-200 text-center">
-                <div className="text-xs text-emerald-700 font-semibold mb-1">Tổng tiền</div>
-                <div className="text-base font-extrabold text-emerald-700">
+              <div className="bg-emerald-50/90 p-3.5 rounded-xl border border-emerald-200/90 text-center shadow-sm">
+                <div className="text-xs text-emerald-800 font-bold mb-1 flex items-center justify-center gap-1">
+                  <DollarCircleOutlined className="text-emerald-600" /> Tổng tiền
+                </div>
+                <div className="text-lg font-black text-emerald-700">
                   {selectedShipment.tong_tien ? `${Number(selectedShipment.tong_tien).toLocaleString('vi-VN')} đ` : '0 đ'}
                 </div>
               </div>

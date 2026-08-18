@@ -47,9 +47,11 @@ export const getPurchaseOrderById = async (req, res) => {
 export const createPurchaseOrder = async (req, res) => {
     try {
         const nguoi_tao_id = req.user?.id || req.user?.nhan_vien_id || null;
+        const don_vi_id = req.user?.don_vi_id || null;
         const order = await createPurchaseOrderService({
             ...req.body,
-            nguoi_tao_id
+            nguoi_tao_id,
+            don_vi_id
         });
         res.status(201).json({ success: true, message: 'Tạo phiếu nhập hàng thành công', data: order });
     } catch (error) {

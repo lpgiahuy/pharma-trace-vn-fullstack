@@ -39,7 +39,7 @@ router.use(protect);
  *       403:
  *         description: Forbidden - Insufficient permissions
  */
-router.get('/', authorizeRoles('SuperAdmin', 'Admin', 'QuanLyCuaHang', 'NhanVienBanHang'), getAllProductsAdmin);
+router.get('/', authorizeRoles('SuperAdmin', 'Admin', 'QuanLyCuaHang', 'NhanVienBanHang', 'QuanLyKho'), getAllProductsAdmin);
 
 /**
  * @swagger
@@ -62,7 +62,7 @@ router.get('/', authorizeRoles('SuperAdmin', 'Admin', 'QuanLyCuaHang', 'NhanVien
  *       404:
  *         description: Product not found
  */
-router.get('/:id', authorizeRoles('SuperAdmin', 'Admin', 'QuanLyCuaHang', 'NhanVienBanHang'), getProductDetailAdmin);
+router.get('/:id', authorizeRoles('SuperAdmin', 'Admin', 'QuanLyCuaHang', 'NhanVienBanHang', 'QuanLyKho'), getProductDetailAdmin);
 
 /**
  * @swagger

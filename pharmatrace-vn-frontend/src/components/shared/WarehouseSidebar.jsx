@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Layout, Menu } from 'antd'
 import {
   InboxOutlined, CheckSquareOutlined, SwapOutlined,
-  DeleteOutlined, AlertOutlined, QrcodeOutlined, UserOutlined, DashboardOutlined
+  DeleteOutlined, AlertOutlined, QrcodeOutlined, UserOutlined, DashboardOutlined, ShoppingCartOutlined
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/store/authStore'
@@ -19,6 +19,7 @@ export const WarehouseSidebar = ({ collapsed, onCollapse }) => {
 
   const menuItems = [
     { key: '/warehouse/inbound',    icon: <InboxOutlined />,       label: <Link to="/warehouse/inbound">{t('warehouse.inbound')}</Link> },
+    { key: '/warehouse/procurement',icon: <ShoppingCartOutlined />,label: <Link to="/warehouse/procurement">Phiếu Đặt Hàng (PO)</Link> },
     { key: '/warehouse/fulfillment',icon: <CheckSquareOutlined />, label: <Link to="/warehouse/fulfillment">{t('warehouse.fulfillment')}</Link> },
     { key: '/warehouse/transfer',   icon: <SwapOutlined />,        label: <Link to="/warehouse/transfer">{t('warehouse.transfer')}</Link> },
     { key: '/warehouse/disposal',   icon: <DeleteOutlined />,      label: <Link to="/warehouse/disposal">{t('warehouse.disposal')}</Link> },

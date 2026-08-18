@@ -6,6 +6,7 @@ import { useUIStore } from '@/store/uiStore'
 import { useCartStore } from '@/store/cartStore'
 import { Spinner } from '@/components/ui/Spinner'
 import { authService } from '@/services/auth.service'
+import { getPortalKey } from '@/utils/portalAuth'
 
 export default function App() {
   const { isAuthenticated, updateUser, logout } = useAuth()
@@ -19,6 +20,8 @@ export default function App() {
 
   useEffect(() => {
     if (!isAuthenticated) return
+    const portal = getPortalKey(pathname)
+
     authService.getProfile()
       .then(user => { if (user) updateUser(user) })
       .catch((err) => {
@@ -27,9 +30,11 @@ export default function App() {
         }
       })
     
-    // Sync cart from server
-    useCartStore.getState().fetchCart()
-  }, [isAuthenticated])
+    // Sync cart from server ONLY on customer portal
+    if (portal === 'customer') {
+      useCartStore.getState().fetchCart()
+    }
+  }, [isAuthenticated, pathname])
 
   return (
     <>

@@ -172,18 +172,22 @@ model duocpham {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model hopthuoc {
-  uid                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  lo_thuoc_id        Int?
-  don_vi_hien_tai_id Int?
-  don_hang_id        Int?
-  trang_thai         String?          @default("TrongKho") @db.VarChar(50)
-  kien_hang_id       Int?
-  donhang            donhang?         @relation(fields: [don_hang_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  donvi              donvi?           @relation(fields: [don_vi_hien_tai_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  kienhang           kienhang?        @relation(fields: [kien_hang_id], references: [id], onUpdate: NoAction)
-  lothuoc            lothuoc?         @relation(fields: [lo_thuoc_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  lichsuphanphoi     lichsuphanphoi[]
-  nhatkyxacthuc      nhatkyxacthuc[]
+  uid                  String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lo_thuoc_id          Int?
+  don_vi_hien_tai_id   Int?
+  don_hang_id          Int?
+  trang_thai           String?          @default("TrongKho") @db.VarChar(50)
+  kien_hang_id         Int?
+  secret_pin_hash      String?          @db.VarChar(64)
+  ngay_kich_hoat       DateTime?        @db.Timestamp(6)
+  so_lan_quet_pin      Int?             @default(0)
+  trang_thai_kich_hoat String?          @default("ChuaKichHoat") @db.VarChar(50)
+  donhang              donhang?         @relation(fields: [don_hang_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  donvi                donvi?           @relation(fields: [don_vi_hien_tai_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  kienhang             kienhang?        @relation(fields: [kien_hang_id], references: [id], onUpdate: NoAction)
+  lothuoc              lothuoc?         @relation(fields: [lo_thuoc_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lichsuphanphoi       lichsuphanphoi[]
+  nhatkyxacthuc        nhatkyxacthuc[]
 
   @@index([don_hang_id], map: "idx_hopthuoc_donhang")
   @@index([kien_hang_id], map: "idx_hopthuoc_kienhang")

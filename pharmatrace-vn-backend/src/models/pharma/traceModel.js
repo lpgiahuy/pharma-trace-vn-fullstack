@@ -3,13 +3,47 @@ import prisma, { serializeBigInt } from '../../config/prisma.js';
 // get info box by uid 
 const getBoxInfo = async (uid) => {
     const result = await prisma.$queryRawUnsafe(`
-        SELECT ht.uid, ht.trang_thai, lt.so_lo, lt.han_su_dung, dp.ten_thuoc
+        SELECT 
+            ht.uid, 
+            ht.trang_thai, 
+            ht.secret_pin_hash,
+            ht.ngay_kich_hoat,
+            ht.so_lan_quet_pin,
+            ht.trang_thai_kich_hoat,
+            lt.so_lo, 
+            lt.han_su_dung, 
+            lt.ngay_san_xuat,
+            dp.id AS duoc_pham_id,
+            dp.ten_thuoc,
+            dp.hinh_anh_url,
+            dp.la_thuoc_ke_don
         FROM HopThuoc ht
         JOIN LoThuoc lt ON ht.lo_thuoc_id = lt.id
         JOIN DuocPham dp ON lt.duoc_pham_id = dp.id
         WHERE ht.uid = $1;
     `, uid);
     return result[0] || null;
+};
+
+// record PIN scan and update activation state
+const recordPinScan = async (uid, isFirstActivation) => {
+    if (isFirstActivation) {
+        await prisma.hopthuoc.update({
+            where: { uid },
+            data: {
+                so_lan_quet_pin: 1,
+                ngay_kich_hoat: new Date(),
+                trang_thai_kich_hoat: 'DaKichHoat'
+            }
+        });
+    } else {
+        await prisma.hopthuoc.update({
+            where: { uid },
+            data: {
+                so_lan_quet_pin: { increment: 1 }
+            }
+        });
+    }
 };
 
 // insert log scan
@@ -103,4 +137,4 @@ const getScanDetails = async (uid) => {
     };
 };
 
-export { getBoxInfo, insertScanLog, getDistributionHistory, getQRRiskScore, getScanDetails };
+export { getBoxInfo, insertScanLog, getDistributionHistory, getQRRiskScore, getScanDetails, recordPinScan };

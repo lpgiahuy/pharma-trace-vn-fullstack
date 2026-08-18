@@ -34,6 +34,9 @@ export const createPurchaseOrderService = async (poData) => {
     if (!poData.nha_cung_cap_id) {
         throw new Error('Vui lòng chọn Nhà cung cấp');
     }
+    if (poData.don_vi_id && Number(poData.nha_cung_cap_id) === Number(poData.don_vi_id)) {
+        throw new Error('Không thể chọn chính đơn vị/kho của mình làm nhà cung cấp!');
+    }
     if (!poData.items || !Array.isArray(poData.items) || poData.items.length === 0) {
         throw new Error('Danh sách mặt hàng nhập không được để trống');
     }
