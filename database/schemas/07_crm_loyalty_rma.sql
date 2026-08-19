@@ -49,41 +49,6 @@ CREATE TABLE IF NOT EXISTS public.lichsu_tichdiem (
 -- Index tối ưu truy vấn điểm thưởng
 CREATE INDEX IF NOT EXISTS idx_tichdiem_khachhang ON public.lichsu_tichdiem(khach_hang_id);
 CREATE INDEX IF NOT EXISTS idx_tichdiem_donhang ON public.lichsu_tichdiem(don_hang_id);
-
--- 3. Hàm Tự Động Tính Cấp Hạng Thành Viên (Rank Calculation Engine)
-CREATE OR REPLACE FUNCTION public.fn_update_customer_rank(p_khach_hang_id INTEGER)
-RETURNS VARCHAR AS $$
-DECLARE
-    v_total_points INTEGER := 0;
-    v_new_rank VARCHAR(50) := 'Đồng';
-BEGIN
-    -- Lấy tổng điểm tích lũy của khách hàng
-    SELECT COALESCE(diem_tich_luy_tong, 0) INTO v_total_points
-    FROM public.khachhang
-    WHERE id = p_khach_hang_id;
-
-    -- Tính hạng thành viên dựa trên tổng điểm
-    IF v_total_points >= 50000 THEN
-        v_new_rank := 'Kim Cương';
-    ELSIF v_total_points >= 20000 THEN
-        v_new_rank := 'Bạch Kim';
-    ELSIF v_total_points >= 5000 THEN
-        v_new_rank := 'Vàng';
-    ELSIF v_total_points >= 1000 THEN
-        v_new_rank := 'Bạc';
-    ELSE
-        v_new_rank := 'Đồng';
-    END IF;
-
-    -- Cập nhật hạng thành viên trong bảng khachhang
-    UPDATE public.khachhang
-    SET hang_thanh_vien = v_new_rank
-    WHERE id = p_khach_hang_id;
-
-    RETURN v_new_rank;
-END;
-$$ LANGUAGE plpgsql;
-
 -- 4. Kích hoạt RLS Security cho bảng lichsu_tichdiem
 ALTER TABLE public.lichsu_tichdiem ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.lichsu_tichdiem FORCE ROW LEVEL SECURITY;
@@ -96,26 +61,7 @@ CREATE POLICY p_lichsu_tichdiem_mod ON public.lichsu_tichdiem FOR ALL USING (
 );
 
 -- 5. Dữ liệu thử nghiệm điểm thưởng & RMA
-INSERT INTO public.lichsu_tichdiem (khach_hang_id, don_hang_id, loai_giao_dich, so_diem, mo_ta)
-SELECT 
-    kh.id,
-    dh.id,
-    'TichDiem',
-    FLOOR(dh.tong_tien / 10000)::INT,
-    'Tích điểm tự động từ Đơn hàng #' || dh.id
-FROM public.donhang dh
-JOIN public.khachhang kh ON dh.khach_hang_id = kh.id
-LIMIT 5
-ON CONFLICT DO NOTHING;
+-- Initial data loaded via seeds
 
 -- Thêm các yêu cầu Đổi trả hàng RMA thử nghiệm vào bảng phieutrahang (nếu chưa có)
-INSERT INTO public.phieutrahang (don_hang_id, khach_hang_id, ly_do_tra, trang_thai_duyet)
-SELECT 
-    dh.id,
-    dh.khach_hang_id,
-    'Sản phẩm vỏ hộp bị móp vỡ do vận chuyển, yêu cầu đổi hộp mới',
-    'ChoDuyet'
-FROM public.donhang dh
-WHERE dh.trang_thai_don IN ('ChoHoanTat', 'HoanThanh', 'TraHangMotPhan')
-LIMIT 2
-ON CONFLICT DO NOTHING;
+-- Initial data loaded via seeds

@@ -73,13 +73,11 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
 
     if (!cleanCode) return
 
-    // Real-time verification against order products
-    if (availableData && availableData.length > 0) {
-      const matchedItem = availableData.find(item => (item.available_uids || []).includes(cleanCode))
-      if (!matchedItem) {
-        toast.error(`⛔ INVALID QR: Medicine box (${cleanCode.slice(0, 8)}...) does not belong to any product in this order!`, { duration: 4000 })
-        return
-      }
+    // Basic UUID validation
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!uuidPattern.test(cleanCode) && cleanCode.length < 8) {
+      toast.error(`⛔ INVALID QR: Code (${cleanCode}) is not a valid box UID!`, { duration: 3000 })
+      return
     }
 
     setScannedUIDs(prev => {
