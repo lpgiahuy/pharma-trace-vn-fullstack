@@ -19,13 +19,18 @@ const getRoleDisplay = (vai_tro, role) => {
   const r = vai_tro || role || ''
   switch (r) {
     case 'SuperAdmin': return 'Super Administrator'
-    case 'Admin': return 'Admin Chi Nhánh'
-    case 'QuanLyCuaHang': return 'Quản Lý Cửa Hàng'
-    case 'QuanLyKho': return 'Quản Lý Kho (WMS)'
-    case 'NhanVienKho': return 'Nhân Viên Kho'
-    case 'NhanVienBanHang': return 'Nhân Viên Bán Hàng / Dược Sĩ'
-    default: return r || 'Nhân viên'
+    case 'Admin': return 'Branch Admin'
+    case 'QuanLyCuaHang': return 'Store Manager'
+    case 'QuanLyKho': return 'Warehouse Manager (WMS)'
+    case 'NhanVienKho': return 'Warehouse Staff'
+    case 'NhanVienBanHang': return 'Sales Staff / Pharmacist'
+    default: return r || 'Staff'
   }
+}
+
+const getRoleKey = (vai_tro, role) => {
+  const r = vai_tro || role || ''
+  return r.toLowerCase()
 }
 
 const getColorScheme = (vai_tro, role) => {
@@ -52,10 +57,10 @@ export default function WarehouseProfilePage() {
     <div className="max-w-3xl mx-auto">
       <div className="mb-6">
         <h1 className="text-xl font-bold text-slate-800">
-          {isAdminPortal ? 'Hồ sơ Quản trị viên & Nhân viên' : t('warehouse.profile_title')}
+          {isAdminPortal ? 'Administrator & Staff Profile' : t('warehouse.profile_title', { defaultValue: 'Warehouse Staff Profile' })}
         </h1>
         <p className="text-sm text-slate-500 mt-0.5">
-          {isAdminPortal ? 'Thông tin tài khoản nội bộ trên hệ thống PharmaTrace Admin' : t('warehouse.profile_desc')}
+          {isAdminPortal ? 'Internal system account credentials and facility assignments' : t('warehouse.profile_desc', { defaultValue: 'WMS employee credentials and facility assignment details' })}
         </p>
       </div>
 
@@ -85,13 +90,13 @@ export default function WarehouseProfilePage() {
               </span>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/15 text-white">
                 <CheckCircle className="w-3 h-3" />
-                {t('warehouse.active', { defaultValue: 'Đang hoạt động' })}
+                {t('warehouse.active', { defaultValue: 'Active' })}
               </span>
             </div>
           </div>
 
           <div className="text-right hidden sm:block flex-shrink-0">
-            <p className={`${isAdminPortal ? 'text-indigo-200' : 'text-teal-200'} text-[10px] font-bold uppercase tracking-widest`}>{t('warehouse.employee_id', { defaultValue: 'Mã NV' })}</p>
+            <p className={`${isAdminPortal ? 'text-indigo-200' : 'text-teal-200'} text-[10px] font-bold uppercase tracking-widest`}>{t('warehouse.employee_id', { defaultValue: 'Staff ID' })}</p>
             <p className="text-white font-black text-lg">#{String(user?.id || 0).padStart(4, '0')}</p>
           </div>
         </div>
@@ -100,38 +105,38 @@ export default function WarehouseProfilePage() {
       {/* Info Fields */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100">
-          <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">{t('warehouse.account_info')}</h3>
+          <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">{t('warehouse.account_info', { defaultValue: 'Account Information' })}</h3>
         </div>
 
         <div className="divide-y divide-slate-50">
           <InfoRow
             icon={<User className="w-4 h-4" />}
-            label={t('warehouse.full_name')}
+            label={t('warehouse.full_name', { defaultValue: 'Full Name' })}
             value={user?.ho_ten || user?.name}
           />
           <InfoRow
             icon={<Mail className="w-4 h-4" />}
-            label={t('warehouse.email')}
+            label={t('warehouse.email', { defaultValue: 'Email Address' })}
             value={user?.email}
           />
           <InfoRow
             icon={<Shield className="w-4 h-4" />}
-            label={t('warehouse.role')}
+            label={t('warehouse.role', { defaultValue: 'System Role' })}
             value={
               <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold ${colors.bg} ${colors.text}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} />
-                {t(`warehouse.${getRoleKey(vai_tro, role)}`)}
+                {getRoleDisplay(vai_tro, role)}
               </span>
             }
           />
           <InfoRow
             icon={<Building2 className="w-4 h-4" />}
-            label={t('warehouse.unit')}
-            value={user?.don_vi_id ? t('warehouse.unit_id', { id: user.don_vi_id }) : '—'}
+            label={t('warehouse.unit', { defaultValue: 'Assigned Facility' })}
+            value={user?.ten_don_vi || (user?.don_vi_id ? `Facility #${user.don_vi_id}` : 'All Units / HQ')}
           />
           <InfoRow
             icon={<Hash className="w-4 h-4" />}
-            label={t('warehouse.employee_id')}
+            label={t('warehouse.employee_id', { defaultValue: 'Staff ID' })}
             value={`#${String(user?.id || 0).padStart(4, '0')}`}
           />
         </div>
@@ -141,9 +146,9 @@ export default function WarehouseProfilePage() {
       <div className="mt-4 flex items-center justify-between text-xs text-slate-400 px-1">
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="font-medium">{t('warehouse.status_active')}</span>
+          <span className="font-medium">{t('warehouse.status_active', { defaultValue: 'System Online & Authenticated' })}</span>
         </div>
-        <span>{t('warehouse.wms_portal')}</span>
+        <span>{isAdminPortal ? 'PharmaTrace Enterprise Platform' : 'PharmaTrace WMS Engine'}</span>
       </div>
     </div>
   )

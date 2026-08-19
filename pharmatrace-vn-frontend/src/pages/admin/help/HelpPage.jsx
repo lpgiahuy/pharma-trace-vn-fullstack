@@ -13,58 +13,58 @@ const Icon = ({ name, filled = false, className = '' }) => (
 )
 
 const FEATURE_CARDS = [
-  { icon: 'dashboard',       color: 'text-blue-600 bg-blue-50',     title: 'Tổng quan (Dashboard)',   desc: 'Xem thống kê doanh thu, đơn hàng, tồn kho và biểu đồ phân tích theo thời gian thực.' },
-  { icon: 'inventory_2',     color: 'text-emerald-600 bg-emerald-50', title: 'Quản lý sản phẩm',       desc: 'Thêm, sửa, xóa sản phẩm; quản lý danh mục, đơn vị tính và hình ảnh.' },
-  { icon: 'shopping_bag',    color: 'text-orange-600 bg-orange-50',  title: 'Quản lý đơn hàng',        desc: 'Theo dõi trạng thái đơn hàng, xử lý yêu cầu hoàn trả (RMA) và in phiếu giao hàng.' },
-  { icon: 'manage_accounts', color: 'text-violet-600 bg-violet-50',  title: 'Nhân viên & Phân quyền',  desc: 'Tạo tài khoản nhân viên, phân vai trò Admin / Manager / Warehouse.' },
-  { icon: 'assignment',      color: 'text-pink-600 bg-pink-50',      title: 'Đơn thuốc',               desc: 'Xem xét và phê duyệt đơn thuốc do khách hàng tải lên trước khi giao hàng.' },
-  { icon: 'local_offer',     color: 'text-yellow-600 bg-yellow-50',  title: 'Voucher & Khuyến mãi',    desc: 'Tạo mã giảm giá, đặt điều kiện áp dụng và theo dõi lượt sử dụng.' },
-  { icon: 'article',         color: 'text-cyan-600 bg-cyan-50',      title: 'Blog & Tin tức',           desc: 'Đăng bài viết y tế, tin tức dược phẩm với trình soạn thảo văn bản phong phú.' },
-  { icon: 'business',        color: 'text-slate-600 bg-slate-100',   title: 'Chi nhánh & Kho',          desc: 'Quản lý danh sách nhà thuốc, kho hàng và địa điểm trong hệ thống.' },
+  { icon: 'dashboard',       color: 'text-blue-600 bg-blue-50',     title: 'Overview & Dashboard',    desc: 'View real-time revenue analytics, order volume, inventory levels, and interactive charts.' },
+  { icon: 'inventory_2',     color: 'text-emerald-600 bg-emerald-50', title: 'Product Catalog',         desc: 'Create, update, and manage medications; configure categories, units of measure, and imagery.' },
+  { icon: 'shopping_bag',    color: 'text-orange-600 bg-orange-50',  title: 'Order Management',        desc: 'Track order fulfillment status, process RMA return requests, and print waybills.' },
+  { icon: 'manage_accounts', color: 'text-violet-600 bg-violet-50',  title: 'Staff & Role Permissions', desc: 'Manage team accounts and assign RBAC roles (Admin / Store Manager / Warehouse).' },
+  { icon: 'assignment',      color: 'text-pink-600 bg-pink-50',      title: 'Prescriptions (Rx)',      desc: 'Review and verify customer-uploaded prescription images prior to dispensing medications.' },
+  { icon: 'local_offer',     color: 'text-yellow-600 bg-yellow-50',  title: 'Vouchers & Promotions',    desc: 'Configure promotional discount codes, validity dates, minimum spends, and usage tracking.' },
+  { icon: 'article',         color: 'text-cyan-600 bg-cyan-50',      title: 'Blog & Health News',      desc: 'Publish pharmaceutical insights and healthcare news articles with a rich text editor.' },
+  { icon: 'business',        color: 'text-slate-600 bg-slate-100',   title: 'Units & Facilities',       desc: 'Maintain distribution centers, warehouses, and retail pharmacy network coordinates.' },
 ]
 
 const WAREHOUSE_CARDS = [
-  { icon: 'move_to_inbox', label: 'Nhập kho',  path: '/warehouse/inbound',     color: 'text-blue-600 bg-blue-50' },
-  { icon: 'outbox',        label: 'Xuất kho',  path: '/warehouse/fulfillment', color: 'text-emerald-600 bg-emerald-50' },
-  { icon: 'sync_alt',      label: 'Chuyển kho',path: '/warehouse/transfer',    color: 'text-orange-600 bg-orange-50' },
-  { icon: 'delete',        label: 'Huỷ lô',    path: '/warehouse/disposal',    color: 'text-red-600 bg-red-50' },
-  { icon: 'recycling',     label: 'Thu hồi',   path: '/warehouse/recall',      color: 'text-yellow-600 bg-yellow-50' },
-  { icon: 'qr_code_scanner', label: 'Quét QR', path: '/warehouse/scanner',     color: 'text-violet-600 bg-violet-50' },
+  { icon: 'move_to_inbox', label: 'Inbound',    path: '/warehouse/inbound',     color: 'text-blue-600 bg-blue-50' },
+  { icon: 'outbox',        label: 'Outbound',   path: '/warehouse/fulfillment', color: 'text-emerald-600 bg-emerald-50' },
+  { icon: 'sync_alt',      label: 'Transfer',   path: '/warehouse/transfer',    color: 'text-orange-600 bg-orange-50' },
+  { icon: 'delete',        label: 'Disposal',   path: '/warehouse/disposal',    color: 'text-red-600 bg-red-50' },
+  { icon: 'recycling',     label: 'Recall',     path: '/warehouse/recall',      color: 'text-yellow-600 bg-yellow-50' },
+  { icon: 'qr_code_scanner', label: 'Scanner',  path: '/warehouse/scanner',     color: 'text-violet-600 bg-violet-50' },
 ]
 
 const FAQS = [
   {
-    category: 'Tài khoản & Phân quyền',
+    category: 'Accounts & Permissions',
     badge: 'bg-blue-100 text-blue-700',
     items: [
-      { q: 'Làm sao thêm nhân viên mới?', a: 'Vào Nhân viên & Phân quyền → nhấn "+ Thêm nhân viên" → nhập email, họ tên và chọn vai trò (Admin / Manager / Warehouse). Hệ thống sẽ gửi email kích hoạt tài khoản tự động.' },
-      { q: 'Sự khác biệt giữa vai trò Admin và Manager là gì?', a: 'Admin có toàn quyền kể cả tạo/xóa tài khoản nhân viên. Manager có thể quản lý sản phẩm, đơn hàng, blog nhưng không thể tạo tài khoản mới hay thay đổi phân quyền.' },
-      { q: 'Tôi quên mật khẩu, phải làm gì?', a: 'Nhấn "Quên mật khẩu" ở trang đăng nhập, nhập email và kiểm tra hộp thư để nhận link đặt lại mật khẩu (hiệu lực 30 phút).' },
+      { q: 'How do I add a new team member?', a: 'Go to Staff & Permissions → click "+ Add Staff" → enter email, full name, and assign role (Admin / Manager / Warehouse). The system will send an activation email automatically.' },
+      { q: 'What is the difference between Admin and Store Manager?', a: 'Admins have complete platform authority including managing other staff accounts. Managers can oversee inventory, catalog, and orders, but cannot manage system users or security credentials.' },
+      { q: 'I forgot my account password, what should I do?', a: 'Click "Forgot Password" on the login screen, enter your email, and follow the secure reset instructions sent to your inbox (link valid for 30 minutes).' },
     ],
   },
   {
-    category: 'Sản phẩm & Kho hàng',
+    category: 'Products & Inventory',
     badge: 'bg-emerald-100 text-emerald-700',
     items: [
-      { q: 'Làm sao thêm sản phẩm mới?', a: 'Vào Quản lý sản phẩm → nhấn "+ Thêm sản phẩm" → điền đầy đủ thông tin: tên, danh mục, giá, số lượng, hình ảnh. Sản phẩm chỉ hiển thị trên web khi trạng thái là "Đang bán".' },
-      { q: 'Cảnh báo tồn kho thấp hoạt động như thế nào?', a: 'Dashboard tự động hiển thị danh sách sản phẩm có số lượng ≤ 10. Bạn có thể cập nhật ngưỡng cảnh báo trong phần cài đặt của từng sản phẩm.' },
-      { q: 'Làm sao nhập hàng vào kho?', a: 'Vào phân hệ Kho hàng → Nhập kho → chọn sản phẩm và điền số lô (batch), hạn sử dụng, số lượng. Mỗi lô sẽ được gán mã QR riêng để truy xuất nguồn gốc.' },
+      { q: 'How do I add a new pharmaceutical product?', a: 'Navigate to Product Catalog → click "+ Add Product" → input details: name, registration number, category, price, stock, and photos. Products become visible on the storefront when marked Active.' },
+      { q: 'How does low stock alert work?', a: 'The dashboard automatically flags products with inventory ≤ 10 units. You can customize the minimum threshold per product.' },
+      { q: 'How do I record inbound stock shipments?', a: 'Access Warehouse WMS → Inbound → select product and enter batch/lot number, expiry date, and quantity. Unique QR serial codes are generated for item traceability.' },
     ],
   },
   {
-    category: 'Đơn hàng & RMA',
+    category: 'Orders & RMA Returns',
     badge: 'bg-orange-100 text-orange-700',
     items: [
-      { q: 'Luồng xử lý đơn hàng như thế nào?', a: 'Đơn hàng đi qua các bước: Chờ xác nhận → Đã xác nhận → Đang giao → Hoàn thành / Đã hủy. Mỗi bước bạn có thể cập nhật thủ công hoặc hệ thống tự chuyển khi tích hợp vận chuyển.' },
-      { q: 'Xử lý yêu cầu hoàn trả (RMA) như thế nào?', a: 'Vào Đơn hàng → RMA → xem yêu cầu của khách → chọn "Chấp thuận" hoặc "Từ chối" kèm lý do. Khi chấp thuận, hệ thống sẽ tạo phiếu hoàn tiền và cập nhật tồn kho.' },
+      { q: 'What is the order fulfillment lifecycle?', a: 'Orders transition through: Awaiting Confirmation → Confirmed → In Delivery → Delivered / Cancelled. Statuses can be updated manually or automatically via integrated shipping carriers.' },
+      { q: 'How do I process RMA return requests?', a: 'Go to Orders → RMA Returns → review customer claims → choose "Approve" or "Reject" with justification notes. Upon approval, refund vouchers are credited.' },
     ],
   },
   {
-    category: 'Truy xuất nguồn gốc',
+    category: 'Supply Chain Traceability',
     badge: 'bg-violet-100 text-violet-700',
     items: [
-      { q: 'Hệ thống truy xuất nguồn gốc hoạt động ra sao?', a: 'Mỗi lô sản phẩm được gán mã QR duy nhất. Khi quét mã tại trang /trace, khách hàng thấy toàn bộ hành trình: nhà sản xuất → nhập kho → xuất kho → giao hàng.' },
-      { q: 'Làm sao in mã QR cho lô hàng?', a: 'Vào Kho hàng → Quét QR → chọn lô hàng → nhấn "In mã QR". Mã QR sẽ được xuất dưới dạng PDF sẵn sàng in nhãn.' },
+      { q: 'How does PharmaTrace cryptographic provenance work?', a: 'Each packaging unit has a unique serialized QR code. Scanning via /trace reveals complete milestone provenance: Manufacturer → Inbound Storage → Warehouse Transfer → Retail Pharmacy.' },
+      { q: 'How do I print QR serial labels for lots?', a: 'Go to Warehouse WMS → Scanner / Lot Monitor → select the batch → click "Print QR Labels" to generate a ready-to-print PDF label sheet.' },
     ],
   },
 ]
@@ -91,16 +91,16 @@ export default function AdminHelpPage() {
             <Icon name="help" filled className="text-3xl text-white" />
           </div>
           <div>
-            <h1 className="font-display text-2xl font-bold">Trợ giúp & Hướng dẫn</h1>
+            <h1 className="font-display text-2xl font-bold">Help Center & Knowledge Base</h1>
             <p className="mt-1 text-sm text-blue-100">
-              Tìm hiểu cách sử dụng PharmaTrace VN Admin — quản lý dược phẩm thông minh, an toàn.
+              Learn how to operate PharmaTrace VN Admin — intelligent, secure pharmaceutical supply chain management.
             </p>
           </div>
         </div>
         <div className="mt-6">
           <Input
             size="large"
-            placeholder="Tìm kiếm hướng dẫn, câu hỏi thường gặp..."
+            placeholder="Search documentation, guides, FAQs..."
             prefix={<Icon name="search" className="text-slate-400 text-xl mr-1" />}
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -115,7 +115,7 @@ export default function AdminHelpPage() {
         <>
           <div>
             <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-500 uppercase tracking-wide">
-              <Icon name="menu_book" className="text-base" /> Tính năng Admin
+              <Icon name="menu_book" className="text-base" /> Admin Core Capabilities
             </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {FEATURE_CARDS.map(card => (
@@ -135,7 +135,7 @@ export default function AdminHelpPage() {
           {/* Warehouse */}
           <div>
             <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-500 uppercase tracking-wide">
-              <Icon name="warehouse" className="text-base" /> Phân hệ Kho hàng
+              <Icon name="warehouse" className="text-base" /> Warehouse WMS Modules
             </h2>
             <div className="card p-4">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
@@ -149,7 +149,7 @@ export default function AdminHelpPage() {
                 ))}
               </div>
               <p className="mt-3 text-xs text-slate-400">
-                * Truy cập phân hệ kho tại <code className="rounded bg-slate-100 px-1">/warehouse</code>. Yêu cầu vai trò Warehouse, Manager hoặc Admin.
+                * Access warehouse subsystem at <code className="rounded bg-slate-100 px-1">/warehouse</code>. Requires Warehouse, Manager, or Admin role.
               </p>
             </div>
           </div>
@@ -160,15 +160,15 @@ export default function AdminHelpPage() {
               <Icon name="qr_code_scanner" filled className="text-2xl text-brand-600" />
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-brand-700">Truy xuất nguồn gốc (PharmaTrace)</p>
+              <p className="font-semibold text-brand-700">Cryptographic Traceability (PharmaTrace)</p>
               <p className="text-xs text-slate-500 mt-0.5">
-                Khách hàng quét mã QR để tra cứu hành trình lô thuốc. Trang công khai tại{' '}
+                Customers scan packaging QR codes to inspect authentic batch journey. Public portal at{' '}
                 <code className="rounded bg-white px-1 text-brand-600">/trace</code>.
               </p>
             </div>
             <a href="/trace" target="_blank" rel="noreferrer"
               className="flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700 transition-colors">
-              Xem thử <Icon name="open_in_new" className="text-sm" />
+              Preview Portal <Icon name="open_in_new" className="text-sm" />
             </a>
           </div>
         </>
@@ -177,14 +177,14 @@ export default function AdminHelpPage() {
       {/* FAQ */}
       <div>
         <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-500 uppercase tracking-wide">
-          <Icon name="forum" className="text-base" /> Câu hỏi thường gặp
+          <Icon name="forum" className="text-base" /> Frequently Asked Questions (FAQ)
         </h2>
 
         {filtered.length === 0 ? (
           <div className="card py-14 text-center">
             <Icon name="search_off" className="text-5xl text-slate-300 mx-auto mb-3" />
-            <p className="font-medium text-slate-500">Không tìm thấy kết quả cho "{search}"</p>
-            <p className="mt-1 text-sm text-slate-400">Thử từ khóa khác hoặc liên hệ bộ phận hỗ trợ bên dưới.</p>
+            <p className="font-medium text-slate-500">No results found for "{search}"</p>
+            <p className="mt-1 text-sm text-slate-400">Try different search keywords or reach out to customer support below.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -212,15 +212,15 @@ export default function AdminHelpPage() {
       {search === '' && (
         <div className="card p-6">
           <h2 className="mb-4 flex items-center gap-2 font-semibold text-slate-700">
-            <Icon name="contact_support" filled className="text-xl text-brand-500" /> Vẫn cần hỗ trợ?
+            <Icon name="contact_support" filled className="text-xl text-brand-500" /> Still Need Assistance?
           </h2>
           <div className="grid gap-3 sm:grid-cols-3">
-            <ContactCard icon="mail" title="Email hỗ trợ" value="support@pharmatrace.vn" sub="Phản hồi trong 24h làm việc" />
-            <ContactCard icon="chat_bubble" title="Zalo OA" value="PharmaTrace VN" sub="Hỗ trợ nhanh 8:00 – 17:00" />
-            <ContactCard icon="phone_in_talk" title="Hotline" value="1800 1234" sub="Miễn phí, T2 – T7" />
+            <ContactCard icon="mail" title="Support Email" value="support@pharmatrace.vn" sub="Response within 24 business hours" />
+            <ContactCard icon="chat_bubble" title="Zalo Official Account" value="PharmaTrace VN" sub="Live support 8:00 – 17:00" />
+            <ContactCard icon="phone_in_talk" title="Toll-Free Hotline" value="1800 1234" sub="Toll-free, Mon – Sat" />
           </div>
           <p className="mt-4 text-xs text-slate-400">
-            Khi liên hệ vui lòng cung cấp tên tài khoản và mô tả ngắn gọn vấn đề để được hỗ trợ nhanh nhất.
+            Please provide your account username and a brief description of the issue for expedited support.
           </p>
         </div>
       )}

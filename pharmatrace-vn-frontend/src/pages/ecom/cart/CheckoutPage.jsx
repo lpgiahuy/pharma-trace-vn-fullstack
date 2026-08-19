@@ -39,7 +39,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     fetchCart()
     if (!isAuthenticated) {
-      toast.error('Vui lòng đăng nhập để thanh toán')
+      toast.error('Please sign in to proceed to checkout')
       navigate('/login', { state: { from: { pathname: '/checkout' } } })
     } else {
       authService.getProfile()
@@ -70,15 +70,15 @@ export default function CheckoutPage() {
   })
 
   const handleApplyVoucher = async () => {
-    if (!voucherCode.trim()) { toast.error('Vui lòng nhập mã khuyến mãi'); return }
+    if (!voucherCode.trim()) { toast.error('Please enter a promotion voucher code'); return }
     setApplyingVoucher(true)
     try {
       const result = await voucherService.applyVoucher(voucherCode, getSubtotal())
       applyVoucher({ code: result.ma_code, type: 'fixed', value: result.so_tien_giam })
       setVoucherCode('')
-      toast.success(`Áp dụng mã ${result.ma_code} thành công!`)
+      toast.success('Voucher coupon applied successfully!')
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Mã khuyến mãi không hợp lệ')
+      toast.error(err.response?.data?.message || 'Invalid promotional voucher code')
     } finally {
       setApplyingVoucher(false)
     }
@@ -89,7 +89,7 @@ export default function CheckoutPage() {
 
   const onSubmit = async (formData) => {
     if (hasPrescriptionItem && !selectedPrescription) {
-      toast.error('Giỏ hàng có thuốc kê đơn. Vui lòng chọn toa thuốc hợp lệ.')
+      toast.error('Cart contains prescription medication. Please select a verified prescription.')
       return
     }
     try {
@@ -104,10 +104,10 @@ export default function CheckoutPage() {
         toa_thuoc_id:           selectedPrescription || null,
       })
       clearCart()
-      toast.success('Đặt hàng thành công!')
+      toast.success('Order placed successfully!')
       navigate(`/order-success/${order.id}`)
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Đặt hàng thất bại. Vui lòng thử lại.')
+      toast.error(err.response?.data?.message || 'Failed to place order. Please try again.')
     }
   }
 

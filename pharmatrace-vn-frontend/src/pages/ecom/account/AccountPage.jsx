@@ -4,10 +4,10 @@ import { useAuth } from '@/store/authStore'
 import { Avatar } from '@/components/ui/Avatar'
 
 const MENU = [
-  { icon: User,       label: 'Thông tin cá nhân', sub: 'Quản lý thông tin & Thành viên', to: '/account/profile' },
-  { icon: Package,    label: 'Đơn hàng của tôi',   sub: 'Theo dõi & quản lý đơn hàng', to: '/account/orders' },
-  { icon: Heart,      label: 'Sản phẩm yêu thích', sub: 'Sản phẩm bạn đã lưu',         to: '/account/wishlist' },
-  { icon: FileText,   label: 'Sổ khám bệnh',       sub: 'Các hồ sơ bệnh án & đơn thuốc', to: '/account/prescriptions' },
+  { icon: User,       label: 'Personal Profile',      sub: 'Manage personal info & VIP tier', to: '/account/profile' },
+  { icon: Package,    label: 'My Orders',             sub: 'Track & manage order status',      to: '/account/orders' },
+  { icon: Heart,      label: 'Wishlist & Saved Items', sub: 'Products you have saved',          to: '/account/wishlist' },
+  { icon: FileText,   label: 'Prescription Records',  sub: 'Medical records & Rx approvals',   to: '/account/prescriptions' },
 ]
 
 export default function AccountPage() {

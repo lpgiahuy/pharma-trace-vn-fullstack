@@ -6,19 +6,19 @@ import { formatDateTime } from '@/utils'
 import toast from 'react-hot-toast'
 
 const DISPOSAL_REASONS = [
-  { value: 'Hết hạn sử dụng',     label: 'Hết hạn sử dụng' },
-  { value: 'Hư hỏng',             label: 'Hư hỏng' },
-  { value: 'Nhiễm khuẩn',         label: 'Nhiễm khuẩn' },
-  { value: 'Thu hồi',             label: 'Thu hồi' },
-  { value: 'Tồn kho dư thừa',     label: 'Tồn kho dư thừa' },
-  { value: 'Không đạt chất lượng', label: 'Không đạt chất lượng' },
+  { value: 'Expired',                label: 'Expired' },
+  { value: 'Damaged packaging',       label: 'Damaged packaging' },
+  { value: 'Contaminated / Spoiled',  label: 'Contaminated / Spoiled' },
+  { value: 'Recall batch',           label: 'Recall batch' },
+  { value: 'Surplus inventory',      label: 'Surplus inventory' },
+  { value: 'Quality failed',         label: 'Quality failed' },
 ]
 
 const DISPOSAL_METHODS = [
-  { value: 'Đốt tiêu hủy',              label: 'Đốt tiêu hủy' },
-  { value: 'Chôn lấp',                  label: 'Chôn lấp' },
-  { value: 'Trung hòa hóa học',         label: 'Trung hòa hóa học' },
-  { value: 'Trả lại nhà cung cấp',      label: 'Trả lại nhà cung cấp' },
+  { value: 'Incineration',           label: 'Incineration' },
+  { value: 'Secure landfill',        label: 'Secure landfill' },
+  { value: 'Chemical neutralization',label: 'Chemical neutralization' },
+  { value: 'Return to supplier',     label: 'Return to supplier' },
 ]
 
 export default function DisposalPage() {
@@ -31,64 +31,64 @@ export default function DisposalPage() {
     try {
       const result = await warehouseService.disposeStock(vals)
       setHistory(prev => [{ ...result, ...vals, key: Date.now(), disposedAt: new Date().toISOString() }, ...prev])
-      toast.success('Đã ghi nhận tiêu hủy thành công')
+      toast.success('Disposal record saved successfully')
       form.resetFields()
-    } catch { toast.error('Ghi nhận tiêu hủy thất bại') }
+    } catch { toast.error('Failed to record disposal') }
     finally { setLoading(false) }
   }
 
   const cols = [
-    { title: 'Sản phẩm',   dataIndex: 'productName', key: 'product' },
-    { title: 'Số lô',      dataIndex: 'batchNumber',  key: 'batch',  render: v => <span className="font-mono text-xs">{v}</span> },
-    { title: 'Số lượng',   dataIndex: 'quantity',     key: 'qty' },
-    { title: 'Lý do',      dataIndex: 'reason',       key: 'reason', render: v => <Tag color="red">{v}</Tag> },
-    { title: 'Phương pháp',dataIndex: 'method',       key: 'method' },
-    { title: 'Người thực hiện', dataIndex: 'disposedBy', key: 'by' },
-    { title: 'Thời gian',  dataIndex: 'disposedAt',   key: 'time',   render: v => formatDateTime(v) },
+    { title: 'Product',   dataIndex: 'productName', key: 'product' },
+    { title: 'Batch Number',      dataIndex: 'batchNumber',  key: 'batch',  render: v => <span className="font-mono text-xs">{v}</span> },
+    { title: 'Quantity',   dataIndex: 'quantity',     key: 'qty' },
+    { title: 'Reason',      dataIndex: 'reason',       key: 'reason', render: v => <Tag color="red">{v}</Tag> },
+    { title: 'Disposal Method',dataIndex: 'method',       key: 'method' },
+    { title: 'Executed By', dataIndex: 'disposedBy', key: 'by' },
+    { title: 'Timestamp',  dataIndex: 'disposedAt',   key: 'time',   render: v => formatDateTime(v) },
   ]
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-xl font-display font-bold text-slate-900 flex items-center gap-2"><DeleteOutlined /> Tiêu hủy hàng hóa</h1>
-        <p className="text-slate-500 text-sm mt-1">Ghi nhận tiêu hủy hàng hết hạn, hư hỏng hoặc bị thu hồi</p>
+        <h1 className="text-xl font-display font-bold text-slate-900 flex items-center gap-2"><DeleteOutlined /> Stock Disposal & Write-Off</h1>
+        <p className="text-slate-500 text-sm mt-1">Record disposal of expired, damaged, or recalled pharmaceutical items</p>
       </div>
 
       <Alert
-        message="Thao tác không thể hoàn tác"
-        description="Đảm bảo đã được cấp trên phê duyệt trước khi tiêu hủy. Mọi lần tiêu hủy đều được ghi lại để kiểm toán."
+        message="Irreversible Operation"
+        description="Ensure authorized managerial approval before proceeding with disposal. All destruction operations are permanently recorded for regulatory audits."
         type="warning"
         showIcon
         icon={<WarningOutlined />}
       />
 
-      <Card title="Ghi nhận tiêu hủy">
+      <Card title="Record Disposal">
         <Form form={form} layout="vertical" onFinish={handleDispose}>
           <div className="grid sm:grid-cols-2 gap-x-4">
-            <Form.Item label="Tên sản phẩm" name="productName" rules={[{ required: true, message: 'Nhập tên sản phẩm' }]}><Input /></Form.Item>
-            <Form.Item label="Số lô" name="batchNumber" rules={[{ required: true, message: 'Nhập số lô' }]}><Input /></Form.Item>
-            <Form.Item label="Số lượng tiêu hủy" name="quantity" rules={[{ required: true, message: 'Nhập số lượng' }]}>
+            <Form.Item label="Product Name" name="productName" rules={[{ required: true, message: 'Please enter product name' }]}><Input /></Form.Item>
+            <Form.Item label="Batch / Lot Number" name="batchNumber" rules={[{ required: true, message: 'Please enter batch number' }]}><Input /></Form.Item>
+            <Form.Item label="Disposal Quantity" name="quantity" rules={[{ required: true, message: 'Please enter quantity' }]}>
               <InputNumber min={1} style={{ width: '100%' }} />
             </Form.Item>
-            <Form.Item label="Lý do" name="reason" rules={[{ required: true, message: 'Chọn lý do' }]}>
-              <Select options={DISPOSAL_REASONS} placeholder="Chọn lý do tiêu hủy" />
+            <Form.Item label="Disposal Reason" name="reason" rules={[{ required: true, message: 'Please select reason' }]}>
+              <Select options={DISPOSAL_REASONS} placeholder="Select disposal reason" />
             </Form.Item>
-            <Form.Item label="Phương pháp tiêu hủy" name="method" rules={[{ required: true, message: 'Chọn phương pháp' }]}>
-              <Select options={DISPOSAL_METHODS} placeholder="Chọn phương pháp" />
+            <Form.Item label="Disposal Method" name="method" rules={[{ required: true, message: 'Please select method' }]}>
+              <Select options={DISPOSAL_METHODS} placeholder="Select disposal method" />
             </Form.Item>
-            <Form.Item label="Người thực hiện" name="disposedBy" rules={[{ required: true, message: 'Nhập tên người thực hiện' }]}>
-              <Input placeholder="Tên nhân viên" />
+            <Form.Item label="Executed By" name="disposedBy" rules={[{ required: true, message: 'Please enter staff name' }]}>
+              <Input placeholder="Staff name" />
             </Form.Item>
-            <Form.Item label="Ghi chú" name="notes" className="sm:col-span-2">
-              <Input.TextArea rows={2} placeholder="Ghi chú thêm…" />
+            <Form.Item label="Notes" name="notes" className="sm:col-span-2">
+              <Input.TextArea rows={2} placeholder="Additional details…" />
             </Form.Item>
           </div>
-          <AButton type="primary" danger htmlType="submit" loading={loading} icon={<DeleteOutlined />}>Xác nhận tiêu hủy</AButton>
+          <AButton type="primary" danger htmlType="submit" loading={loading} icon={<DeleteOutlined />}>Confirm Disposal</AButton>
         </Form>
       </Card>
 
       {history.length > 0 && (
-        <Card title="Lịch sử tiêu hủy (phiên này)">
+        <Card title="Disposal History (Current Session)">
           <Table dataSource={history} columns={cols} rowKey="key" pagination={false} size="small" scroll={{ x: 700 }} />
         </Card>
       )}

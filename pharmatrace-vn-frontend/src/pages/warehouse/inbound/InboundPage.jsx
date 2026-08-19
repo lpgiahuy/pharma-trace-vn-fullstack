@@ -4,12 +4,13 @@ import { InboxOutlined, PrinterOutlined, CheckCircleOutlined, CarOutlined, Safet
 import { warehouseService } from '@/services/warehouse.service'
 import { productService } from '@/services/product.service'
 import { formatDateTime } from '@/utils'
+import { formatUnitType } from '@/utils/formatters'
 import { useAuth } from '@/store/authStore'
 import toast from 'react-hot-toast'
 import { QRCodeSVG } from 'qrcode.react'
 
 const SUPPLIERS = [
-  'Dược Hậu Giang (DHG Pharma)',
+  'DHG Pharma',
   'Traphaco',
   'Pymepharco',
   'Imexpharm',
@@ -63,7 +64,7 @@ export default function InboundPage() {
         productName: item.productName || 'Unknown',
         batchNumber: item.batchNumber || '',
         quantity: item.quantity || 0,
-        unitName: item.unitName || item.don_vi_tinh || 'hộp',
+        unitName: item.unitName || item.don_vi_tinh || 'box',
         qrCode: item.batchNumber || '',
         receivedAt: item.receivedAt || item.createdAt || new Date().toISOString(),
         location: item.location || '',
@@ -75,7 +76,7 @@ export default function InboundPage() {
       setReceived(normalized)
     } catch (err) {
       console.error(err)
-      toast.error('Không thể tải lịch sử nhập kho')
+      toast.error('Failed to load inbound history')
     } finally {
       setLoadingHistory(false)
     }
@@ -97,11 +98,11 @@ export default function InboundPage() {
         const qty = Number(t.so_luong_hop || 0)
         const donGia = Number(t.don_gia || 0)
         const total = Number(t.tong_tien || (donGia * qty))
-        const unitName = t.don_vi_tinh || 'hộp'
+        const unitName = t.don_vi_tinh || 'box'
         return {
           id: t.id,
           ma_phieu_nhap: `TRF-${t.id || Date.now()}`,
-          ten_nha_cung_cap: t.ten_tu_kho || `Đơn vị #${t.tu_don_vi_id}`,
+          ten_nha_cung_cap: t.ten_tu_kho || `Unit #${t.tu_don_vi_id}`,
           so_luong_mat_hang: `${t.ten_duoc_pham} (${qty} ${unitName})`,
           don_gia: donGia,
           tong_tien: total,
@@ -115,7 +116,7 @@ export default function InboundPage() {
         }
       })
 
-      // 2. Completed & Cancelled Transfers (Lịch sử nhận kho)
+      // 2. Completed & Cancelled Transfers
       const normalizedCompletedTransfers = (incomingTransfers || [])
         .filter(t => t.trang_thai === 'HoanThanh' || t.trang_thai === 'DaHuy' || !t.trang_thai?.startsWith('DangVanChuyen'))
         .map(t => {
@@ -123,11 +124,11 @@ export default function InboundPage() {
           const donGia = Number(t.don_gia || 0)
           const total = Number(t.tong_tien || (donGia * qty))
           const isCancelled = t.trang_thai === 'DaHuy' || (typeof t.trang_thai === 'string' && t.trang_thai.startsWith('DaHuy'))
-          const unitName = t.don_vi_tinh || 'hộp'
+          const unitName = t.don_vi_tinh || 'box'
           return {
             id: t.id,
             ma_phieu_nhap: `TRF-${t.id}`,
-            ten_nha_cung_cap: t.ten_tu_kho || `Đơn vị #${t.tu_don_vi_id}`,
+            ten_nha_cung_cap: t.ten_tu_kho || `Unit #${t.tu_don_vi_id}`,
             so_luong_mat_hang: `${t.ten_duoc_pham} (${qty} ${unitName})`,
             don_gia: donGia,
             tong_tien: total,
@@ -141,16 +142,16 @@ export default function InboundPage() {
           }
         })
 
-      // 3. Initial Inbound Declarations (Khai báo nhập kho lô mới trực tiếp tại kho này)
+      // 3. Initial Inbound Declarations
       const normalizedInitialInbounds = (initialInbounds || []).map(init => {
         const qty = Number(init.so_luong_hop || 0)
         const donGia = Number(init.don_gia || 0)
         const total = Number(init.tong_tien || (donGia * qty))
-        const unitName = init.don_vi_tinh || 'hộp'
+        const unitName = init.don_vi_tinh || 'box'
         return {
           id: `INIT-${init.id}`,
           ma_phieu_nhap: `NK-${init.so_lo}`,
-          ten_nha_cung_cap: init.ten_nha_cung_cap || 'Khai báo nhập lô mới',
+          ten_nha_cung_cap: init.ten_nha_cung_cap || 'Direct Factory Declaration',
           so_luong_mat_hang: `${init.ten_duoc_pham} (${qty} ${unitName})`,
           don_gia: donGia,
           tong_tien: total,
@@ -207,7 +208,7 @@ export default function InboundPage() {
       const raw = product?.variants || product?.packagingVariants || []
       setVariants(raw.map(v => ({ id: v.id, label: v.unit || v.label || v.ten_don_vi || `#${v.id}` })))
     } catch {
-      toast.error('Không thể tải quy cách đóng gói')
+      toast.error('Failed to load packaging specification')
     } finally {
       setLoadingVariants(false)
     }
@@ -227,7 +228,7 @@ export default function InboundPage() {
         nha_cung_cap: vals.nha_cung_cap || '',
       }
       const result = await warehouseService.receiveStock(payload)
-      toast.success(`Nhập kho thành công — đã sinh ${result.so_luong_da_sinh_qr || vals.so_luong_hop} QR code`)
+      toast.success(`Inbound successful — generated ${result.so_luong_da_sinh_qr || vals.so_luong_hop} QR codes`)
       form.resetFields()
       if (user?.don_vi_id) {
         form.setFieldValue('don_vi_id', Number(user.don_vi_id))
@@ -237,7 +238,7 @@ export default function InboundPage() {
       await fetchShipments()
       setActiveTab('inbound_history')
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Nhập kho thất bại')
+      toast.error(err?.response?.data?.message || 'Inbound receipt failed')
     }
     finally { setLoading(false) }
   }
@@ -246,14 +247,14 @@ export default function InboundPage() {
     try {
       await warehouseService.updatePurchaseOrderStatus(orderId, targetStatus)
       if (targetStatus === 'DaNhanHang') {
-        toast.success('Đã xác nhận nhận hàng tại cầu tải Kho!')
+        toast.success('Confirmed shipment receipt at warehouse dock!')
       } else if (targetStatus === 'DaDuyet') {
-        toast.success('Đã xác nhận nhập kho khả dụng thành công!')
+        toast.success('Inventory receipt verified and stored successfully!')
       }
       fetchShipments()
       fetchHistory()
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Cập nhật thất bại')
+      toast.error(err?.response?.data?.message || 'Update failed')
     }
   }
 
@@ -264,22 +265,22 @@ export default function InboundPage() {
         den_don_vi_id: record.den_don_vi_id,
         mang_uid: record.mang_uid
       })
-      toast.success('Đã xác nhận nhận hàng chuyển kho và cộng tồn kho thành công!')
+      toast.success('Confirmed stock transfer receipt and updated inventory successfully!')
       fetchShipments()
       fetchHistory()
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Xác nhận thất bại')
+      toast.error(err?.response?.data?.message || 'Confirmation failed')
     }
   }
 
   const handleRejectTransferReceipt = async (record) => {
     try {
       await warehouseService.cancelStockTransfer(record.id, record.mang_uid)
-      toast.success('Đã từ chối nhận chuyến hàng! Thuốc đã được tự động hoàn trả về Kho gửi khả dụng.')
+      toast.success('Shipment rejected! Stock automatically returned to origin warehouse.')
       await fetchShipments()
       await fetchHistory()
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Từ chối chuyến hàng thất bại')
+      toast.error(err?.response?.data?.message || 'Failed to reject shipment')
     }
   }
 
@@ -291,7 +292,7 @@ export default function InboundPage() {
       const qrs = await warehouseService.getBatchQRs(batchId)
       setPrintQRs(qrs)
     } catch {
-      toast.error('Không thể tải danh sách mã QR')
+      toast.error('Failed to load QR code list')
       setPrintModalVisible(false)
     } finally {
       setLoadingQRs(false)
@@ -303,7 +304,7 @@ export default function InboundPage() {
     win.document.write(`
       <html>
         <head>
-          <title>In nhãn tem kép Dual-Code PharmaTrace - Lô ${printBatchNumber}</title>
+          <title>Print PharmaTrace Dual-Code Labels - Batch ${printBatchNumber}</title>
           <style>
             body { font-family: sans-serif; padding: 20px; text-align: center; }
             .grid-print { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; justify-items: center; }
@@ -320,8 +321,8 @@ export default function InboundPage() {
           </style>
         </head>
         <body>
-          <h2 style="margin-bottom: 5px;">Mẫu In Tem Nhãn Kép (Dual-Code Architecture) PharmaTrace</h2>
-          <p style="margin-bottom: 15px; font-size: 12px; color: #666;">Lô Thuốc: ${printBatchNumber} — (Barcode Vận Hành + Tem Phủ Cào Chống Giả)</p>
+          <h2 style="margin-bottom: 5px;">PharmaTrace Dual-Code Label Print Template</h2>
+          <p style="margin-bottom: 15px; font-size: 12px; color: #666;">Batch: ${printBatchNumber} — (Logistics Barcode + Scratch-Off Security PIN)</p>
           <div class="grid-print">
             ${printQRs.map(qr => {
               const svgLogistics = document.getElementById('qr-svg-logistics-' + qr.uid)?.outerHTML || ''
@@ -329,12 +330,12 @@ export default function InboundPage() {
               return `
                 <div class="dual-label-card">
                   <div class="label-col" style="border-right: 1px dashed #ccc; padding-right: 8px;">
-                    <span class="label-badge badge-logistics">1. MÃ VẬN HÀNH</span>
+                    <span class="label-badge badge-logistics">1. LOGISTICS</span>
                     ${svgLogistics}
                     <div class="qr-text">${qr.uid}</div>
                   </div>
                   <div class="label-col">
-                    <span class="label-badge badge-security">2. TEM PHỦ CÀO</span>
+                    <span class="label-badge badge-security">2. SCRATCH PIN</span>
                     ${svgSecurity}
                     <div class="pin-scratch-box">PIN: ${qr.secret_pin || '••••••'}</div>
                   </div>
@@ -354,23 +355,23 @@ export default function InboundPage() {
   }
 
   const shipmentCols = [
-    { title: 'Mã phiếu', dataIndex: 'ma_phieu_nhap', key: 'ma_phieu', render: v => <span className="font-mono font-bold text-brand-700">{v}</span> },
-    { title: 'Nhà cung cấp / Kho gửi', dataIndex: 'ten_nha_cung_cap', key: 'ncc' },
-    { title: 'Số mặt hàng', dataIndex: 'so_luong_mat_hang', key: 'so_luong', render: v => (typeof v === 'number' ? `${v} mặt hàng` : v) },
-    { title: 'Tổng tiền', dataIndex: 'tong_tien', key: 'tong_tien', render: v => `${Number(v || 0).toLocaleString('vi-VN')} đ` },
+    { title: 'Receipt ID', dataIndex: 'ma_phieu_nhap', key: 'ma_phieu', render: v => <span className="font-mono font-bold text-brand-700">{v}</span> },
+    { title: 'Supplier / Origin Unit', dataIndex: 'ten_nha_cung_cap', key: 'ncc' },
+    { title: 'Item / Quantity', dataIndex: 'so_luong_mat_hang', key: 'so_luong', render: v => (typeof v === 'number' ? `${v} items` : v) },
+    { title: 'Total Amount', dataIndex: 'tong_tien', key: 'tong_tien', render: v => `${Number(v || 0).toLocaleString()} ₫` },
     {
-      title: 'Trạng thái chuyển hàng',
+      title: 'Shipment Status',
       dataIndex: 'trang_thai',
       key: 'trang_thai',
       render: (st) => {
-        if (st === 'DangVanChuyen' || st === 'IN_TRANSIT') return <Tag color="blue" icon={<CarOutlined />}>Đang vận chuyển</Tag>
-        if (st === 'DaNhanHang' || st === 'RECEIVED') return <Tag color="gold" icon={<CheckCircleOutlined />}>Đã nhận tại kho</Tag>
-        return <Tag color="green" icon={<CheckCircleOutlined />}>Đã hoàn tất lưu kho</Tag>
+        if (st === 'DangVanChuyen' || st === 'IN_TRANSIT') return <Tag color="blue" icon={<CarOutlined />}>In Transit</Tag>
+        if (st === 'DaNhanHang' || st === 'RECEIVED') return <Tag color="gold" icon={<CheckCircleOutlined />}>Received at Dock</Tag>
+        return <Tag color="green" icon={<CheckCircleOutlined />}>Stored in Warehouse</Tag>
       }
     },
-    { title: 'Ngày tạo', dataIndex: 'created_at', key: 'created_at', render: v => v ? formatDateTime(v) : '-' },
+    { title: 'Created At', dataIndex: 'created_at', key: 'created_at', render: v => v ? formatDateTime(v) : '-' },
     {
-      title: 'Hành động kho WMS',
+      title: 'WMS Actions',
       key: 'action',
       render: (_, record) => {
         const st = record.trang_thai
@@ -382,12 +383,12 @@ export default function InboundPage() {
               icon={<EyeOutlined />}
               onClick={() => setSelectedShipment(record)}
             >
-              Chi tiết
+              Details
             </AButton>
           )
         }
         if (isTransfer) {
-          return <Tag color="blue" icon={<SafetyCertificateOutlined />}>Đã có QR từ Nhà máy</Tag>
+          return <Tag color="blue" icon={<SafetyCertificateOutlined />}>Factory QR Attached</Tag>
         }
         if (st === 'DaNhanHang' || st === 'RECEIVED') {
           return (
@@ -398,7 +399,7 @@ export default function InboundPage() {
                 icon={<PrinterOutlined />}
                 onClick={() => handleOpenPrintModal(record.id, record.ma_phieu_nhap)}
               >
-                In Tem phụ QR
+                Print Dual QRs
               </AButton>
               <AButton
                 size="small"
@@ -407,64 +408,64 @@ export default function InboundPage() {
                 icon={<CheckCircleOutlined />}
                 onClick={() => handleConfirmReceipt(record.id, 'DaDuyet')}
               >
-                Hoàn Tất Lưu Kho
+                Complete Inbound
               </AButton>
             </div>
           )
         }
-        return <Tag color="default">Đã lưu kho</Tag>
+        return <Tag color="default">Stored in Warehouse</Tag>
       }
     }
   ]
 
   const inboundHistoryCols = [
-    { title: 'Mã phiếu', dataIndex: 'ma_phieu_nhap', key: 'ma_phieu', render: v => <span className="font-mono font-bold text-brand-700">{v}</span> },
-    { title: 'Nguồn hàng / Kho gửi', dataIndex: 'ten_nha_cung_cap', key: 'ncc' },
-    { title: 'Sản phẩm & Số lượng', dataIndex: 'so_luong_mat_hang', key: 'so_luong' },
-    { title: 'Đơn giá nhập', dataIndex: 'don_gia', key: 'don_gia', render: v => `${Number(v || 0).toLocaleString('vi-VN')} đ` },
-    { title: 'Tổng tiền', dataIndex: 'tong_tien', key: 'tong_tien', render: v => <span className="font-semibold text-emerald-600">{Number(v || 0).toLocaleString('vi-VN')} đ</span> },
+    { title: 'Receipt ID', dataIndex: 'ma_phieu_nhap', key: 'ma_phieu', render: v => <span className="font-mono font-bold text-brand-700">{v}</span> },
+    { title: 'Supplier / Origin Unit', dataIndex: 'ten_nha_cung_cap', key: 'ncc' },
+    { title: 'Products & Quantity', dataIndex: 'so_luong_mat_hang', key: 'so_luong' },
+    { title: 'Unit Price', dataIndex: 'don_gia', key: 'don_gia', render: v => `${Number(v || 0).toLocaleString()} ₫` },
+    { title: 'Total Amount', dataIndex: 'tong_tien', key: 'tong_tien', render: v => <span className="font-semibold text-emerald-600">{Number(v || 0).toLocaleString()} ₫</span> },
     {
-      title: 'Trạng thái',
+      title: 'Status',
       dataIndex: 'trang_thai',
       key: 'trang_thai',
       render: (st) => {
         if (st === 'DaHuy') {
-          return <Tag color="error" icon={<CloseCircleOutlined />}>Đã hủy (Đã hoàn kho gốc)</Tag>
+          return <Tag color="error" icon={<CloseCircleOutlined />}>Cancelled (Returned to Origin)</Tag>
         }
-        return <Tag color="green" icon={<CheckCircleOutlined />}>Đã hoàn tất lưu kho</Tag>
+        return <Tag color="green" icon={<CheckCircleOutlined />}>Stored in Warehouse</Tag>
       }
     },
-    { title: 'Thời gian nhập', dataIndex: 'created_at', key: 'created_at', render: v => v ? formatDateTime(v) : '-' }
+    { title: 'Inbound Date', dataIndex: 'created_at', key: 'created_at', render: v => v ? formatDateTime(v) : '-' }
   ]
 
   const historyCols = [
-    { title: 'Sản phẩm', dataIndex: 'productName', key: 'product', ellipsis: true },
-    { title: 'Số lô', dataIndex: 'batchNumber', key: 'batch', render: v => <span className="font-mono text-xs">{v}</span> },
+    { title: 'Product', dataIndex: 'productName', key: 'product', ellipsis: true },
+    { title: 'Batch Number', dataIndex: 'batchNumber', key: 'batch', render: v => <span className="font-mono text-xs">{v}</span> },
     {
-      title: 'Số lượng tồn kho',
+      title: 'Stock Quantity',
       dataIndex: 'quantity',
       key: 'qty',
       render: (v, record) => {
         if (record.isTransferredOut || v === 0) {
-          return <Tag color="volcano">Đã chuyển kho (Giữ lịch sử 180 ngày)</Tag>
+          return <Tag color="volcano">Transferred Out (180-day retention)</Tag>
         }
-        return <span className="font-semibold text-slate-800">{v} {record.unitName || record.don_vi_tinh || 'hộp'}</span>
+        return <span className="font-semibold text-slate-800">{v} {record.unitName || record.don_vi_tinh || 'box'}</span>
       }
     },
-    { title: 'Thời gian', dataIndex: 'receivedAt', key: 'time', render: v => v ? formatDateTime(v) : 'Vừa xong' },
+    { title: 'Timestamp', dataIndex: 'receivedAt', key: 'time', render: v => v ? formatDateTime(v) : 'Just now' },
     {
-      title: 'Hành động',
+      title: 'Action',
       key: 'action',
       render: (_, record) => {
         if (record.isTransferredOut) {
-          return <Tag color="default">Đã xuất luân chuyển kho</Tag>
+          return <Tag color="default">Transferred Out</Tag>
         }
         if (record.isReceivedViaTransfer) {
-          return <Tag color="blue" icon={<SafetyCertificateOutlined />}>Đã có QR từ Nhà máy</Tag>
+          return <Tag color="blue" icon={<SafetyCertificateOutlined />}>Factory QR Attached</Tag>
         }
         return record.batchId ? (
           <AButton size="small" type="primary" icon={<PrinterOutlined />} onClick={() => handleOpenPrintModal(record.batchId, record.batchNumber)}>
-            In mã QR
+            Print QR Labels
           </AButton>
         ) : null
       }
@@ -475,10 +476,10 @@ export default function InboundPage() {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-xl font-display font-bold text-slate-900 flex items-center gap-2">
-          <InboxOutlined /> Quản Lý Nhập Kho & Tem Truy Xuất QR (WMS)
+          <InboxOutlined /> Inbound Inventory & Dual QR Management (WMS)
         </h1>
         <p className="text-slate-500 text-sm mt-1">
-          Theo dõi trạng thái vận chuyển từ Nhà máy / NCC, xác nhận nhận hàng và dán tem QR bảo chứng PharmaTrace
+          Monitor inbound shipments from factories/suppliers, verify receiving, and print PharmaTrace Dual-Code QR authenticity labels.
         </p>
       </div>
 
@@ -487,10 +488,10 @@ export default function InboundPage() {
         <div className="flex gap-3 items-start">
           <SafetyCertificateOutlined className="text-2xl text-amber-600 mt-1" />
           <div>
-            <h4 className="font-bold text-amber-900 text-sm">Chế độ Nhập kho & Bảo chứng Tem QR Truy Xuất (Hybrid QR)</h4>
+            <h4 className="font-bold text-amber-900 text-sm">Hybrid QR Inbound Modes & Traceability Compliance</h4>
             <p className="text-xs text-amber-800 mt-0.5">
-              • <strong>Thuốc Nội bộ / Nhà máy liên kết:</strong> Đã in sẵn QR từ chuyền sản xuất - Quét mã Thùng/Kiện để xác nhận.<br />
-              • <strong>Thuốc Bên Thứ 3 (Sanofi, DHG, Pfizer...):</strong> Nhận hàng - WMS tự sinh UID - Bấm <strong>"In Tem phụ QR"</strong> để dán tem PharmaTrace lên hộp.
+              • <strong>Internal / Factory Stock:</strong> Pre-printed with production QR codes — Scan Master Box/Pallet to verify receiving.<br />
+              • <strong>Third-Party Brands (Sanofi, DHG, Pfizer...):</strong> Receive stock — WMS auto-generates UIDs — Click <strong>"Print Dual QRs"</strong> to affix PharmaTrace security labels.
             </p>
           </div>
         </div>
@@ -502,9 +503,9 @@ export default function InboundPage() {
         items={[
           {
             key: 'shipments',
-            label: <span><CarOutlined /> Chuyến Hàng Đang Vận Chuyển / Chờ Nhận</span>,
+            label: <span><CarOutlined /> In-Transit / Pending Receiving Shipments</span>,
             children: (
-              <Card title="Danh sách Phiếu/Lô hàng đang vận chuyển đến kho">
+              <Card title="Inbound Shipments En Route to Warehouse">
                 <Table
                   dataSource={shipments}
                   columns={shipmentCols}
@@ -518,9 +519,9 @@ export default function InboundPage() {
           },
           {
             key: 'inbound_history',
-            label: <span><HistoryOutlined /> Lịch Sử Nhập Kho</span>,
+            label: <span><HistoryOutlined /> Inbound Receiving History</span>,
             children: (
-              <Card title="Lịch sử các đợt nhập kho đã hoàn tất (Chuyển kho & NCC)">
+              <Card title="Completed Inbound Shipments (Transfers & Supplier POs)">
                 <Table
                   dataSource={completedInbounds}
                   columns={inboundHistoryCols}
@@ -534,18 +535,18 @@ export default function InboundPage() {
           },
           {
             key: 'manual',
-            label: <span><FileTextOutlined /> Nhập Lô Mới & In Tem QR</span>,
+            label: <span><FileTextOutlined /> Create Inbound Batch & Print QRs</span>,
             children: (
               <div className="grid lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
-                  <Card title="Khai báo & Nhận lô hàng mới">
+                  <Card title="Declare & Receive New Inbound Batch">
                     <Form form={form} layout="vertical" onFinish={handleReceive}>
                       <div className="grid sm:grid-cols-2 gap-x-4">
-                        <Form.Item label="Thuốc" name="duoc_pham_id" rules={[{ required: true, message: 'Chọn sản phẩm' }]} className="sm:col-span-2">
+                        <Form.Item label="Product / Medication" name="duoc_pham_id" rules={[{ required: true, message: 'Please select a product' }]} className="sm:col-span-2">
                           <Select
                             showSearch
                             loading={loadingProducts}
-                            placeholder="Tìm và chọn sản phẩm"
+                            placeholder="Search and select product"
                             optionFilterProp="children"
                             onChange={handleProductChange}
                             filterOption={(input, option) =>
@@ -558,9 +559,9 @@ export default function InboundPage() {
                           </Select>
                         </Form.Item>
 
-                        <Form.Item label="Quy cách đóng gói" name="quy_cach_id">
+                        <Form.Item label="Packaging Specification" name="quy_cach_id">
                           <Select
-                            placeholder={loadingVariants ? 'Đang tải...' : variants.length === 0 ? 'Chọn sản phẩm trước' : 'Chọn quy cách (tùy chọn)'}
+                            placeholder={loadingVariants ? 'Loading...' : variants.length === 0 ? 'Select product first' : 'Select packaging unit (optional)'}
                             loading={loadingVariants}
                             disabled={variants.length === 0 || loadingVariants}
                             allowClear
@@ -571,55 +572,55 @@ export default function InboundPage() {
                           </Select>
                         </Form.Item>
 
-                        <Form.Item label="Số lô" name="so_lo" rules={[{ required: true, message: 'Nhập số lô' }]}>
+                        <Form.Item label="Batch / Lot Number" name="so_lo" rules={[{ required: true, message: 'Please enter batch number' }]}>
                           <Input placeholder="BATCH-0001" />
                         </Form.Item>
 
-                        <Form.Item label="Số lượng hộp" name="so_luong_hop" rules={[{ required: true, message: 'Nhập số lượng' }]}>
+                        <Form.Item label="Package Quantity (Boxes)" name="so_luong_hop" rules={[{ required: true, message: 'Please enter quantity' }]}>
                           <InputNumber min={1} max={50000} style={{ width: '100%' }} />
                         </Form.Item>
 
-                        <Form.Item label="Ngày sản xuất" name="ngay_sx" rules={[{ required: true, message: 'Nhập ngày sản xuất' }]}>
+                        <Form.Item label="Manufacturing Date" name="ngay_sx" rules={[{ required: true, message: 'Please select manufacturing date' }]}>
                           <DatePicker style={{ width: '100%' }} placeholder="YYYY-MM-DD" />
                         </Form.Item>
 
-                        <Form.Item label="Hạn sử dụng" name="hsd" rules={[{ required: true, message: 'Nhập hạn sử dụng' }]}>
+                        <Form.Item label="Expiry Date" name="hsd" rules={[{ required: true, message: 'Please select expiry date' }]}>
                           <DatePicker style={{ width: '100%' }} placeholder="YYYY-MM-DD" />
                         </Form.Item>
 
                         <Form.Item
-                          label="Đơn giá nhập / Giá xuất xưởng (VNĐ)"
+                          label="Inbound Unit Price (VND)"
                           name="don_gia"
                           rules={[
-                            { required: true, message: 'Vui lòng nhập đơn giá nhập kho' },
-                            { type: 'number', min: 1, message: 'Đơn giá phải lớn hơn 0' }
+                            { required: true, message: 'Please enter unit price' },
+                            { type: 'number', min: 1, message: 'Unit price must be greater than 0' }
                           ]}
                         >
                           <InputNumber
                             min={1}
                             step={1000}
-                            placeholder="Ví dụ: 4000"
+                            placeholder="e.g. 4000"
                             style={{ width: '100%' }}
-                            formatter={value => value ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : ''}
+                            formatter={value => value ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
                             parser={value => value ? value.replace(/\D/g, '') : ''}
                           />
                         </Form.Item>
 
-                        <Form.Item label="Đơn vị nhập kho" name="don_vi_id" rules={[{ required: true, message: 'Chọn đơn vị' }]}>
+                        <Form.Item label="Receiving Facility / Unit" name="don_vi_id" rules={[{ required: true, message: 'Please select destination unit' }]}>
                           <Select
                             showSearch
-                            placeholder="Chọn đơn vị / chi nhánh"
+                            placeholder="Select warehouse / branch"
                             optionFilterProp="label"
                             options={units.map(u => ({
                               value: u.id,
-                              label: `${u.ten_don_vi}${u.loai_don_vi ? ` — ${u.loai_don_vi}` : ''}`,
+                              label: `${u.ten_don_vi}${u.loai_don_vi ? ` (${formatUnitType(u.loai_don_vi)})` : ''}`,
                             }))}
                           />
                         </Form.Item>
 
-                        <Form.Item label="Nhà cung cấp" name="nha_cung_cap">
+                        <Form.Item label="Supplier" name="nha_cung_cap">
                           <AutoComplete
-                            placeholder="Chọn hoặc nhập tên nhà cung cấp"
+                            placeholder="Select or enter supplier name"
                             allowClear
                             filterOption={(input, option) =>
                               (option?.value ?? '').toLowerCase().includes(input.toLowerCase())
@@ -631,15 +632,15 @@ export default function InboundPage() {
 
                       {Boolean(watchQty && watchPrice && watchQty > 0 && watchPrice > 0) && (
                         <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-between">
-                          <span className="text-xs text-emerald-800 font-medium">Tổng giá trị lô hàng nhập kho:</span>
+                          <span className="text-xs text-emerald-800 font-medium">Total Inbound Valuation:</span>
                           <span className="text-base font-bold text-emerald-700">
-                            {(Number(watchQty) * Number(watchPrice)).toLocaleString('vi-VN')} đ
+                            {(Number(watchQty) * Number(watchPrice)).toLocaleString()} ₫
                           </span>
                         </div>
                       )}
 
                       <AButton type="primary" htmlType="submit" loading={loading} icon={<InboxOutlined />} size="large">
-                        Tạo Lô & Sinh Mã QR Tem Phụ
+                        Create Batch & Generate Dual-Code QRs
                       </AButton>
                     </Form>
                   </Card>
@@ -649,9 +650,9 @@ export default function InboundPage() {
           },
           {
             key: 'history',
-            label: <span><InboxOutlined /> Lịch Sử Lưu Kho (Tất Cả)</span>,
+            label: <span><InboxOutlined /> Available Stock Inventory</span>,
             children: (
-              <Card title="Lịch sử lưu kho khả dụng">
+              <Card title="Current Warehouse Available Inventory Records">
                 <Table
                   dataSource={received}
                   columns={historyCols}
@@ -668,33 +669,33 @@ export default function InboundPage() {
 
       {/* Print QR Modal */}
       <Modal
-        title={`In nhãn tem kép (Dual-Code) PharmaTrace - Lô ${printBatchNumber}`}
+        title={`Print PharmaTrace Dual-Code Labels - Batch ${printBatchNumber}`}
         open={printModalVisible}
         onCancel={() => setPrintModalVisible(false)}
         width={850}
         footer={[
           <AButton key="close" onClick={() => setPrintModalVisible(false)}>
-            Đóng
+            Close
           </AButton>,
           <AButton key="print" type="primary" icon={<PrinterOutlined />} onClick={handlePrint} disabled={printQRs.length === 0}>
-            In dải tem kép Dual-Code hàng loạt
+            Batch Print Dual-Code Security Labels
           </AButton>,
         ]}
       >
         {loadingQRs ? (
           <div className="py-12 text-center">
-            <Spin size="large" tip="Đang tải danh dải mã UIDs tem nhãn..." />
-            <p className="text-slate-400 mt-2 text-sm">Vui lòng đợi trong giây lát</p>
+            <Spin size="large" tip="Loading label UIDs and security PINs..." />
+            <p className="text-slate-400 mt-2 text-sm">Please wait a moment</p>
           </div>
         ) : (
           <div>
             <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg text-blue-900 text-xs mb-4 flex items-start gap-2">
               <span className="material-symbols-outlined text-blue-600 text-base shrink-0">verified_user</span>
               <div>
-                <strong>Cơ chế Tem Kép (Dual-Code Security):</strong>
+                <strong>Dual-Code Security Architecture:</strong>
                 <ul className="list-disc ml-4 mt-1 space-y-0.5 text-blue-800">
-                  <li><strong>Mã Vận Hành (Trái):</strong> Quét nhanh ngoài vỏ hộp khi Nhập/Xuất/Đóng gói không cần cào lớp bạc.</li>
-                  <li><strong>Tem Chống Giả (Phải):</strong> Phủ bạc bảo mật chứa URL kèm mã PIN bí mật dành riêng cho Khách hàng cuối cào và xác thực.</li>
+                  <li><strong>1. Logistics Barcode (Left):</strong> Quick external package scan during inbound receiving, warehouse picking, and transfers.</li>
+                  <li><strong>2. Anti-Counterfeit Scratch PIN (Right):</strong> Secure scratch-off coating containing URL and private PIN for customer authentication.</li>
                 </ul>
               </div>
             </div>
@@ -707,14 +708,14 @@ export default function InboundPage() {
                   <div key={qr.uid} className="border border-slate-300 bg-white p-3 rounded-xl shadow-sm grid grid-cols-2 gap-3 items-center">
                     {/* Left: Logistics Code */}
                     <div className="flex flex-col items-center justify-center text-center border-r border-dashed border-slate-200 pr-2">
-                      <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded mb-1">1. VẬN HÀNH</span>
+                      <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded mb-1">1. LOGISTICS</span>
                       <QRCodeSVG id={`qr-svg-logistics-${qr.uid}`} value={logisticsUrl} size={90} level="M" includeMargin={true} />
                       <div className="text-[9px] font-mono mt-1 text-slate-500 truncate w-full">{qr.uid}</div>
                     </div>
 
                     {/* Right: Consumer Scratch-off QR */}
                     <div className="flex flex-col items-center justify-center text-center">
-                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded mb-1">2. TEM PHỦ CÀO</span>
+                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded mb-1">2. SCRATCH PIN</span>
                       <QRCodeSVG id={`qr-svg-security-${qr.uid}`} value={securityUrl} size={90} level="M" includeMargin={true} />
                       <div className="text-[10px] font-mono font-bold bg-slate-100 border border-slate-300 text-slate-700 px-2 py-0.5 rounded mt-1">
                         PIN: {qr.secret_pin || '••••••'}
@@ -728,11 +729,11 @@ export default function InboundPage() {
         )}
       </Modal>
 
-      {/* Modal Chi Tiết Chuyến Hàng Đang Vận Chuyển */}
+      {/* Inbound Shipment Details Modal */}
       <Modal
         title={
           <div className="flex items-center gap-2 text-slate-800 text-lg font-bold">
-            <CarOutlined className="text-blue-600" /> Chi tiết chuyến hàng nhập kho
+            <CarOutlined className="text-blue-600" /> Inbound Shipment Details
           </div>
         }
         open={!!selectedShipment}
@@ -753,29 +754,29 @@ export default function InboundPage() {
                 }
               }}
             >
-              Xác Nhận Đã Nhận Hàng
+              Confirm Received at Dock
             </AButton>
           ),
           selectedShipment && selectedShipment.isTransfer && (
             <Popconfirm
               key="reject-confirm"
-              title="Từ chối / Hủy nhận chuyến hàng?"
-              description="Toàn bộ số thuốc thuộc chuyến hàng này sẽ được tự động hoàn trả về Kho gửi khả dụng."
+              title="Reject / Cancel Shipment?"
+              description="All items in this shipment will be automatically returned to the origin warehouse available stock."
               onConfirm={async () => {
                 const rec = selectedShipment
                 setSelectedShipment(null)
                 await handleRejectTransferReceipt(rec)
               }}
-              okText="Từ chối / Hủy"
-              cancelText="Quay lại"
+              okText="Reject / Return"
+              cancelText="Back"
               okButtonProps={{ danger: true }}
             >
               <AButton key="reject" danger icon={<CloseCircleOutlined />}>
-                Từ Chối / Hủy
+                Reject / Cancel
               </AButton>
             </Popconfirm>
           ),
-          <AButton key="close" onClick={() => setSelectedShipment(null)}>Đóng</AButton>
+          <AButton key="close" onClick={() => setSelectedShipment(null)}>Close</AButton>
         ]}
         width={650}
         centered
@@ -785,7 +786,7 @@ export default function InboundPage() {
             <div className="flex items-center justify-between bg-slate-50 p-3.5 rounded-xl border border-slate-200 shadow-sm">
               <div>
                 <div className="text-xs text-slate-500 font-semibold flex items-center gap-1.5">
-                  <FileTextOutlined className="text-blue-500" /> Mã phiếu / Thời gian tạo
+                  <FileTextOutlined className="text-blue-500" /> Receipt ID / Creation Date
                 </div>
                 <div className="text-sm font-bold text-slate-800 flex items-center gap-2 mt-1">
                   <span className="font-mono">{selectedShipment.ma_phieu_nhap}</span>
@@ -795,7 +796,7 @@ export default function InboundPage() {
               </div>
               <div>
                 <Tag color="processing" icon={<CarOutlined />} className="px-3.5 py-1.5 text-xs font-bold rounded-full border border-blue-200 shadow-sm">
-                  Đang vận chuyển (Chờ nhận)
+                  In Transit (Pending Receiving)
                 </Tag>
               </div>
             </div>
@@ -803,14 +804,14 @@ export default function InboundPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="bg-amber-50/70 p-3.5 rounded-xl border border-amber-200/80 shadow-sm">
                 <div className="text-xs text-amber-800 font-bold mb-1 flex items-center gap-1.5">
-                  <ShopOutlined className="text-amber-600" /> Nguồn hàng / Kho gửi
+                  <ShopOutlined className="text-amber-600" /> Source Supplier / Origin Warehouse
                 </div>
                 <div className="text-sm font-bold text-slate-800 break-words">{selectedShipment.ten_nha_cung_cap}</div>
               </div>
 
               <div className="bg-blue-50/70 p-3.5 rounded-xl border border-blue-200/80 shadow-sm">
                 <div className="text-xs text-blue-800 font-bold mb-1 flex items-center gap-1.5">
-                  <MedicineBoxOutlined className="text-blue-600" /> Sản phẩm & Số lượng
+                  <MedicineBoxOutlined className="text-blue-600" /> Products & Quantity
                 </div>
                 <div className="text-sm font-bold text-slate-800 break-words">{selectedShipment.so_luong_mat_hang}</div>
               </div>
@@ -819,19 +820,19 @@ export default function InboundPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-center shadow-sm">
                 <div className="text-xs text-slate-500 font-semibold mb-1 flex items-center justify-center gap-1">
-                  <DollarOutlined className="text-slate-500" /> Đơn giá nhập
+                  <DollarOutlined className="text-slate-500" /> Inbound Unit Price
                 </div>
                 <div className="text-base font-extrabold text-slate-800">
-                  {selectedShipment.don_gia ? `${Number(selectedShipment.don_gia).toLocaleString('vi-VN')} đ` : '0 đ'}
+                  {selectedShipment.don_gia ? `${Number(selectedShipment.don_gia).toLocaleString()} ₫` : '0 ₫'}
                 </div>
               </div>
 
               <div className="bg-emerald-50/90 p-3.5 rounded-xl border border-emerald-200/90 text-center shadow-sm">
                 <div className="text-xs text-emerald-800 font-bold mb-1 flex items-center justify-center gap-1">
-                  <DollarCircleOutlined className="text-emerald-600" /> Tổng tiền
+                  <DollarCircleOutlined className="text-emerald-600" /> Total Inbound Value
                 </div>
                 <div className="text-lg font-black text-emerald-700">
-                  {selectedShipment.tong_tien ? `${Number(selectedShipment.tong_tien).toLocaleString('vi-VN')} đ` : '0 đ'}
+                  {selectedShipment.tong_tien ? `${Number(selectedShipment.tong_tien).toLocaleString()} ₫` : '0 ₫'}
                 </div>
               </div>
             </div>

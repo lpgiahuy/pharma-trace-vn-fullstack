@@ -19,7 +19,7 @@ export const WarehouseSidebar = ({ collapsed, onCollapse }) => {
 
   const menuItems = [
     { key: '/warehouse/inbound',    icon: <InboxOutlined />,       label: <Link to="/warehouse/inbound">{t('warehouse.inbound')}</Link> },
-    { key: '/warehouse/procurement',icon: <ShoppingCartOutlined />,label: <Link to="/warehouse/procurement">Phiếu Đặt Hàng (PO)</Link> },
+    { key: '/warehouse/procurement',icon: <ShoppingCartOutlined />,label: <Link to="/warehouse/procurement">{t('warehouse.procurement')}</Link> },
     { key: '/warehouse/fulfillment',icon: <CheckSquareOutlined />, label: <Link to="/warehouse/fulfillment">{t('warehouse.fulfillment')}</Link> },
     { key: '/warehouse/transfer',   icon: <SwapOutlined />,        label: <Link to="/warehouse/transfer">{t('warehouse.transfer')}</Link> },
     { key: '/warehouse/disposal',   icon: <DeleteOutlined />,      label: <Link to="/warehouse/disposal">{t('warehouse.disposal')}</Link> },
@@ -28,7 +28,7 @@ export const WarehouseSidebar = ({ collapsed, onCollapse }) => {
     { type: 'divider' },
     { key: '/warehouse/profile',    icon: <UserOutlined />,        label: <Link to="/warehouse/profile">{t('warehouse.my_profile')}</Link> },
     ...(isSuperAdmin ? [
-      { key: '/admin',              icon: <DashboardOutlined />,   label: <Link to="/admin">Trang Admin Portal</Link> }
+      { key: '/admin',              icon: <DashboardOutlined />,   label: <Link to="/admin">{t('admin.admin_portal')}</Link> }
     ] : []),
   ]
 

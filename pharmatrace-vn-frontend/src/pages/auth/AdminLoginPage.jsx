@@ -17,8 +17,8 @@ export default function AdminLoginPage() {
   const from = location.state?.from?.pathname || '/admin'
 
   const adminSchema = z.object({
-    email: z.string().email('Email không đúng định dạng'),
-    password: z.string().min(6, 'Mật khẩu phải từ 6 ký tự trở lên'),
+    email: z.string().email('Please enter a valid email address'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
   })
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
@@ -35,15 +35,15 @@ export default function AdminLoginPage() {
       const allowedAdminRoles = ['SuperAdmin', 'superadmin', 'Admin', 'admin', 'NhanVienBanHang', 'QuanLyCuaHang', 'manager', 'staff']
       if (!allowedAdminRoles.includes(userRole)) {
         await useAuthStore.getState().logout()
-        toast.error('Tài khoản hoặc mật khẩu không chính xác!')
+        toast.error('Incorrect username or password!')
         return
       }
 
-      toast.success(`Xin chào ${result.user?.ho_ten || 'Quản lý'}!`)
+      toast.success(`Welcome ${result.user?.ho_ten || 'Manager'}!`)
       const target = (from && from !== '/' && from !== '/admin/login') ? from : '/admin'
       navigate(target, { replace: true })
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message || 'Tài khoản hoặc mật khẩu không chính xác!')
+      toast.error(err.response?.data?.message || err.message || 'Incorrect username or password!')
     }
   }
 
@@ -52,20 +52,20 @@ export default function AdminLoginPage() {
       <div className="mb-6">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-semibold mb-4">
           <ShieldCheck className="w-4 h-4 text-brand-600" />
-          <span>PORTAL NỘI BỘ & CỬA HÀNG</span>
+          <span>INTERNAL & STORE PORTAL</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-display font-bold text-slate-900 mb-2 flex items-center gap-2">
           <Store className="w-7 h-7 text-brand-600 inline-block" />
           Welcome back, Admin!
         </h1>
         <p className="text-slate-500 text-sm">
-          Hệ thống dành riêng cho Quản lý cửa hàng, Dược sĩ bán hàng và Ban quản trị PharmaTrace.
+          Restricted to Store Managers, Pharmacists, and PharmaTrace System Administrators.
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input
-          label="Email Tài Khoản Nội Bộ"
+          label="Internal Account Email"
           type="email"
           placeholder="admin@pharmatrace.vn"
           error={errors.email?.message}
@@ -73,7 +73,7 @@ export default function AdminLoginPage() {
           {...register('email')}
         />
         <Input
-          label="Mật Khẩu"
+          label="Password"
           type={showPw ? 'text' : 'password'}
           placeholder="••••••••"
           error={errors.password?.message}
@@ -88,26 +88,26 @@ export default function AdminLoginPage() {
 
         <div className="flex justify-end">
           <Link to="/forgot-password" className="text-xs sm:text-sm text-brand-600 hover:underline font-medium">
-            Quên mật khẩu?
+            Forgot password?
           </Link>
         </div>
 
         <Button type="submit" fullWidth size="lg" loading={isSubmitting} leftIcon={<LogIn className="w-4 h-4" />}>
-          Đăng Nhập Admin Portal
+          Sign In to Admin Portal
         </Button>
       </form>
 
       <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col gap-2 text-center text-xs text-slate-500">
         <p>
-          Bạn là nhân viên kho bãi?{' '}
+          Are you warehouse logistics staff?{' '}
           <Link to="/warehouse/login" className="text-amber-600 font-semibold hover:underline">
-            Đăng nhập Portal Kho WMS ➔
+            Sign in to Warehouse WMS Portal ➔
           </Link>
         </p>
         <p>
-          Bạn là khách hàng mua sắm?{' '}
+          Are you a retail customer?{' '}
           <Link to="/login" className="text-brand-600 font-semibold hover:underline">
-            Về trang Đăng nhập Khách hàng ➔
+            Go to Customer Storefront Sign In ➔
           </Link>
         </p>
       </div>

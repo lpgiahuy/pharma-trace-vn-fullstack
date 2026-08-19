@@ -25,11 +25,11 @@ const Logo =
   "https://res.cloudinary.com/dc64co0el/image/upload/v1777731026/Logo_ck5ouv.svg";
 
 const NAV_LINKS = [
-  { label: "Thuốc", to: "/products" },
-  { label: "Tra cứu bệnh", to: "/blog" },
-  { label: "Thực phẩm bảo vệ", to: "/products" },
-  { label: "Mẹ và bé", to: "/products" },
-  { label: "Nhãn hàng PharmaTrace VN", to: "/products" },
+  { label: "Medications", to: "/products" },
+  { label: "Health Library", to: "/blog" },
+  { label: "Supplements", to: "/products" },
+  { label: "Mom & Baby", to: "/products" },
+  { label: "PharmaTrace VN Brands", to: "/products" },
 ];
 
 export const Header = () => {
@@ -126,21 +126,6 @@ export const Header = () => {
             <MapPin className="w-3.5 h-3.5 text-brand-500" />{" "}
             {t("nav.pharmacies")}
           </Link>
-          <div className="h-3 w-px bg-slate-200" />
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => i18n.changeLanguage("vi")}
-              className={`text-[10px] font-black px-1.5 py-0.5 rounded transition-all ${i18n.language === "vi" ? "bg-brand-500 text-white shadow-sm" : "text-slate-400 hover:bg-slate-50"}`}
-            >
-              VI
-            </button>
-            <button
-              onClick={() => i18n.changeLanguage("en")}
-              className={`text-[10px] font-black px-1.5 py-0.5 rounded transition-all ${i18n.language?.startsWith("en") ? "bg-brand-500 text-white shadow-sm" : "text-slate-400 hover:bg-slate-50"}`}
-            >
-              EN
-            </button>
-          </div>
         </div>
       </div>
 

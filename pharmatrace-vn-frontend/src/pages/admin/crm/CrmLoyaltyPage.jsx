@@ -32,7 +32,7 @@ export default function CrmLoyaltyPage() {
       const res = await apiClient.get('/admin/crm-rma/customers', { params })
       if (res.data?.success) setCustomers(res.data.data || [])
     } catch (err) {
-      message.error('Lỗi khi tải danh sách Khách hàng CRM')
+      message.error('Failed to load CRM customers list')
     } finally {
       setLoading(false)
     }
@@ -62,16 +62,16 @@ export default function CrmLoyaltyPage() {
       }
       const res = await apiClient.post('/admin/crm-rma/adjust-points', payload)
       if (res.data?.success) {
-        message.success(`Đã cập nhật điểm thưởng thành công! Cấp hạng mới: ${res.data.data.customer.hang_thanh_vien}`)
+        message.success(`Loyalty points updated successfully! New tier: ${res.data.data.customer.hang_thanh_vien}`)
         setIsPointModalOpen(false)
         pointForm.resetFields()
         fetchCustomers()
         fetchStats()
       } else {
-        message.error(res.data?.message || 'Lỗi khi điều chỉnh điểm')
+        message.error(res.data?.message || 'Error adjusting loyalty points')
       }
     } catch (err) {
-      message.error(err.response?.data?.message || 'Không thể kết nối máy chủ')
+      message.error(err.response?.data?.message || 'Failed to connect to server')
     }
   }
 
@@ -83,7 +83,7 @@ export default function CrmLoyaltyPage() {
       const res = await apiClient.get(`/admin/crm-rma/customers/${customer.id}/points-history`)
       if (res.data?.success) setHistoryList(res.data.data || [])
     } catch (err) {
-      message.error('Lỗi khi tải lịch sử điểm')
+      message.error('Failed to load points history')
     } finally {
       setHistoryLoading(false)
     }
@@ -91,44 +91,44 @@ export default function CrmLoyaltyPage() {
 
   const renderRankBadge = (rank) => {
     const map = {
-      'Kim Cương': { color: 'purple', icon: <CrownOutlined /> },
-      'Bạch Kim': { color: 'blue', icon: <TrophyOutlined /> },
-      'Vàng': { color: 'gold', icon: <TrophyOutlined /> },
-      'Bạc': { color: 'default', icon: <UserOutlined /> },
-      'Đồng': { color: 'orange', icon: <UserOutlined /> }
+      'Kim Cương': { color: 'purple', text: 'Diamond VIP', icon: <CrownOutlined /> },
+      'Bạch Kim': { color: 'blue', text: 'Platinum VIP', icon: <TrophyOutlined /> },
+      'Vàng': { color: 'gold', text: 'Gold VIP', icon: <TrophyOutlined /> },
+      'Bạc': { color: 'default', text: 'Silver Member', icon: <UserOutlined /> },
+      'Đồng': { color: 'orange', text: 'Bronze Member', icon: <UserOutlined /> }
     }
-    const item = map[rank] || { color: 'default', icon: <UserOutlined /> }
-    return <Tag color={item.color} icon={item.icon}>{rank}</Tag>
+    const item = map[rank] || { color: 'default', text: rank, icon: <UserOutlined /> }
+    return <Tag color={item.color} icon={item.icon}>{item.text}</Tag>
   }
 
   const customerColumns = [
-    { title: 'Họ và Tên', dataIndex: 'ho_ten', key: 'ho_ten', width: 180, render: (name) => <strong>{name}</strong> },
-    { title: 'Số Điện Thoại', dataIndex: 'so_dien_thoai', key: 'so_dien_thoai', width: 140 },
-    { title: 'Email', dataIndex: 'email', key: 'email', width: 200, render: (e) => e || 'N/A' },
-    { title: 'Hạng VIP', dataIndex: 'hang_thanh_vien', key: 'hang_thanh_vien', width: 140, render: (r) => renderRankBadge(r) },
+    { title: 'Customer Name', dataIndex: 'ho_ten', key: 'ho_ten', width: 180, render: (name) => <strong>{name}</strong> },
+    { title: 'Phone Number', dataIndex: 'so_dien_thoai', key: 'so_dien_thoai', width: 140 },
+    { title: 'Email Address', dataIndex: 'email', key: 'email', width: 200, render: (e) => e || 'N/A' },
+    { title: 'VIP Tier', dataIndex: 'hang_thanh_vien', key: 'hang_thanh_vien', width: 140, render: (r) => renderRankBadge(r) },
     { 
-      title: 'Điểm Khả Dụng', 
+      title: 'Available Points', 
       dataIndex: 'diem_tich_luy', 
       key: 'diem_tich_luy',
       width: 140,
-      render: (val) => <span className="font-bold text-green-600">+{Number(val).toLocaleString()} điểm</span> 
+      render: (val) => <span className="font-bold text-green-600">+{Number(val).toLocaleString()} pts</span> 
     },
     { 
-      title: 'Điểm Tích Lũy Tổng', 
+      title: 'Lifetime Points', 
       dataIndex: 'diem_tich_luy_tong', 
       key: 'diem_tich_luy_tong',
       width: 160,
-      render: (val) => <span className="font-bold text-brand-600">{Number(val).toLocaleString()} điểm</span> 
+      render: (val) => <span className="font-bold text-brand-600">{Number(val).toLocaleString()} pts</span> 
     },
     { 
-      title: 'Tổng Chi Tiêu (₫)', 
+      title: 'Lifetime Spending (₫)', 
       dataIndex: 'tong_chi_tieu', 
       key: 'tong_chi_tieu',
       width: 160,
-      render: (val) => <span>{Number(val).toLocaleString('vi-VN')} ₫</span> 
+      render: (val) => <span>{Number(val).toLocaleString()} ₫</span> 
     },
     {
-      title: 'Hành Động',
+      title: 'Actions',
       key: 'action',
       width: 220,
       render: (_, r) => (
@@ -139,10 +139,10 @@ export default function CrmLoyaltyPage() {
             icon={<PlusOutlined />} 
             onClick={() => { setSelectedCustomer(r); setIsPointModalOpen(true); }}
           >
-            Thưởng / Trừ Điểm
+            Adjust Points
           </Button>
           <Button size="small" icon={<HistoryOutlined />} onClick={() => handleViewHistory(r)}>
-            Lịch Sử
+            History
           </Button>
         </Space>
       )
@@ -155,12 +155,12 @@ export default function CrmLoyaltyPage() {
       <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <CustomerServiceOutlined className="text-brand-600" /> CRM & Quản Lý Thành Viên VIP
+            <CustomerServiceOutlined className="text-brand-600" /> CRM & VIP Customer Loyalty Management
           </h1>
-          <p className="text-sm text-slate-500">Phân hạng khách hàng VIP, theo dõi tổng chi tiêu và thưởng điểm thành viên</p>
+          <p className="text-sm text-slate-500">Segment customer tiers, track cumulative spend, and manage loyalty reward points</p>
         </div>
         <Button icon={<ReloadOutlined />} onClick={() => { fetchStats(); fetchCustomers(); }}>
-          Tải lại
+          Refresh
         </Button>
       </div>
 
@@ -168,22 +168,22 @@ export default function CrmLoyaltyPage() {
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="Tổng Khách Hàng" value={stats.tong_khach_hang || 0} valueStyle={{ color: '#0284c7' }} prefix={<UserOutlined />} />
+            <Statistic title="Total Customers" value={stats.tong_khach_hang || 0} valueStyle={{ color: '#0284c7' }} prefix={<UserOutlined />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="VIP Kim Cương / Bạch Kim" value={(stats.thanh_vien_kim_cuong || 0) + (stats.thanh_vien_bach_kim || 0)} valueStyle={{ color: '#a855f7' }} prefix={<CrownOutlined />} />
+            <Statistic title="Diamond / Platinum VIPs" value={(stats.thanh_vien_kim_cuong || 0) + (stats.thanh_vien_bach_kim || 0)} valueStyle={{ color: '#a855f7' }} prefix={<CrownOutlined />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="VIP Vàng" value={stats.thanh_vien_vang || 0} valueStyle={{ color: '#eab308' }} prefix={<TrophyOutlined />} />
+            <Statistic title="Gold Tier Members" value={stats.thanh_vien_vang || 0} valueStyle={{ color: '#eab308' }} prefix={<TrophyOutlined />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="Tổng Điểm Đã Cấp" value={Number(stats.tong_diem_da_cap || 0)} valueStyle={{ color: '#16a34a' }} prefix={<TrophyOutlined />} />
+            <Statistic title="Total Loyalty Points Issued" value={Number(stats.tong_diem_da_cap || 0)} valueStyle={{ color: '#16a34a' }} prefix={<TrophyOutlined />} />
           </Card>
         </Col>
       </Row>
@@ -192,25 +192,25 @@ export default function CrmLoyaltyPage() {
       <Card className="rounded-xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
           <Space wrap>
-            <span className="text-sm font-semibold text-slate-700">Hạng VIP:</span>
+            <span className="text-sm font-semibold text-slate-700">VIP Tier:</span>
             <Select
               value={filterRank}
               onChange={setFilterRank}
-              style={{ width: 150 }}
+              style={{ width: 160 }}
               options={[
-                { label: 'Tất cả hạng', value: '' },
-                { label: 'Kim Cương', value: 'Kim Cương' },
-                { label: 'Bạch Kim', value: 'Bạch Kim' },
-                { label: 'Vàng', value: 'Vàng' },
-                { label: 'Bạc', value: 'Bạc' },
-                { label: 'Đồng', value: 'Đồng' }
+                { label: 'All Tiers', value: '' },
+                { label: 'Diamond', value: 'Kim Cương' },
+                { label: 'Platinum', value: 'Bạch Kim' },
+                { label: 'Gold', value: 'Vàng' },
+                { label: 'Silver', value: 'Bạc' },
+                { label: 'Bronze', value: 'Đồng' }
               ]}
             />
           </Space>
           <Input.Search
-            placeholder="Tìm theo Tên, SĐT, Email..."
+            placeholder="Search by Name, Phone, Email..."
             onSearch={(val) => { setSearch(val); fetchCustomers(); }}
-            style={{ width: 260 }}
+            style={{ width: 280 }}
             allowClear
           />
         </div>
@@ -227,32 +227,32 @@ export default function CrmLoyaltyPage() {
 
       {/* Modal Thưởng / Trừ Điểm */}
       <Modal
-        title={`Thưởng / Điều Chỉnh Điểm - Khách Hàng: ${selectedCustomer?.ho_ten || ''}`}
+        title={`Adjust Loyalty Points — Customer: ${selectedCustomer?.ho_ten || ''}`}
         open={isPointModalOpen}
         onCancel={() => setIsPointModalOpen(false)}
         onOk={() => pointForm.submit()}
       >
         <Form form={pointForm} layout="vertical" onFinish={handleAdjustPoints}>
-          <Form.Item name="points" label="Số Điểm Thưởng (+/-)" rules={[{ required: true, message: 'Nhập số điểm' }]}>
-            <InputNumber placeholder="Ví dụ: 1000 (tối đa ±5,000 điểm)" style={{ width: '100%' }} />
+          <Form.Item name="points" label="Points Adjustment (+/-)" rules={[{ required: true, message: 'Please enter points' }]}>
+            <InputNumber placeholder="e.g. 1000 (max ±5,000 pts)" style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="type" label="Loại Giao Dịch" initialValue="DieuChinhAdmin">
+          <Form.Item name="type" label="Transaction Type" initialValue="DieuChinhAdmin">
             <Select options={[
-              { label: 'Admin Điều Chỉnh', value: 'DieuChinhAdmin' },
-              { label: 'Thưởng Hạng Thành Viên', value: 'ThuongRank' },
-              { label: 'Tích Điểm Mua Hàng', value: 'TichDiem' },
-              { label: 'Trừ Điểm Đổi Trả RMA', value: 'TruDiemRma' }
+              { label: 'Administrative Adjustment', value: 'DieuChinhAdmin' },
+              { label: 'Membership Tier Reward', value: 'ThuongRank' },
+              { label: 'Purchase Point Accrual', value: 'TichDiem' },
+              { label: 'RMA Return Point Deduction', value: 'TruDiemRma' }
             ]} />
           </Form.Item>
-          <Form.Item name="description" label="Lý Do / Ghi Chú Giải Trình (Bắt Buộc)" rules={[{ required: true, min: 5, message: 'Nhập ít nhất 5 ký tự giải trình' }]}>
-            <Input.TextArea placeholder="Ghi rõ lý do giải trình để kiểm toán Audit" rows={3} />
+          <Form.Item name="description" label="Audit Reason & Notes (Required)" rules={[{ required: true, min: 5, message: 'Please enter at least 5 characters justification' }]}>
+            <Input.TextArea placeholder="Provide detailed operational rationale for audit trail…" rows={3} />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* Modal Lịch Sử Điểm */}
       <Modal
-        title={`Lịch Sử Điểm Thưởng - ${selectedCustomer?.ho_ten || ''}`}
+        title={`Points Transaction History — ${selectedCustomer?.ho_ten || ''}`}
         open={isHistoryModalOpen}
         onCancel={() => setIsHistoryModalOpen(false)}
         footer={null}
@@ -264,15 +264,15 @@ export default function CrmLoyaltyPage() {
           loading={historyLoading}
           pagination={{ pageSize: 5 }}
           columns={[
-            { title: 'Ngày Tạo', dataIndex: 'ngay_tao', key: 'ngay_tao', render: (d) => new Date(d).toLocaleString('vi-VN') },
-            { title: 'Loại Giao Dịch', dataIndex: 'loai_giao_dich', key: 'loai_giao_dich', render: (t) => <Tag color="blue">{t}</Tag> },
+            { title: 'Date & Time', dataIndex: 'ngay_tao', key: 'ngay_tao', render: (d) => new Date(d).toLocaleString() },
+            { title: 'Transaction Type', dataIndex: 'loai_giao_dich', key: 'loai_giao_dich', render: (t) => <Tag color="blue">{t}</Tag> },
             { 
-              title: 'Số Điểm', 
+              title: 'Points Change', 
               dataIndex: 'so_diem', 
               key: 'so_diem',
               render: (v) => Number(v) > 0 ? <strong className="text-green-600">+{v}</strong> : <strong className="text-red-500">{v}</strong>
             },
-            { title: 'Mô Tả / Ghi Chú', dataIndex: 'mo_ta', key: 'mo_ta' }
+            { title: 'Audit Description / Notes', dataIndex: 'mo_ta', key: 'mo_ta' }
           ]}
         />
       </Modal>

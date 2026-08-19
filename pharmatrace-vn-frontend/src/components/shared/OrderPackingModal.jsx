@@ -28,7 +28,7 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
       setOrder(ordRes)
       setAvailableData(availRes)
     } catch (err) {
-      toast.error('Không thể tải thông tin đơn hàng')
+      toast.error('Failed to load order details')
     } finally {
       setLoading(false)
     }
@@ -77,17 +77,17 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
     if (availableData && availableData.length > 0) {
       const matchedItem = availableData.find(item => (item.available_uids || []).includes(cleanCode))
       if (!matchedItem) {
-        toast.error(`⛔ SAI MÃ QR: Hộp thuốc (${cleanCode.slice(0, 8)}...) không thuộc sản phẩm nào trong đơn hàng này!`, { duration: 4000 })
+        toast.error(`⛔ INVALID QR: Medicine box (${cleanCode.slice(0, 8)}...) does not belong to any product in this order!`, { duration: 4000 })
         return
       }
     }
 
     setScannedUIDs(prev => {
       if (prev.includes(cleanCode)) {
-        toast.error(`Mã UID ${cleanCode.slice(0, 8)}... đã được quét trước đó!`)
+        toast.error(`UID ${cleanCode.slice(0, 8)}... has already been scanned!`)
         return prev
       }
-      toast.success(`✓ Nhận diện đúng hộp thuốc: ${cleanCode.slice(0, 8)}...`)
+      toast.success(`✓ Verified medicine box: ${cleanCode.slice(0, 8)}...`)
       return [...prev, cleanCode]
     })
   }
@@ -119,7 +119,7 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
       )
     } catch (err) {
       setCameraScanning(false)
-      toast.error('Không thể bật camera. Vui lòng cấp quyền hoặc nhập thủ công.')
+      toast.error('Cannot access camera. Please allow camera permissions or enter UID manually.')
     }
   }
 
@@ -130,7 +130,7 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
       const text = await scanQRFromFile(file)
       addUID(text)
     } catch (err) {
-      toast.error('Không đọc được mã QR từ tệp ảnh')
+      toast.error('Cannot decode QR code from image file')
     }
   }
 
@@ -143,12 +143,12 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
     })
 
     if (allAvailable.length === 0) {
-      toast.error('Không tìm thấy UID khả dụng trong kho')
+      toast.error('No available UIDs found in warehouse inventory')
       return
     }
 
     setScannedUIDs(allAvailable)
-    toast.success(`Đã tự động chọn ${allAvailable.length} mã UID khả dụng trong kho!`)
+    toast.success(`Auto-selected ${allAvailable.length} available UIDs from inventory!`)
   }
 
   // Calculate items summary
@@ -159,16 +159,16 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
 
   const handleFulfillSubmit = async () => {
     if (scannedUIDs.length === 0) {
-      return toast.error('Vui lòng quét hoặc nhập ít nhất 1 mã UID hộp thuốc')
+      return toast.error('Please scan or enter at least 1 medicine package UID')
     }
     setSubmitting(true)
     try {
       await orderService.fulfillOrder(orderId || order.id, scannedUIDs)
-      toast.success(`Đóng gói đơn hàng #${orderId || order.id} thành công!`)
+      toast.success(`Order #${orderId || order.id} packed successfully!`)
       onSuccess?.(orderId || order.id)
       onClose()
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Đóng gói thất bại')
+      toast.error(err.response?.data?.message || 'Packing failed')
     } finally {
       setSubmitting(false)
     }
@@ -179,14 +179,14 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
       title={
         <div className="flex items-center gap-2 text-slate-800 font-bold">
           <ScanOutlined className="text-brand-600 text-lg" />
-          Đóng gói & Quét mã QR — Đơn hàng #{orderId || order?.id}
+          Order Packing & QR Verification — Order #{orderId || order?.id}
         </div>
       }
       open={open}
       onCancel={() => { stopCamera(); onClose() }}
       footer={[
         <AButton key="cancel" onClick={() => { stopCamera(); onClose() }}>
-          Hủy
+          Cancel
         </AButton>,
         <AButton
           key="submit"
@@ -196,7 +196,7 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
           icon={<CheckCircleOutlined />}
           onClick={handleFulfillSubmit}
         >
-          Xác nhận & Đóng gói ({scannedUIDs.length}/{totalRequired})
+          Confirm & Complete Packing ({scannedUIDs.length}/{totalRequired})
         </AButton>
       ]}
       width={720}
@@ -207,8 +207,8 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex-1 w-full">
             <div className="flex justify-between items-center text-xs font-bold text-slate-600 mb-1">
-              <span>TIẾN ĐỘ ĐÓNG GÓI</span>
-              <span className="font-mono text-brand-600">{currentCount} / {totalRequired} Hộp thuốc</span>
+              <span>PACKING PROGRESS</span>
+              <span className="font-mono text-brand-600">{currentCount} / {totalRequired} Packages</span>
             </div>
             <Progress percent={percent} status={percent === 100 ? 'success' : 'active'} strokeColor={{ '0%': '#3B82F6', '100%': '#10B981' }} />
           </div>
@@ -219,7 +219,7 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
             onClick={handleAutoFillUIDs}
             className="w-full sm:w-auto font-bold border-amber-300 hover:border-amber-400 text-slate-700"
           >
-            ⚡ Tự động chọn UID trong kho
+            ⚡ Auto-Select Stock UIDs
           </AButton>
         </div>
 
@@ -227,15 +227,15 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
         {items.length > 0 && (
           <div className="border border-slate-100 rounded-2xl overflow-hidden text-xs">
             <div className="bg-slate-100/70 px-4 py-2 font-bold text-slate-700 uppercase tracking-wider flex justify-between">
-              <span>Sản phẩm trong đơn</span>
-              <span>Số lượng</span>
+              <span>Order Line Items</span>
+              <span>Quantity</span>
             </div>
             <div className="divide-y divide-slate-100">
               {items.map((it, idx) => (
                 <div key={idx} className="px-4 py-2.5 flex items-center justify-between gap-3">
                   <div>
                     <span className="font-bold text-slate-800">{it.ten_thuoc || it.name}</span>
-                    <span className="text-slate-400 ml-2">({it.ten_don_vi || it.unit || 'Hộp'})</span>
+                    <span className="text-slate-400 ml-2">({it.ten_don_vi || it.unit || 'Box'})</span>
                   </div>
                   <Tag color="blue" className="font-bold font-mono">
                     x{it.so_luong || it.quantity}
@@ -256,41 +256,41 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
           items={[
             {
               key: 'manual',
-              label: <span><BarcodeOutlined /> Máy quét Barcode / Nhập tay</span>,
+              label: <span><BarcodeOutlined /> Barcode Scanner / Manual Input</span>,
               children: (
                 <div className="space-y-3 pt-2">
                   <form onSubmit={handleManualAdd} className="flex gap-2">
                     <Input
-                      placeholder="Quét mã vạch hoặc dán mã UID tại đây..."
+                      placeholder="Scan barcode or paste UID here..."
                       value={manualInput}
                       onChange={e => setManualInput(e.target.value)}
                       autoFocus
                     />
-                    <AButton type="primary" onClick={handleManualAdd}>Thêm UID</AButton>
+                    <AButton type="primary" onClick={handleManualAdd}>Add UID</AButton>
                   </form>
                   <p className="text-xs text-slate-400 italic">
-                    * Bạn có thể sử dụng máy quét mã vạch cầm tay USB/Bluetooth bắn mã trực tiếp vào ô nhập liệu này.
+                    * You can use handheld USB / Bluetooth barcode scanners to scan codes directly into this input field.
                   </p>
                 </div>
               )
             },
             {
               key: 'camera',
-              label: <span><CameraOutlined /> Quét Camera trực tiếp</span>,
+              label: <span><CameraOutlined /> Live Camera Scan</span>,
               children: (
                 <div className="space-y-3 pt-2 text-center">
                   {!cameraScanning ? (
                     <div className="p-8 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 flex flex-col items-center gap-3">
                       <CameraOutlined className="text-4xl text-slate-400" />
-                      <p className="text-sm font-medium text-slate-600">Sử dụng Webcam hoặc Camera thiết bị để quét mã QR trên hộp thuốc</p>
+                      <p className="text-sm font-medium text-slate-600">Use device webcam or camera to scan QR codes on medicine boxes</p>
                       <AButton type="primary" icon={<CameraOutlined />} onClick={startCamera}>
-                        Bật Camera Quét mã
+                        Start Camera Scanner
                       </AButton>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       <div id="packing-qr-reader" className="w-full max-w-sm mx-auto overflow-hidden rounded-2xl border-2 border-brand-500 shadow-md" />
-                      <AButton danger onClick={stopCamera}>Dừng Camera</AButton>
+                      <AButton danger onClick={stopCamera}>Stop Camera</AButton>
                     </div>
                   )}
                 </div>
@@ -298,13 +298,13 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
             },
             {
               key: 'file',
-              label: <span><UploadOutlined /> Tải ảnh mã QR</span>,
+              label: <span><UploadOutlined /> Upload QR Image</span>,
               children: (
                 <div className="pt-2">
                   <label className="border-2 border-dashed border-slate-200 hover:border-brand-400 bg-slate-50 hover:bg-brand-50/30 transition-all rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer text-center">
                     <UploadOutlined className="text-3xl text-brand-600 mb-2" />
-                    <span className="text-sm font-bold text-slate-700">Tải tệp ảnh chứa mã QR</span>
-                    <span className="text-xs text-slate-400 mt-1">Hỗ trợ JPG, PNG, WEBP</span>
+                    <span className="text-sm font-bold text-slate-700">Upload image file containing QR</span>
+                    <span className="text-xs text-slate-400 mt-1">Supports JPG, PNG, WEBP</span>
                     <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
                   </label>
                 </div>
@@ -317,18 +317,18 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
         <div>
           <div className="flex justify-between items-center mb-2">
             <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-              Danh sách mã UID đã quét ({scannedUIDs.length})
+              Scanned Item UIDs ({scannedUIDs.length})
             </span>
             {scannedUIDs.length > 0 && (
               <AButton size="small" type="text" danger icon={<DeleteOutlined />} onClick={() => setScannedUIDs([])}>
-                Xóa tất cả
+                Clear All
               </AButton>
             )}
           </div>
 
           {scannedUIDs.length === 0 ? (
             <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-center text-xs text-slate-400 italic">
-              Chưa có mã UID nào được quét. Vui lòng sử dụng một trong các công cụ trên để quét mã.
+              No UIDs scanned yet. Please use one of the tools above to scan packages.
             </div>
           ) : (
             <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-3 bg-slate-50 border border-slate-100 rounded-xl">

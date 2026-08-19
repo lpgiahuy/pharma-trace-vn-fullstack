@@ -20,24 +20,24 @@ export default function AdminOrdersPage() {
   }, [page, status])
 
   const cols = [
-    { title: 'Mã đơn hàng', dataIndex: 'id',           key: 'id',     render: v => <span className="font-mono text-sm">{v}</span> },
-    { title: 'Ngày đặt',    dataIndex: 'date',          key: 'date',   render: v => formatDateTime(v) },
-    { title: 'Trạng thái',  dataIndex: 'status',        key: 'status', render: v => <OrderStatusBadge status={v} /> },
-    { title: 'Sản phẩm',   dataIndex: 'items',          key: 'items',  render: v => `${v} món` },
-    { title: 'Tổng tiền',  dataIndex: 'total',          key: 'total',  render: v => <strong>{formatCurrency(v)}</strong> },
-    { title: 'Thanh toán', dataIndex: 'paymentMethod',  key: 'pay',    render: v => <Tag>{v?.toUpperCase()}</Tag> },
-    { title: '', key: 'action', render: (_, row) => <a onClick={() => navigate(`/admin/orders/${row.id}`)} className="text-brand-600 hover:underline text-sm">Xem →</a> },
+    { title: 'Order ID', dataIndex: 'id',           key: 'id',     render: v => <span className="font-mono text-sm">#{v}</span> },
+    { title: 'Order Date',    dataIndex: 'date',          key: 'date',   render: v => formatDateTime(v) },
+    { title: 'Status',  dataIndex: 'status',        key: 'status', render: v => <OrderStatusBadge status={v} /> },
+    { title: 'Items',   dataIndex: 'items',          key: 'items',  render: v => `${v} items` },
+    { title: 'Total Amount',  dataIndex: 'total',          key: 'total',  render: v => <strong>{formatCurrency(v)}</strong> },
+    { title: 'Payment', dataIndex: 'paymentMethod',  key: 'pay',    render: v => <Tag>{v?.toUpperCase()}</Tag> },
+    { title: '', key: 'action', render: (_, row) => <a onClick={() => navigate(`/admin/orders/${row.id}`)} className="text-brand-600 hover:underline text-sm">View →</a> },
   ]
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div><h1 className="text-xl font-display font-bold text-slate-900">Đơn hàng</h1><p className="text-slate-500 text-sm">{total} đơn hàng</p></div>
+      <div><h1 className="text-xl font-display font-bold text-slate-900">Orders Management</h1><p className="text-slate-500 text-sm">{total} orders</p></div>
       <div className="card p-4">
         <div className="flex gap-3 mb-4 flex-wrap">
           <Select
             value={status || undefined}
             onChange={v => { setStatus(v || ''); setPage(1) }}
-            placeholder="Lọc theo trạng thái"
+            placeholder="Filter by status"
             allowClear
             style={{ width: 180 }}
             options={Object.values(ORDER_STATUS).map(s => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))}

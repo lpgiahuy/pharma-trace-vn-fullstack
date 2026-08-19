@@ -27,21 +27,21 @@ export default function FulfillmentPage() {
   }
 
   const cols = [
-    { title: 'Mã đơn',    dataIndex: 'id',         key: 'id',    render: v => <span className="font-mono text-sm font-bold">#{v}</span> },
-    { title: 'Ngày đặt',  dataIndex: 'date',        key: 'date',  render: (v, row) => formatDateTime(v || row.ngay_dat_hang) },
-    { title: 'Khách hàng', dataIndex: 'customerName', key: 'cust', render: (v, row) => v || row.ho_ten || 'Khách hàng' },
-    { title: 'Tổng tiền', dataIndex: 'total',       key: 'total', render: (v, row) => formatCurrency(v || row.tong_tien) },
-    { title: 'Trạng thái', dataIndex: 'status',     key: 'status',render: (v, row) => <OrderStatusBadge status={v || row.trang_thai_don} /> },
+    { title: 'Order ID',    dataIndex: 'id',         key: 'id',    render: v => <span className="font-mono text-sm font-bold">#{v}</span> },
+    { title: 'Order Date',  dataIndex: 'date',        key: 'date',  render: (v, row) => formatDateTime(v || row.ngay_dat_hang) },
+    { title: 'Customer', dataIndex: 'customerName', key: 'cust', render: (v, row) => v || row.ho_ten || 'Customer' },
+    { title: 'Total Amount', dataIndex: 'total',       key: 'total', render: (v, row) => formatCurrency(v || row.tong_tien) },
+    { title: 'Status', dataIndex: 'status',     key: 'status',render: (v, row) => <OrderStatusBadge status={v || row.trang_thai_don} /> },
     {
-      title: 'Thao tác', key: 'action',
+      title: 'Action', key: 'action',
       render: (_, row) => {
         const st = row.status || row.trang_thai_don
         const isPending = st === 'ChoXacNhan' || st === 'confirmed' || st === 'Processing'
         return isPending ? (
           <AButton type="primary" size="small" icon={<ScanOutlined />} onClick={() => setPackingOrder(row)}>
-            Quét mã & Đóng gói
+            Scan QR & Pack
           </AButton>
-        ) : <Tag color="green">Đã đóng gói ✓</Tag>
+        ) : <Tag color="green">Packed ✓</Tag>
       },
     },
   ]
@@ -50,9 +50,9 @@ export default function FulfillmentPage() {
     <div className="space-y-4 animate-fade-in">
       <div>
         <h1 className="text-xl font-display font-bold text-slate-900 flex items-center gap-2">
-          <CheckSquareOutlined /> Quyết định & Đóng gói đơn hàng bằng mã QR
+          <CheckSquareOutlined /> Order Fulfillment & Packing Scanner
         </h1>
-        <p className="text-slate-500 text-sm mt-1">Quét mã QR trên từng hộp thuốc bằng Camera hoặc máy quét barcode để xác thực đóng gói đơn hàng</p>
+        <p className="text-slate-500 text-sm mt-1">Scan item QRs on medicine packages via camera or barcode scanner to verify order packing</p>
       </div>
       <div className="card p-4">
         <Table
@@ -62,7 +62,7 @@ export default function FulfillmentPage() {
           loading={loading}
           pagination={{ pageSize: 20 }}
           size="middle"
-          locale={{ emptyText: 'Không có đơn hàng nào cần xử lý đóng gói' }}
+          locale={{ emptyText: 'No pending orders awaiting packing' }}
           scroll={{ x: 800 }}
         />
       </div>

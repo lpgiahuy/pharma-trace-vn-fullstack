@@ -4,6 +4,7 @@ import { PlusOutlined, ShoppingCartOutlined, ShopOutlined, ReloadOutlined } from
 import apiClient from '@/services/apiClient'
 import { warehouseService } from '@/services/warehouse.service'
 import { useAuth } from '@/store/authStore'
+import { formatUnitType, getUnitTypeMeta } from '@/utils/formatters'
 
 export default function ProcurementPage() {
   const { user: currentUser } = useAuth()
@@ -32,7 +33,7 @@ export default function ProcurementPage() {
       const res = await apiClient.get('/admin/procurement/suppliers')
       if (res.data?.success) setSuppliers(res.data.data || [])
     } catch (err) {
-      message.error(err.response?.data?.message || 'Lỗi khi tải danh sách nhà cung cấp')
+      message.error(err.response?.data?.message || 'Failed to load suppliers')
     } finally {
       setLoading(false)
     }
@@ -44,7 +45,7 @@ export default function ProcurementPage() {
       const res = await apiClient.get('/admin/procurement/orders')
       if (res.data?.success) setOrders(res.data.data || [])
     } catch (err) {
-      message.error(err.response?.data?.message || 'Lỗi khi tải danh sách phiếu nhập')
+      message.error(err.response?.data?.message || 'Failed to load purchase orders')
     } finally {
       setLoading(false)
     }
@@ -70,15 +71,15 @@ export default function ProcurementPage() {
     try {
       const res = await apiClient.post('/admin/procurement/suppliers', values)
       if (res.data?.success) {
-        message.success('Tạo nhà cung cấp thành công!')
+        message.success('Supplier created successfully!')
         setIsSupplierModalOpen(false)
         formSupplier.resetFields()
         fetchSuppliers()
       } else {
-        message.error(res.data?.message || 'Lỗi khi tạo nhà cung cấp')
+        message.error(res.data?.message || 'Failed to create supplier')
       }
     } catch (err) {
-      message.error(err.response?.data?.message || 'Không thể kết nối đến máy chủ')
+      message.error(err.response?.data?.message || 'Cannot connect to server')
     }
   }
 
@@ -86,15 +87,15 @@ export default function ProcurementPage() {
     try {
       const res = await apiClient.post('/admin/procurement/orders', values)
       if (res.data?.success) {
-        message.success('Tạo phiếu đặt hàng PO thành công!')
+        message.success('Purchase Order (PO) created successfully!')
         setIsPoModalOpen(false)
         formPo.resetFields()
         fetchOrders()
       } else {
-        message.error(res.data?.message || 'Lỗi khi tạo phiếu đặt hàng PO')
+        message.error(res.data?.message || 'Failed to create Purchase Order')
       }
     } catch (err) {
-      message.error(err.response?.data?.message || 'Không thể kết nối đến máy chủ')
+      message.error(err.response?.data?.message || 'Cannot connect to server')
     }
   }
 
@@ -105,10 +106,10 @@ export default function ProcurementPage() {
         setSelectedPo(res.data.data)
         setIsDetailModalOpen(true)
       } else {
-        message.error(res.data?.message || 'Lỗi khi lấy chi tiết đơn hàng')
+        message.error(res.data?.message || 'Failed to get purchase order details')
       }
     } catch (err) {
-      message.error(err.response?.data?.message || 'Không thể kết nối đến máy chủ')
+      message.error(err.response?.data?.message || 'Cannot connect to server')
     }
   }
 
@@ -116,51 +117,51 @@ export default function ProcurementPage() {
     try {
       const res = await apiClient.patch(`/admin/procurement/orders/${id}/status`, { trang_thai: newStatus })
       if (res.data?.success) {
-        message.success('Cập nhật trạng thái thành công!')
+        message.success('Status updated successfully!')
         fetchOrders()
         if (selectedPo && selectedPo.id === id) {
           setSelectedPo({ ...selectedPo, trang_thai: newStatus })
         }
       }
     } catch (err) {
-      message.error(err.response?.data?.message || 'Lỗi khi cập nhật trạng thái')
+      message.error(err.response?.data?.message || 'Failed to update status')
     }
   }
 
   const renderStatusTag = (status) => {
     const statusMap = {
-      ChoDuyet: { color: 'gold', text: 'Chờ duyệt' },
-      DaDuyet: { color: 'blue', text: 'Đã duyệt' },
-      DaNhapKho: { color: 'green', text: 'Đã nhập kho' },
-      DaHuy: { color: 'red', text: 'Đã hủy' }
+      ChoDuyet: { color: 'gold', text: 'Pending Approval' },
+      DaDuyet: { color: 'blue', text: 'Approved' },
+      DaNhapKho: { color: 'green', text: 'Stored in Warehouse' },
+      DaHuy: { color: 'red', text: 'Cancelled' }
     }
     const st = statusMap[status] || { color: 'default', text: status }
     return <Tag color={st.color}>{st.text}</Tag>
   }
 
   const orderColumns = [
-    { title: 'Mã Phiếu', dataIndex: 'ma_phieu_nhap', key: 'ma_phieu_nhap', render: (text) => <strong>{text}</strong> },
-    { title: 'Nhà Cung Cấp', dataIndex: 'ten_nha_cung_cap', key: 'ten_nha_cung_cap' },
-    { title: 'Số Mặt Hàng', dataIndex: 'so_luong_mat_hang', key: 'so_luong_mat_hang', align: 'center' },
+    { title: 'PO Number', dataIndex: 'ma_phieu_nhap', key: 'ma_phieu_nhap', render: (text) => <strong>{text}</strong> },
+    { title: 'Supplier', dataIndex: 'ten_nha_cung_cap', key: 'ten_nha_cung_cap' },
+    { title: 'Item Count', dataIndex: 'so_luong_mat_hang', key: 'so_luong_mat_hang', align: 'center' },
     { 
-      title: 'Tổng Tiền', 
+      title: 'Total Amount', 
       dataIndex: 'tong_tien', 
       key: 'tong_tien',
-      render: (val) => `${Number(val || 0).toLocaleString('vi-VN')} ₫` 
+      render: (val) => `${Number(val || 0).toLocaleString()} ₫` 
     },
     {
-      title: 'Tiến Độ Giao',
+      title: 'Delivery Progress',
       key: 'delivery_progress',
       align: 'center',
       render: (_, r) => {
         if (r.trang_thai === 'ChoDuyet') {
-          return <Tag color="gold">Chờ duyệt PO</Tag>
+          return <Tag color="gold">Pending PO Approval</Tag>
         }
         if (r.trang_thai === 'DaHuy') {
-          return <Tag color="default">Đã hủy</Tag>
+          return <Tag color="default">Cancelled</Tag>
         }
         if (r.trang_thai === 'DaNhapKho') {
-          return <Tag color="success">Đã nhận 100%</Tag>
+          return <Tag color="success">Received 100%</Tag>
         }
         if (r.so_luong_da_nhan > 0 || r.so_luong_dang_giao > 0) {
           const total = r.tong_so_luong_dat || 1
@@ -170,31 +171,39 @@ export default function ProcurementPage() {
           return (
             <div className="w-32 mx-auto">
               <div className="text-[11px] font-medium text-slate-600 mb-0.5">
-                {done}/{total} hộp {inTransit > 0 ? `(${inTransit} đang đi)` : ''}
+                {done}/{total} boxes {inTransit > 0 ? `(${inTransit} in transit)` : ''}
               </div>
               <Progress percent={percent} size="small" status={percent === 100 ? 'success' : 'active'} />
             </div>
           )
         }
-        return <span className="text-slate-400 text-xs">Chờ phát hàng</span>
+        return <span className="text-slate-400 text-xs">Awaiting dispatch</span>
       }
     },
-    { title: 'Trạng Thái', dataIndex: 'trang_thai', key: 'trang_thai', render: renderStatusTag },
-    { title: 'Ngày Tạo', dataIndex: 'created_at', key: 'created_at', render: (val) => new Date(val).toLocaleDateString('vi-VN') },
+    { title: 'Status', dataIndex: 'trang_thai', key: 'trang_thai', render: renderStatusTag },
+    { title: 'Created Date', dataIndex: 'created_at', key: 'created_at', render: (val) => new Date(val).toLocaleDateString() },
     {
-      title: 'Hành động',
+      title: 'Actions',
       key: 'action',
       render: (_, record) => (
-        <Button type="link" onClick={() => handleViewDetail(record.id)}>Chi tiết</Button>
+        <Button type="link" onClick={() => handleViewDetail(record.id)}>Details</Button>
       )
     }
   ]
 
   const supplierColumns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
-    { title: 'Tên Nhà Cung Cấp', dataIndex: 'ten_don_vi', key: 'ten_don_vi', render: (text) => <strong>{text}</strong> },
-    { title: 'Loại', dataIndex: 'loai_don_vi', key: 'loai_don_vi', render: (v) => <Tag color="cyan">{v}</Tag> },
-    { title: 'Địa Chỉ', dataIndex: 'dia_chi', key: 'dia_chi', render: (text) => text || 'Chưa cập nhật' }
+    { title: 'Supplier Name', dataIndex: 'ten_don_vi', key: 'ten_don_vi', render: (text) => <strong>{text}</strong> },
+    { 
+      title: 'Facility Type', 
+      dataIndex: 'loai_don_vi', 
+      key: 'loai_don_vi', 
+      render: (v) => {
+        const meta = getUnitTypeMeta(v, 'en')
+        return <Tag color={meta.color}>{meta.en || meta.vi}</Tag>
+      } 
+    },
+    { title: 'Address', dataIndex: 'dia_chi', key: 'dia_chi', render: (text) => text || 'Not updated' }
   ]
 
   return (
@@ -202,19 +211,19 @@ export default function ProcurementPage() {
       <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100">
         <div>
           <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <ShoppingCartOutlined className="text-brand-600" /> Quản Lý Mua Hàng & Nhà Cung Cấp (PO)
+            <ShoppingCartOutlined className="text-brand-600" /> Procurement & Supplier Management (PO)
           </h1>
-          <p className="text-sm text-slate-500">Quản lý các Đơn mua hàng PO và danh mục Nhà cung cấp dược phẩm</p>
+          <p className="text-sm text-slate-500">Manage purchase orders (PO) and pharmaceutical suppliers directory</p>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={activeTab === '1' ? fetchOrders : fetchSuppliers}>Tải lại</Button>
+          <Button icon={<ReloadOutlined />} onClick={activeTab === '1' ? fetchOrders : fetchSuppliers}>Reload</Button>
           {activeTab === '1' ? (
             <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsPoModalOpen(true)}>
-              Tạo Phiếu Nhập PO
+              Create Purchase Order (PO)
             </Button>
           ) : (
             <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsSupplierModalOpen(true)}>
-              Thêm Nhà Cung Cấp
+              Add Supplier
             </Button>
           )}
         </Space>
@@ -229,7 +238,7 @@ export default function ProcurementPage() {
               key: '1',
               label: (
                 <span>
-                  <ShoppingCartOutlined /> Phiếu Nhập Hàng (PO)
+                  <ShoppingCartOutlined /> Purchase Orders (PO)
                 </span>
               ),
               children: (
@@ -246,7 +255,7 @@ export default function ProcurementPage() {
               key: '2',
               label: (
                 <span>
-                  <ShopOutlined /> Danh Sách Nhà Cung Cấp
+                  <ShopOutlined /> Supplier Directory
                 </span>
               ),
               children: (
@@ -263,91 +272,91 @@ export default function ProcurementPage() {
         />
       </Card>
 
-      {/* Modal Thêm Nhà Cung Cấp */}
+      {/* Modal Add Supplier */}
       <Modal
-        title="Thêm Nhà Cung Cấp Mới"
+        title="Add New Supplier"
         open={isSupplierModalOpen}
         onCancel={() => setIsSupplierModalOpen(false)}
         onOk={() => formSupplier.submit()}
       >
         <Form form={formSupplier} layout="vertical" onFinish={handleCreateSupplier}>
-          <Form.Item name="ten_don_vi" label="Tên Nhà Cung Cấp" rules={[{ required: true, message: 'Nhập tên NCC' }]}>
-            <Input placeholder="Ví dụ: Công ty Dược phẩm Hậu Giang" />
+          <Form.Item name="ten_don_vi" label="Supplier Name" rules={[{ required: true, message: 'Please enter supplier name' }]}>
+            <Input placeholder="e.g. DHG Pharmaceutical JSC" />
           </Form.Item>
-          <Form.Item name="loai_don_vi" label="Loại Đơn Vị" initialValue="NhaPhanPhoi">
+          <Form.Item name="loai_don_vi" label="Facility Type" initialValue="NhaPhanPhoi">
             <Select options={[
-              { label: 'Nhà Phân Phối', value: 'NhaPhanPhoi' },
-              { label: 'Nhà Máy Sản Xuất', value: 'NhaMay' }
+              { label: 'Distributor / Wholesale', value: 'NhaPhanPhoi' },
+              { label: 'Manufacturing Factory', value: 'NhaMay' }
             ]} />
           </Form.Item>
-          <Form.Item name="dia_chi" label="Địa Chỉ">
-            <Input.TextArea rows={2} placeholder="Nhập địa chỉ nhà cung cấp" />
+          <Form.Item name="dia_chi" label="Address">
+            <Input.TextArea rows={2} placeholder="Enter supplier address" />
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* Modal Tạo Phiếu Nhập PO */}
+      {/* Modal Create PO */}
       <Modal
-        title="Tạo Phiếu Nhập Hàng (PO)"
+        title="Create Purchase Order (PO)"
         open={isPoModalOpen}
         onCancel={() => setIsPoModalOpen(false)}
         onOk={() => formPo.submit()}
         width={700}
       >
         <Form form={formPo} layout="vertical" onFinish={handleCreatePo}>
-          <Form.Item name="nha_cung_cap_id" label="Nhà Cung Cấp" rules={[{ required: true, message: 'Chọn Nhà cung cấp' }]}>
+          <Form.Item name="nha_cung_cap_id" label="Supplier" rules={[{ required: true, message: 'Please select a supplier' }]}>
             <Select
-              placeholder="Chọn nhà cung cấp"
+              placeholder="Select supplier"
               showSearch
               filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
               options={suppliers
                 .filter(s => !userUnitId || Number(s.id) !== Number(userUnitId))
                 .map(s => ({
-                  label: `${s.ten_don_vi} (${s.loai_don_vi === 'NhaMay' ? 'Nhà Máy' : 'Kho / NPP'})`,
+                  label: `${s.ten_don_vi} (${s.loai_don_vi === 'NhaMay' ? 'Factory' : 'Distributor / Warehouse'})`,
                   value: s.id
                 }))}
             />
           </Form.Item>
-          <Form.Item name="ghi_chu" label="Ghi Chú">
-            <Input.TextArea placeholder="Ghi chú về lô hàng nhập..." rows={2} />
+          <Form.Item name="ghi_chu" label="Notes">
+            <Input.TextArea placeholder="Notes regarding this purchase order batch..." rows={2} />
           </Form.Item>
 
           <Form.List name="items" initialValue={[{ duoc_pham_id: undefined, so_luong: 100, don_gia: 10000 }]}>
             {(fields, { add, remove }) => (
               <>
-                <div className="font-semibold text-slate-700 mb-2">Chi Tiết Mặt Hàng:</div>
+                <div className="font-semibold text-slate-700 mb-2">Item Details:</div>
                 {fields.map(({ key, name, ...restField }) => (
                   <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
                     <Form.Item
                       {...restField}
                       name={[name, 'duoc_pham_id']}
-                      rules={[{ required: true, message: 'Nhập ID sản phẩm' }]}
+                      rules={[{ required: true, message: 'Enter product ID' }]}
                     >
-                      <InputNumber placeholder="ID Dược Phẩm (VD: 991)" style={{ width: 180 }} />
+                      <InputNumber placeholder="Product ID (e.g. 991)" style={{ width: 180 }} />
                     </Form.Item>
                     <Form.Item
                       {...restField}
                       name={[name, 'so_luong']}
-                      rules={[{ required: true, message: 'Số lượng' }]}
+                      rules={[{ required: true, message: 'Quantity' }]}
                     >
-                      <InputNumber placeholder="Số lượng" min={1} style={{ width: 120 }} />
+                      <InputNumber placeholder="Quantity" min={1} style={{ width: 120 }} />
                     </Form.Item>
                     <Form.Item
                       {...restField}
                       name={[name, 'don_gia']}
-                      rules={[{ required: true, message: 'Đơn giá' }]}
+                      rules={[{ required: true, message: 'Unit Price' }]}
                     >
-                      <InputNumber placeholder="Đơn giá (₫)" min={0} style={{ width: 140 }} />
+                      <InputNumber placeholder="Unit Price (₫)" min={0} style={{ width: 140 }} />
                     </Form.Item>
                     {fields.length > 1 && (
                       <Button type="link" danger onClick={() => remove(name)}>
-                        Xóa
+                        Remove
                       </Button>
                     )}
                   </Space>
                 ))}
                 <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
-                  Thêm Mặt Hàng
+                  Add Line Item
                 </Button>
               </>
             )}
@@ -355,15 +364,15 @@ export default function ProcurementPage() {
         </Form>
       </Modal>
 
-      {/* Modal Chi Tiết Phiếu Nhập */}
+      {/* Modal Purchase Order Details */}
       <Modal
-        title={`Chi Tiết Phiếu Nhập: ${selectedPo?.ma_phieu_nhap || ''}`}
+        title={`Purchase Order Details: ${selectedPo?.ma_phieu_nhap || ''}`}
         open={isDetailModalOpen}
         onCancel={() => setIsDetailModalOpen(false)}
         footer={[
           canApprovePo && selectedPo?.trang_thai === 'ChoDuyet' && (
             <Button key="approve" type="primary" onClick={() => handleUpdateStatus(selectedPo.id, 'DaDuyet')}>
-              Duyệt Phiếu
+              Approve PO
             </Button>
           ),
           canApprovePo && selectedPo?.trang_thai === 'DaDuyet' && (() => {
@@ -376,9 +385,9 @@ export default function ProcurementPage() {
             let tooltipText = ''
             if (isInternal && !isFullyReceived) {
               if (selectedPo.is_in_transit) {
-                tooltipText = `Chưa nhận đủ hàng (${receivedQty}/${totalQty} hộp). Vui lòng bấm 'Xác Nhận Nhận Đợt Này' cho các đợt vận chuyển ở bảng bên trên!`
+                tooltipText = `Incomplete receipt (${receivedQty}/${totalQty} boxes). Please click 'Confirm Batch Receipt' for shipments in the table above!`
               } else {
-                tooltipText = 'Đang chờ Kho xuất phát lệnh vận chuyển hàng đi mới được xác nhận nhập kho!'
+                tooltipText = 'Awaiting origin warehouse to dispatch shipment before stock inbound can be confirmed!'
               }
             }
 
@@ -395,22 +404,22 @@ export default function ProcurementPage() {
                   }}
                   onClick={() => handleUpdateStatus(selectedPo.id, 'DaNhapKho')}
                 >
-                  Xác Nhận Nhập Kho
+                  Confirm Stock Inbound
                 </Button>
               </Tooltip>
             )
           })(),
           canApprovePo && selectedPo?.trang_thai !== 'DaHuy' && selectedPo?.trang_thai !== 'DaNhapKho' && (
             <Button key="cancel" danger onClick={() => handleUpdateStatus(selectedPo.id, 'DaHuy')}>
-              Hủy Phiếu
+              Cancel PO
             </Button>
           ),
           !canApprovePo && (
             <span key="no-perm" className="text-xs text-amber-700 font-medium mr-3 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg inline-block">
-              ⚠️ Quyền hạn: Chỉ Quản Lý Cửa Hàng / SuperAdmin mới được duyệt hoặc hủy phiếu PO
+              ⚠️ Permission: Only Store Managers and SuperAdmins can approve or cancel POs
             </span>
           ),
-          <Button key="close" onClick={() => setIsDetailModalOpen(false)}>Đóng</Button>
+          <Button key="close" onClick={() => setIsDetailModalOpen(false)}>Close</Button>
         ]}
         width={750}
       >
@@ -420,8 +429,8 @@ export default function ProcurementPage() {
               <Alert
                 type="warning"
                 showIcon
-                message="Hàng chưa được phát lệnh vận chuyển"
-                description="Phiếu nhập hàng này đến từ đơn vị nội bộ. Bạn cần chờ Kho gửi tạo Lệnh Chuyển Kho (phát lệnh vận chuyển) trước khi có thể bấm Xác Nhận Nhập Kho."
+                message="Shipment Pending Dispatch"
+                description="This purchase order originates from an internal facility. Origin warehouse must create a stock transfer order (dispatch shipment) before inbound receipt can be confirmed."
                 className="rounded-lg font-medium"
               />
             )}
@@ -430,8 +439,8 @@ export default function ProcurementPage() {
               <Alert
                 type="info"
                 showIcon
-                message="Đơn hàng đang được vận chuyển theo từng đợt"
-                description="Kho xuất đã phát lệnh giao hàng. Bạn có thể kiểm tra danh sách từng đợt giao và bấm 'Xác Nhận Nhận Đợt Này' trực tiếp ở bảng bên dưới để nhập kho từng đợt."
+                message="Order Dispatched in Multiple Shipments"
+                description="Origin warehouse has dispatched shipments. Review shipment batches below and click 'Confirm Batch Receipt' directly to receive each batch into inventory."
                 className="rounded-lg font-medium"
               />
             )}
@@ -440,8 +449,8 @@ export default function ProcurementPage() {
               <Alert
                 type="success"
                 showIcon
-                message="Đã nhận đủ 100% số lượng của đơn hàng"
-                description="Toàn bộ các đợt vận chuyển đã được tiếp nhận và lưu kho thành công!"
+                message="100% Order Items Received"
+                description="All inbound shipment batches have been received and stored in warehouse successfully!"
                 className="rounded-lg font-medium"
               />
             )}
@@ -450,12 +459,12 @@ export default function ProcurementPage() {
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-700">
                   <span className="flex items-center gap-1.5 font-semibold text-slate-600">
-                    Tiến Độ Nhận Hàng:
+                    Receiving Progress:
                   </span>
                   <span className="text-emerald-700 font-mono text-sm">
                     {selectedPo.trang_thai === 'DaNhapKho'
-                      ? `${selectedPo.tong_so_luong_dat || selectedPo.so_luong_da_nhan || 0} / ${selectedPo.tong_so_luong_dat || selectedPo.so_luong_da_nhan || 0} Hộp (Đã nhận 100%)`
-                      : `${selectedPo.so_luong_da_nhan || 0} / ${selectedPo.tong_so_luong_dat || 0} Hộp Đã Nhận ${selectedPo.so_luong_dang_giao ? `(${selectedPo.so_luong_dang_giao} hộp đang vận chuyển)` : ''}`}
+                      ? `${selectedPo.tong_so_luong_dat || selectedPo.so_luong_da_nhan || 0} / ${selectedPo.tong_so_luong_dat || selectedPo.so_luong_da_nhan || 0} Boxes (100% Received)`
+                      : `${selectedPo.so_luong_da_nhan || 0} / ${selectedPo.tong_so_luong_dat || 0} Boxes Received ${selectedPo.so_luong_dang_giao ? `(${selectedPo.so_luong_dang_giao} boxes in transit)` : ''}`}
                   </span>
                 </div>
                 <Progress 
@@ -470,12 +479,12 @@ export default function ProcurementPage() {
               </div>
             )}
 
-            {/* Danh Sách Các Đợt Vận Chuyển */}
+            {/* Inbound Shipment Batches */}
             {selectedPo.trang_thai !== 'ChoDuyet' && selectedPo.trang_thai !== 'DaHuy' && selectedPo.shipments && selectedPo.shipments.length > 0 && (
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-700 uppercase tracking-wider">
                   <span className="flex items-center gap-1.5">
-                    Các Đợt Vận Chuyển ({selectedPo.shipments.length} đợt)
+                    Shipment Batches ({selectedPo.shipments.length} batches)
                   </span>
                 </div>
 
@@ -489,25 +498,25 @@ export default function ProcurementPage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-slate-800 text-sm">
-                              Đợt #{batchIndex} — {ship.so_luong_hop} Hộp
+                              Batch #{batchIndex} — {ship.so_luong_hop} Boxes
                             </span>
-                            {isPending && <Tag color="processing">Đang vận chuyển</Tag>}
-                            {isDone && <Tag color="success">Đã nhận kho</Tag>}
+                            {isPending && <Tag color="processing">In Transit</Tag>}
+                            {isDone && <Tag color="success">Stored in Warehouse</Tag>}
                           </div>
                           <div className="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-2">
-                            <span>Sản phẩm: <strong>{ship.ten_duoc_pham || 'Dược phẩm'}</strong></span>
+                            <span>Product: <strong>{ship.ten_duoc_pham || 'Medication'}</strong></span>
                             <span>•</span>
-                            <span>Lô: <strong>{ship.so_lo || 'N/A'}</strong></span>
+                            <span>Batch: <strong>{ship.so_lo || 'N/A'}</strong></span>
                             {Number(ship.don_gia) > 0 && (
                               <>
                                 <span>•</span>
-                                <span>Đơn giá: <strong>{Number(ship.don_gia).toLocaleString('vi-VN')} ₫</strong></span>
+                                <span>Unit Price: <strong>{Number(ship.don_gia).toLocaleString()} ₫</strong></span>
                                 <span>•</span>
-                                <span>Thành tiền: <strong className="text-emerald-700">{Number(ship.tong_tien || (ship.don_gia * ship.so_luong_hop)).toLocaleString('vi-VN')} ₫</strong></span>
+                                <span>Total Value: <strong className="text-emerald-700">{Number(ship.tong_tien || (ship.don_gia * ship.so_luong_hop)).toLocaleString()} ₫</strong></span>
                               </>
                             )}
                             <span>•</span>
-                            <span>{new Date(ship.thoi_gian).toLocaleTimeString('vi-VN')} {new Date(ship.thoi_gian).toLocaleDateString('vi-VN')}</span>
+                            <span>{new Date(ship.thoi_gian).toLocaleTimeString()} {new Date(ship.thoi_gian).toLocaleDateString()}</span>
                           </div>
                         </div>
 
@@ -524,7 +533,7 @@ export default function ProcurementPage() {
                                     den_don_vi_id: ship.den_don_vi_id,
                                     mang_uid: ship.mang_uid
                                   })
-                                  message.success(`Đã xác nhận nhận đợt ${batchIndex} (${ship.so_luong_hop} hộp) thành công!`)
+                                  message.success(`Confirmed batch #${batchIndex} (${ship.so_luong_hop} boxes) receipt successfully!`)
                                   
                                   // Refresh detail view
                                   const updatedPoRes = await apiClient.get(`/admin/procurement/orders/${selectedPo.id}`)
@@ -541,11 +550,11 @@ export default function ProcurementPage() {
                                   }
                                   fetchOrders()
                                 } catch (err) {
-                                  message.error(err.response?.data?.message || 'Xác nhận đợt nhập hàng thất bại')
+                                  message.error(err.response?.data?.message || 'Failed to confirm batch receipt')
                                 }
                               }}
                             >
-                              ✔ Xác Nhận Nhận Đợt Này ({ship.so_luong_hop} Hộp)
+                              ✔ Confirm Batch Receipt ({ship.so_luong_hop} Boxes)
                             </Button>
                           )}
                         </div>
@@ -557,20 +566,20 @@ export default function ProcurementPage() {
             )}
 
             <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg text-sm">
-              <div><strong>Nhà cung cấp:</strong> {selectedPo.ten_nha_cung_cap}</div>
-              <div><strong>Trạng thái:</strong> {renderStatusTag(selectedPo.trang_thai)}</div>
-              <div><strong>Tổng tiền:</strong> {Number(selectedPo.tong_tien).toLocaleString('vi-VN')} ₫</div>
-              <div><strong>Ngày tạo:</strong> {new Date(selectedPo.created_at).toLocaleString('vi-VN')}</div>
-              <div className="col-span-2"><strong>Ghi chú:</strong> {selectedPo.ghi_chu || 'Không có'}</div>
+              <div><strong>Supplier:</strong> {selectedPo.ten_nha_cung_cap}</div>
+              <div><strong>Status:</strong> {renderStatusTag(selectedPo.trang_thai)}</div>
+              <div><strong>Total Amount:</strong> {Number(selectedPo.tong_tien).toLocaleString()} ₫</div>
+              <div><strong>Created Date:</strong> {new Date(selectedPo.created_at).toLocaleString()}</div>
+              <div className="col-span-2"><strong>Notes:</strong> {selectedPo.ghi_chu || 'None'}</div>
             </div>
 
             <Table
               dataSource={selectedPo.chi_tiet || []}
               columns={[
-                { title: 'Tên Dược Phẩm', dataIndex: 'ten_thuoc', key: 'ten_thuoc', render: (t, r) => t || `ID: ${r.duoc_pham_id}` },
-                { title: 'Số Lượng', dataIndex: 'so_luong', key: 'so_luong', align: 'center' },
-                { title: 'Đơn Giá', dataIndex: 'don_gia', key: 'don_gia', render: (v) => `${Number(v).toLocaleString('vi-VN')} ₫` },
-                { title: 'Thành Tiền', dataIndex: 'thanh_tien', key: 'thanh_tien', render: (v) => <strong>{Number(v).toLocaleString('vi-VN')} ₫</strong> }
+                { title: 'Product Name', dataIndex: 'ten_thuoc', key: 'ten_thuoc', render: (t, r) => t || `ID: ${r.duoc_pham_id}` },
+                { title: 'Quantity', dataIndex: 'so_luong', key: 'so_luong', align: 'center' },
+                { title: 'Unit Price', dataIndex: 'don_gia', key: 'don_gia', render: (v) => `${Number(v).toLocaleString()} ₫` },
+                { title: 'Total Value', dataIndex: 'thanh_tien', key: 'thanh_tien', render: (v) => <strong>{Number(v).toLocaleString()} ₫</strong> }
               ]}
               rowKey="id"
               pagination={false}

@@ -8,23 +8,23 @@ import { useAuth } from '@/store/authStore'
 const { useBreakpoint } = Grid
 
 const COMMON_ICONS = [
-  { value: 'medication', label: 'Thuốc / Kháng sinh' },
-  { value: 'pill', label: 'Thuốc viên / Dược phẩm' },
-  { value: 'vaccines', label: 'Vaccine / Tiêm chủng' },
-  { value: 'medical_services', label: 'Thiết bị & Y tế' },
-  { value: 'health_and_safety', label: 'Chăm sóc sức khỏe' },
-  { value: 'sanitizer', label: 'Sát khuẩn / Khử trùng' },
-  { value: 'clean_hands', label: 'Vệ sinh cá nhân' },
-  { value: 'healing', label: 'Sơ cứu / Băng gạc' },
-  { value: 'ecg_heart', label: 'Tim mạch / Huyết áp' },
-  { value: 'psychology', label: 'Thần kinh / Bổ não' },
-  { value: 'eye', label: 'Chăm sóc mắt' },
-  { value: 'dentistry', label: 'Răng hàm mặt' },
-  { value: 'child_care', label: 'Mẹ và bé' },
-  { value: 'nutrition', label: 'Dinh dưỡng / TPCN' },
-  { value: 'fitness_center', label: 'Thể thao / Tăng cường' },
-  { value: 'skincare', label: 'Mỹ phẩm / Chăm sóc da' },
-  { value: 'category', label: 'Khác / Mặc định' },
+  { value: 'medication', label: 'Medication / Antibiotics' },
+  { value: 'pill', label: 'Pills / Pharmaceuticals' },
+  { value: 'vaccines', label: 'Vaccines / Immunization' },
+  { value: 'medical_services', label: 'Medical Devices & Services' },
+  { value: 'health_and_safety', label: 'Health & Safety' },
+  { value: 'sanitizer', label: 'Antiseptics & Sanitizers' },
+  { value: 'clean_hands', label: 'Personal Hygiene' },
+  { value: 'healing', label: 'First Aid & Bandages' },
+  { value: 'ecg_heart', label: 'Cardiology & Blood Pressure' },
+  { value: 'psychology', label: 'Neurology & Brain Health' },
+  { value: 'eye', label: 'Eye Care' },
+  { value: 'dentistry', label: 'Dental & Oral Health' },
+  { value: 'child_care', label: 'Mom & Baby' },
+  { value: 'nutrition', label: 'Nutrition & Supplements' },
+  { value: 'fitness_center', label: 'Fitness & Vitality' },
+  { value: 'skincare', label: 'Dermatology & Skincare' },
+  { value: 'category', label: 'Other / Default' },
 ]
 
 const buildCategoryTree = (flatList) => {
@@ -120,11 +120,11 @@ export default function CategoriesPage() {
       if (editing) await productService.updateCategory(editing.id || editing._id, payload)
       else         await productService.createCategory(payload)
 
-      toast.success(editing ? 'Đã cập nhật danh mục' : 'Đã tạo danh mục')
+      toast.success(editing ? 'Category updated successfully' : 'Category created successfully')
       setOpen(false)
       fetchCategories()
     } catch {
-      toast.error(editing ? 'Cập nhật danh mục thất bại' : 'Tạo danh mục thất bại')
+      toast.error(editing ? 'Failed to update category' : 'Failed to create category')
     } finally {
       setSaving(false)
     }
@@ -134,13 +134,13 @@ export default function CategoriesPage() {
     try {
       const res = await productService.deleteCategory(id)
       if (res?.data?.isSoftDeleted) {
-        toast.error(res.message || 'Danh mục đã có sản phẩm thuộc về nên đã được tự động chuyển sang trạng thái Ẩn.')
+        toast.error(res.message || 'Category contains active products and was hidden instead.')
       } else {
-        toast.success(res?.message || 'Đã xóa vĩnh viễn danh mục thành công!')
+        toast.success(res?.message || 'Category deleted permanently!')
       }
       fetchCategories()
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Xóa danh mục thất bại')
+      toast.error(err.response?.data?.message || 'Failed to delete category')
     }
   }
 
@@ -153,20 +153,20 @@ export default function CategoriesPage() {
       render: v => <span className="material-symbols-outlined text-[20px] text-slate-400">{v || 'category'}</span>
     },
     {
-      title: 'Tên',
+      title: 'Name',
       dataIndex: 'name',
       key: 'name',
       render: (v, row) => (
         <div>
           <span className="font-medium text-slate-700">{v}</span>
           {row.danh_muc_cha_id && (
-            <div className="text-[10px] text-slate-400 uppercase tracking-tighter">Danh mục con</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-tighter">Sub-category</div>
           )}
         </div>
       )
     },
     {
-      title: 'Thứ tự',
+      title: 'Order',
       dataIndex: 'thu_tu_hien_thi',
       key: 'order',
       width: 80,
@@ -175,20 +175,20 @@ export default function CategoriesPage() {
     },
     ...(isSuperAdmin ? [
       {
-        title: 'Trạng thái',
+        title: 'Status',
         dataIndex: 'trang_thai',
         key: 'status',
         width: 120,
-        render: v => <Tag color={v ? 'green' : 'red'}>{v ? 'HOẠT ĐỘNG' : 'ẨN'}</Tag>
+        render: v => <Tag color={v ? 'green' : 'red'}>{v ? 'ACTIVE' : 'HIDDEN'}</Tag>
       },
       {
-        title: 'Thao tác',
+        title: 'Actions',
         key: 'actions',
         width: 100,
         render: (_, row) => (
           <Space size="small">
             <AButton size="small" icon={<EditOutlined />} onClick={() => openModal(row)} />
-            <Popconfirm title="Xóa danh mục?" onConfirm={() => handleDelete(row.id || row._id)} okText="Xóa" okButtonProps={{ danger: true }}>
+            <Popconfirm title="Delete category?" onConfirm={() => handleDelete(row.id || row._id)} okText="Delete" okButtonProps={{ danger: true }}>
               <AButton size="small" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           </Space>
@@ -201,12 +201,12 @@ export default function CategoriesPage() {
     <div className="space-y-4 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-display font-bold text-slate-900">Danh mục</h1>
-          <p className="text-slate-500 text-sm">Quản lý nhóm sản phẩm và danh mục</p>
+          <h1 className="text-xl font-display font-bold text-slate-900">Product Categories</h1>
+          <p className="text-slate-500 text-sm">Manage product groups and taxonomy hierarchy</p>
         </div>
         {isSuperAdmin && (
           <AButton type="primary" icon={<PlusOutlined />} onClick={() => openModal()} className="w-full sm:w-auto">
-            Thêm danh mục
+            Add Category
           </AButton>
         )}
       </div>
@@ -223,21 +223,21 @@ export default function CategoriesPage() {
       </div>
 
       <Modal
-        title={editing ? 'Chỉnh sửa danh mục' : 'Danh mục mới'}
+        title={editing ? 'Edit Category' : 'New Category'}
         open={open}
         onCancel={() => setOpen(false)}
         onOk={() => form.submit()}
-        okText="Lưu"
+        okText="Save"
         confirmLoading={saving}
         centered
       >
         <Form form={form} layout="vertical" onFinish={handleSave} className="mt-4">
-          <Form.Item label="Tên danh mục" name="ten_danh_muc" rules={[{ required: true, message: 'Vui lòng nhập tên danh mục' }]}>
-            <Input placeholder="VD: Kháng sinh" />
+          <Form.Item label="Category Name" name="ten_danh_muc" rules={[{ required: true, message: 'Please enter category name' }]}>
+            <Input placeholder="e.g. Antibiotics" />
           </Form.Item>
 
-          <Form.Item label="Danh mục cha" name="danh_muc_cha_id">
-            <Select placeholder="Chọn danh mục cha (tùy chọn)" allowClear>
+          <Form.Item label="Parent Category" name="danh_muc_cha_id">
+            <Select placeholder="Select parent category (optional)" allowClear>
               {cats.filter(c => !c.danh_muc_cha_id && (!editing || (c.id !== editing.id))).map(c => (
                 <Select.Option key={c.id} value={c.id}>{c.name}</Select.Option>
               ))}
@@ -245,9 +245,9 @@ export default function CategoriesPage() {
           </Form.Item>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item label="Icon danh mục" name="hinh_anh_icon">
+            <Form.Item label="Category Icon" name="hinh_anh_icon">
               <AutoComplete
-                placeholder="Chọn hoặc gõ tên icon (VD: medication, pill...)"
+                placeholder="Select or type icon name (e.g. medication, pill...)"
                 allowClear
                 filterOption={(inputValue, option) =>
                   (option?.value || '').toLowerCase().includes(inputValue.toLowerCase()) ||
@@ -265,12 +265,12 @@ export default function CategoriesPage() {
                 ))}
               </AutoComplete>
             </Form.Item>
-            <Form.Item label="Thứ tự hiển thị" name="thu_tu_hien_thi">
+            <Form.Item label="Display Order" name="thu_tu_hien_thi">
               <InputNumber min={0} style={{ width: '100%' }} />
             </Form.Item>
           </div>
 
-          <Form.Item label="Hoạt động" name="trang_thai" valuePropName="checked">
+          <Form.Item label="Active Status" name="trang_thai" valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>

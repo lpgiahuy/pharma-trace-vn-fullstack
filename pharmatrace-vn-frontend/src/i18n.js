@@ -17,18 +17,13 @@ const resources = {
 };
 
 i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'en', // default language
+    lng: 'en',
     fallbackLng: 'en',
     interpolation: {
-      escapeValue: false // react already safes from xss
-    },
-    detection: {
-      order: ['localStorage', 'cookie', 'htmlTag', 'path', 'subdomain'],
-      caches: ['localStorage']
+      escapeValue: false
     }
   });
 

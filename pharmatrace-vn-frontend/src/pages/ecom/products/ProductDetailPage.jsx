@@ -246,34 +246,34 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          {/* Price & Discount Box */}
-          <div className="bg-slate-50/80 p-6 rounded-2xl border border-slate-100 mb-6 shadow-sm">
+          {/* Price & Discount */}
+          <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-100 mb-6">
             {activeOriginalPrice && activePrice < activeOriginalPrice && (
-              <div className="inline-flex items-center bg-medical-red text-white text-[10px] font-black px-2 py-1 rounded mb-3 shadow-sm uppercase tracking-tight">
+              <div className="inline-flex items-center bg-medical-red text-white text-[11px] font-bold px-2 py-0.5 rounded mb-2 shadow-sm uppercase tracking-tight">
                 {t('product.discount_amount', { 
                   amount: formatCurrency(activeOriginalPrice - activePrice), 
-                  defaultValue: `GIẢM ${formatCurrency(activeOriginalPrice - activePrice)}` 
+                  defaultValue: `SAVE ${formatCurrency(activeOriginalPrice - activePrice)}` 
                 })}
               </div>
             )}
             
             <div className="flex items-baseline gap-3">
-              <span className="text-3xl md:text-4xl font-display font-black text-brand-600 tracking-tight">
+              <span className="text-2xl sm:text-3xl font-display font-bold text-brand-600">
                 {formatCurrency(activePrice)}
-                <span className="text-lg md:text-xl font-bold text-slate-400 ml-1.5 uppercase">
+                <span className="text-sm font-medium text-slate-500 ml-1.5">
                   /{selectedVariant?.unit || product.unit}
                 </span>
               </span>
               
               {activeOriginalPrice && activePrice < activeOriginalPrice && (
-                <span className="text-lg md:text-xl text-slate-300 line-through font-medium decor-slate-200">
+                <span className="text-base text-slate-400 line-through">
                   {formatCurrency(activeOriginalPrice)}
                 </span>
               )}
             </div>
 
-            <p className="text-[10px] sm:text-[11px] text-slate-400 mt-4 leading-relaxed italic border-t border-slate-200/60 pt-3">
-              * {t('product.price_disclaimer', { defaultValue: 'Giá đã bao gồm thuế. Phí vận chuyển và các chi phí khác (nếu có) sẽ được thể hiện khi đặt hàng.' })}
+            <p className="text-[11px] text-slate-400 mt-2 leading-relaxed italic">
+              * {t('product.price_disclaimer', { defaultValue: 'Price includes applicable taxes. Shipping rates calculated at checkout.' })}
             </p>
           </div>
 

@@ -39,8 +39,8 @@ export default function ScannerPage() {
       )
     } catch (err) {
       setScanning(false)
-      setError('Không thể truy cập camera. Vui lòng cấp quyền hoặc nhập thủ công.')
-      toast.error('Mở camera thất bại')
+      setError('Cannot access camera. Please allow camera permissions or enter UID manually.')
+      toast.error('Failed to open camera')
     }
   }
 
@@ -61,12 +61,12 @@ export default function ScannerPage() {
 
     try {
       const decodedText = await scanQRFromFile(file)
-      toast.success('Giải mã ảnh QR thành công!')
+      toast.success('Decoded QR image successfully!')
       handleScan(decodedText)
     } catch (err) {
       console.error('[QR File Scan Error]', err)
-      setError('Không thể tìm thấy mã QR hợp lệ trong ảnh này. Vui lòng chọn ảnh khác.')
-      toast.error('Quét ảnh thất bại')
+      setError('No valid QR code found in this image. Please select another image.')
+      toast.error('Image scan failed')
     } finally {
       setLoading(false)
     }
@@ -92,10 +92,10 @@ export default function ScannerPage() {
     try {
       const data = await warehouseService.scanQR(finalCode)
       setResult(data)
-      toast.success('Quét mã QR thành công')
+      toast.success('QR Code scanned successfully')
     } catch {
-      setError('Không tìm thấy hàng tồn kho cho mã QR này.')
-      toast.error('Quét mã thất bại')
+      setError('No inventory found for this QR code.')
+      toast.error('QR scan failed')
     } finally {
       setLoading(false)
     }
@@ -107,26 +107,26 @@ export default function ScannerPage() {
     <div className="space-y-6 animate-fade-in max-w-2xl">
       <div>
         <h1 className="text-xl font-display font-bold text-slate-900 flex items-center gap-2">
-          <QrcodeOutlined /> Quét mã QR
+          <QrcodeOutlined /> Warehouse QR Scanner
         </h1>
-        <p className="text-slate-500 text-sm mt-1">Quét mã QR sản phẩm để xem thông tin tồn kho</p>
+        <p className="text-slate-500 text-sm mt-1">Scan product QR codes to inspect inventory data & traceability status</p>
       </div>
 
-      <Card title="Quét bằng camera">
+      <Card title="Camera Scanner">
         {scanning ? (
           <div className="rounded-xl overflow-hidden border border-brand-500 bg-black relative mb-4">
             <div id="qr-reader-warehouse" ref={scannerEl} className="w-full h-[300px]" />
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
               <AButton type="primary" danger onClick={stopCamera}>
-                Dừng camera
+                Stop Camera
               </AButton>
             </div>
           </div>
         ) : (
           <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-slate-50 mb-4">
             <QrcodeOutlined className="text-5xl text-slate-300 mb-3" />
-            <p className="text-slate-500 font-medium mb-1">Hướng camera vào mã QR</p>
-            <p className="text-xs text-slate-400 mb-4">Cần quyền truy cập camera để quét trực tiếp</p>
+            <p className="text-slate-500 font-medium mb-1">Point camera at QR code</p>
+            <p className="text-xs text-slate-400 mb-4">Camera permissions required for live video scanning</p>
             
             <div className="flex gap-3">
               <AButton
@@ -134,11 +134,11 @@ export default function ScannerPage() {
                 icon={<QrcodeOutlined />}
                 onClick={startCamera}
               >
-                Bật camera quét
+                Start Camera Scanner
               </AButton>
               
               <label className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-all cursor-pointer text-sm font-medium shadow-sm">
-                Tải ảnh QR lên
+                Upload QR Image
                 <input
                   type="file"
                   accept="image/*"
@@ -150,14 +150,13 @@ export default function ScannerPage() {
           </div>
         )}
 
-
-        {/* Nhập thủ công */}
+        {/* Manual search */}
         <div className="flex gap-2">
           <input
             value={manualCode}
             onChange={e => setManualCode(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleManualSearch()}
-            placeholder="Hoặc nhập mã QR thủ công…"
+            placeholder="Or enter UID / QR code manually…"
             className="input flex-1"
           />
           <AButton
@@ -166,42 +165,42 @@ export default function ScannerPage() {
             loading={loading}
             onClick={handleManualSearch}
           >
-            Tra cứu
+            Search
           </AButton>
         </div>
       </Card>
 
-      {loading && <InlineLoader text="Đang tra cứu…" />}
+      {loading && <InlineLoader text="Looking up inventory…" />}
 
       {error && <Alert message={error} type="error" showIcon />}
 
       {result && (
         <Card
-          title={<span className="flex items-center gap-2"><QrcodeOutlined className="text-brand-500" /> Kết quả quét</span>}
-          extra={<AButton size="small" icon={<ReloadOutlined />} onClick={() => setResult(null)}>Xóa</AButton>}
+          title={<span className="flex items-center gap-2"><QrcodeOutlined className="text-brand-500" /> Scan Result</span>}
+          extra={<AButton size="small" icon={<ReloadOutlined />} onClick={() => setResult(null)}>Clear</AButton>}
           className="border-brand-200"
         >
           <Descriptions bordered size="small" column={1}>
-            <Descriptions.Item label="Sản phẩm">{result.productName}</Descriptions.Item>
-            <Descriptions.Item label="Số lô"><span className="font-mono">{result.batchNumber}</span></Descriptions.Item>
-            <Descriptions.Item label="Vị trí"><Tag color="blue">{result.location}</Tag></Descriptions.Item>
-            <Descriptions.Item label="Số lượng">
+            <Descriptions.Item label="Product">{result.productName}</Descriptions.Item>
+            <Descriptions.Item label="Batch / Lot"><span className="font-mono">{result.batchNumber}</span></Descriptions.Item>
+            <Descriptions.Item label="Location"><Tag color="blue">{result.location}</Tag></Descriptions.Item>
+            <Descriptions.Item label="Quantity">
               <span className="font-bold">{result.quantity}</span>
-              &nbsp;<span className="text-slate-400 text-xs">({result.reserved} đã đặt trước)</span>
+              &nbsp;<span className="text-slate-400 text-xs">({result.reserved} reserved)</span>
             </Descriptions.Item>
-            <Descriptions.Item label="Trạng thái tồn kho">
+            <Descriptions.Item label="Stock Status">
               <StockBadge quantity={result.quantity} />
             </Descriptions.Item>
-            <Descriptions.Item label="Hạn sử dụng">{formatDate(result.expiryDate)}</Descriptions.Item>
-            <Descriptions.Item label="Nhà cung cấp">{result.supplierName}</Descriptions.Item>
-            <Descriptions.Item label="Mã QR"><span className="font-mono text-xs">{result.qrCode}</span></Descriptions.Item>
-            <Descriptions.Item label="Thời gian quét">{result.scannedAt ? new Date(result.scannedAt).toLocaleString('vi-VN') : 'Vừa xong'}</Descriptions.Item>
+            <Descriptions.Item label="Expiry Date">{formatDate(result.expiryDate)}</Descriptions.Item>
+            <Descriptions.Item label="Supplier">{result.supplierName}</Descriptions.Item>
+            <Descriptions.Item label="QR Code"><span className="font-mono text-xs">{result.qrCode}</span></Descriptions.Item>
+            <Descriptions.Item label="Scanned At">{result.scannedAt ? new Date(result.scannedAt).toLocaleString() : 'Just now'}</Descriptions.Item>
           </Descriptions>
 
           <div className="mt-4 flex gap-2">
-            <AButton type="primary" size="small">Xem chi tiết</AButton>
-            <AButton size="small">Cập nhật vị trí</AButton>
-            <AButton size="small" danger>Gắn cờ kiểm tra</AButton>
+            <AButton type="primary" size="small">View Details</AButton>
+            <AButton size="small">Update Location</AButton>
+            <AButton size="small" danger>Flag for Inspection</AButton>
           </div>
         </Card>
       )}

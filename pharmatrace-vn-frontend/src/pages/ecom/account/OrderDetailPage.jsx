@@ -21,14 +21,14 @@ export default function OrderDetailPage() {
   useEffect(() => { fetchDetail() }, [id])
 
   const handleConfirmReceipt = async () => {
-    if (!window.confirm('Bạn có chắc chắn đã kiểm tra và nhận đầy đủ hàng? Thao tác này sẽ hoàn tất đơn hàng.')) return
+    if (!window.confirm('Are you sure you have inspected and received all items in this shipment? This will complete the order.')) return
     setConfirming(true)
     try {
       await orderService.confirmReceipt(order.id)
-      toast.success('🎉 Xác nhận nhận hàng thành công! Đơn hàng đã hoàn thành.')
+      toast.success('🎉 Package receipt confirmed! Order completed successfully.')
       fetchDetail()
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi xác nhận nhận hàng.')
+      toast.error(err.response?.data?.message || 'An error occurred while confirming delivery receipt.')
     } finally {
       setConfirming(false)
     }
@@ -54,8 +54,8 @@ export default function OrderDetailPage() {
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
-              <p className="font-bold text-slate-900 text-base">Đơn hàng đang được giao / Đã nhận hàng?</p>
-              <p className="text-xs text-slate-600">Vui lòng kiểm tra kỹ sản phẩm & tem niêm phong trước khi bấm xác nhận.</p>
+              <p className="font-bold text-slate-900 text-base">Out for delivery / Package received?</p>
+              <p className="text-xs text-slate-600">Please carefully inspect products & authenticity seals before confirming receipt.</p>
             </div>
           </div>
           <button
@@ -64,7 +64,7 @@ export default function OrderDetailPage() {
             className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
           >
             {confirming ? <Spinner size="sm" className="text-white" /> : <ShieldCheck className="w-5 h-5" />}
-            Đã nhận được hàng
+            Confirm Order Received
           </button>
         </div>
       )}
@@ -72,7 +72,7 @@ export default function OrderDetailPage() {
       {isCompleted && (
         <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-3 font-medium">
           <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-          <span>Đơn hàng này đã hoàn thành. Cảm ơn bạn đã tin tưởng PharmaTrace!</span>
+          <span>This order has been completed. Thank you for choosing PharmaTrace!</span>
         </div>
       )}
 

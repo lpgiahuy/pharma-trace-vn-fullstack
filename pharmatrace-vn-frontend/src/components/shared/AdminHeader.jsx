@@ -10,10 +10,7 @@ const { Header } = Layout
 export const AdminHeader = ({ collapsed, onToggle, portal = 'Admin', isMobile }) => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const { t, i18n } = useTranslation()
-
-  const currentLang = i18n.language?.startsWith('vi') ? 'vi' : 'en'
-  const toggleLang = () => i18n.changeLanguage(currentLang === 'vi' ? 'en' : 'vi')
+  const { t } = useTranslation()
 
   const userRole = user?.role || user?.vai_tro
   const isSuperAdmin = ['SuperAdmin', 'superadmin'].includes(userRole)
@@ -22,14 +19,14 @@ export const AdminHeader = ({ collapsed, onToggle, portal = 'Admin', isMobile })
   const menuItems = [
     { key: 'profile', label: t('admin.my_profile'), onClick: () => navigate(profilePath) },
     ...(portal === 'Admin' && isSuperAdmin ? [
-      { key: 'warehouse', label: '📦 Quản lý Kho (WMS Portal)', onClick: () => navigate('/warehouse/inbound') }
+      { key: 'warehouse', label: `${t('admin.warehouse_wms')} (${t('warehouse.wms_portal')})`, onClick: () => navigate('/warehouse/inbound') }
     ] : []),
     ...(portal === 'Warehouse' && isSuperAdmin ? [
-      { key: 'admin', label: '📊 Trang Quản trị (Admin Portal)', onClick: () => navigate('/admin') }
+      { key: 'admin', label: t('admin.admin_portal'), onClick: () => navigate('/admin') }
     ] : []),
-    { key: 'store',   label: t('admin.back_to_store'), onClick: () => navigate('/') },
+    { key: 'store', label: t('admin.back_to_store'), onClick: () => navigate('/') },
     { type: 'divider' },
-    { key: 'logout',  label: <span className="text-red-500">{t('admin.sign_out')}</span>, onClick: logout },
+    { key: 'logout', label: <span className="text-red-500">{t('admin.sign_out')}</span>, onClick: logout },
   ]
 
   return (
@@ -59,18 +56,6 @@ export const AdminHeader = ({ collapsed, onToggle, portal = 'Admin', isMobile })
       </span>
 
       <div className="ml-auto flex items-center gap-1.5 sm:gap-3">
-        {/* Language toggle */}
-        <button
-          onClick={toggleLang}
-          title={currentLang === 'vi' ? 'Switch to English' : 'Chuyển sang Tiếng Việt'}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all text-xs font-semibold text-slate-600 select-none"
-        >
-          <span className="text-base leading-none">
-            {currentLang === 'vi' ? '🇻🇳' : '🇺🇸'}
-          </span>
-          <span>{currentLang === 'vi' ? 'VI' : 'EN'}</span>
-        </button>
-
         <button className="relative p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500">
           <BellOutlined style={{ fontSize: 18 }} />
           <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />

@@ -55,47 +55,47 @@ export default function VouchersPage() {
       if (editing) await voucherService.update(editing.id, payload)
       else         await voucherService.create(payload)
 
-      toast.success(editing ? 'Đã cập nhật mã giảm giá' : 'Đã tạo mã giảm giá')
+      toast.success(editing ? 'Voucher coupon updated successfully' : 'Voucher coupon created successfully')
       setOpen(false); fetchData()
-    } catch { toast.error('Lưu thất bại') }
+    } catch { toast.error('Failed to save voucher') }
     finally { setSaving(false) }
   }
 
   const handleDelete = async (id) => {
-    try { await voucherService.delete(id); toast.success('Đã xóa mã giảm giá'); fetchData() }
-    catch { toast.error('Xóa thất bại') }
+    try { await voucherService.delete(id); toast.success('Voucher deleted successfully'); fetchData() }
+    catch { toast.error('Failed to delete voucher') }
   }
 
   const cols = [
     {
-      title: 'Mã giảm giá',
+      title: 'Coupon Code',
       dataIndex: 'code',
       key: 'code',
       render: v => <span className="font-mono font-bold text-brand-600 bg-brand-50 px-2 py-1 rounded">{v}</span>
     },
     {
-      title: 'Loại giảm',
+      title: 'Discount Type',
       dataIndex: 'type',
       key: 'type',
       render: v => (
         <Tag color={v === 'PhanTram' ? 'blue' : 'orange'}>
-          {v === 'PhanTram' ? 'Phần trăm %' : 'Tiền mặt ₫'}
+          {v === 'PhanTram' ? 'Percentage %' : 'Fixed Amount ₫'}
         </Tag>
       )
     },
     {
-      title: 'Giá trị',
+      title: 'Value',
       key: 'value',
       render: (_, r) => r.type === 'PhanTram' ? `${r.value}%` : formatCurrency(r.value)
     },
     {
-      title: 'Điều kiện',
+      title: 'Conditions',
       dataIndex: 'minOrder',
       key: 'min',
-      render: v => v > 0 ? `Tối thiểu ${formatCurrency(v)}` : <span className="text-slate-400 italic">Không yêu cầu</span>
+      render: v => v > 0 ? `Min spend ${formatCurrency(v)}` : <span className="text-slate-400 italic">No minimum</span>
     },
     {
-      title: 'Lượt dùng',
+      title: 'Usage Count',
       key: 'usage',
       render: (_, r) => (
         <div className="flex flex-col">
@@ -110,18 +110,18 @@ export default function VouchersPage() {
       )
     },
     {
-      title: 'Trạng thái',
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: v => <Tag color={v === 'active' ? 'green' : 'red'}>{v === 'active' ? 'HOẠT ĐỘNG' : 'HẾT HẠN'}</Tag>
+      render: v => <Tag color={v === 'active' ? 'green' : 'red'}>{v === 'active' ? 'ACTIVE' : 'EXPIRED'}</Tag>
     },
     {
-      title: 'Hiệu lực',
+      title: 'Validity Period',
       key: 'validity',
       render: (_, r) => (
         <div className="text-xs text-slate-500">
           <div>{formatDate(r.startDate)}</div>
-          <div className="text-slate-300">đến</div>
+          <div className="text-slate-300">to</div>
           <div>{formatDate(r.endDate)}</div>
         </div>
       )
@@ -133,7 +133,7 @@ export default function VouchersPage() {
       render: (_, row) => (
         <div className="flex gap-1">
           <AButton size="small" icon={<EditOutlined />} onClick={() => openModal(row)} />
-          <Popconfirm title="Xóa mã giảm giá?" onConfirm={() => handleDelete(row.id)} okText="Xóa" okButtonProps={{ danger: true }}>
+          <Popconfirm title="Delete this discount voucher?" onConfirm={() => handleDelete(row.id)} okText="Delete" okButtonProps={{ danger: true }}>
             <AButton size="small" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </div>
@@ -145,48 +145,48 @@ export default function VouchersPage() {
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-display font-bold text-slate-900">Mã giảm giá & Khuyến mãi</h1>
-          <p className="text-slate-500 text-sm">Quản lý mã giảm giá và chiến dịch marketing</p>
+          <h1 className="text-xl font-display font-bold text-slate-900">Vouchers & Promotional Discounts</h1>
+          <p className="text-slate-500 text-sm">Manage promotional discount codes and customer marketing campaigns</p>
         </div>
-        <AButton type="primary" icon={<PlusOutlined />} onClick={() => openModal()} size="large">Tạo mã giảm giá</AButton>
+        <AButton type="primary" icon={<PlusOutlined />} onClick={() => openModal()} size="large">Create Voucher</AButton>
       </div>
       <div className="card p-4">
         <Table dataSource={data} columns={cols} rowKey="id" loading={loading} pagination={{ pageSize: 10 }} size="middle" scroll={{ x: 800 }} />
       </div>
 
-      <Modal title={editing ? 'Chỉnh sửa mã giảm giá' : 'Mã giảm giá mới'} open={open} onCancel={() => setOpen(false)} onOk={() => form.submit()} okText="Lưu" confirmLoading={saving}>
+      <Modal title={editing ? 'Edit Voucher Code' : 'Create New Voucher'} open={open} onCancel={() => setOpen(false)} onOk={() => form.submit()} okText="Save" confirmLoading={saving}>
         <Form form={form} layout="vertical" onFinish={handleSave} className="mt-4">
-          <Form.Item label="Mã giảm giá" name="ma_code" rules={[{ required: true, message: 'Vui lòng nhập mã' }]}>
-            <Input placeholder="VD: PHARMA50" style={{ textTransform: 'uppercase' }} />
+          <Form.Item label="Coupon Code" name="ma_code" rules={[{ required: true, message: 'Please enter voucher code' }]}>
+            <Input placeholder="e.g. PHARMA50" style={{ textTransform: 'uppercase' }} />
           </Form.Item>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item label="Loại" name="loai_giam_gia" rules={[{ required: true }]}>
+            <Form.Item label="Discount Type" name="loai_giam_gia" rules={[{ required: true }]}>
               <Select options={[
-                { value: 'PhanTram', label: 'Phần trăm (%)' },
-                { value: 'TienMat',  label: 'Tiền mặt (₫)' },
-                { value: 'FreeShip', label: 'Miễn phí vận chuyển' },
+                { value: 'PhanTram', label: 'Percentage (%)' },
+                { value: 'TienMat',  label: 'Fixed Cash Amount (₫)' },
+                { value: 'FreeShip', label: 'Free Shipping' },
               ]} />
             </Form.Item>
-            <Form.Item label="Giá trị" name="gia_tri" rules={[{ required: true }]}>
+            <Form.Item label="Discount Value" name="gia_tri" rules={[{ required: true, message: 'Please enter value' }]}>
               <InputNumber min={0} style={{ width: '100%' }} />
             </Form.Item>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item label="Đơn hàng tối thiểu (₫)" name="don_hang_toi_thieu">
+            <Form.Item label="Minimum Order Spend (₫)" name="don_hang_toi_thieu">
               <InputNumber min={0} style={{ width: '100%' }} />
             </Form.Item>
-            <Form.Item label="Giới hạn lượt dùng" name="so_luong_gioi_han">
+            <Form.Item label="Usage Limit" name="so_luong_gioi_han">
               <InputNumber min={1} style={{ width: '100%' }} />
             </Form.Item>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item label="Ngày bắt đầu" name="ngay_bat_dau" rules={[{ required: true, message: 'Ngày bắt đầu là bắt buộc' }]}>
+            <Form.Item label="Start Date" name="ngay_bat_dau" rules={[{ required: true, message: 'Start date is required' }]}>
               <DatePicker showTime style={{ width: '100%' }} />
             </Form.Item>
-            <Form.Item label="Ngày kết thúc" name="ngay_ket_thuc" rules={[{ required: true, message: 'Ngày kết thúc là bắt buộc' }]}>
+            <Form.Item label="End Date" name="ngay_ket_thuc" rules={[{ required: true, message: 'End date is required' }]}>
               <DatePicker showTime style={{ width: '100%' }} />
             </Form.Item>
           </div>

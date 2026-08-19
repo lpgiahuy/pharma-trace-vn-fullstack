@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { Table, Card, Tag, Button, Modal, Form, Input, Select, InputNumber, Space, Row, Col, Statistic, message, Popconfirm, Alert } from 'antd'
 import { SafetyCertificateOutlined, AlertOutlined, ThunderboltOutlined, CompassOutlined, CheckCircleOutlined, ReloadOutlined, ExclamationCircleOutlined, AimOutlined, LockOutlined } from '@ant-design/icons'
 import apiClient from '@/services/apiClient'
+import { useTranslation } from 'react-i18next'
 
 export default function FraudAnomalyEnginePage() {
+  const { t } = useTranslation()
   const [alerts, setAlerts] = useState([])
   const [stats, setStats] = useState({ tong_so_canh_bao: 0, rui_ro_nghiem_trong: 0, bat_thuong_van_toc: 0, bat_thuong_tan_suat: 0, da_xac_nhan_hang_gia: 0 })
   const [loading, setLoading] = useState(false)
@@ -29,7 +31,7 @@ export default function FraudAnomalyEnginePage() {
       const res = await apiClient.get('/admin/fraud-anomalies/alerts', { params })
       if (res.data?.success) setAlerts(res.data.data || [])
     } catch (err) {
-      message.error('Lỗi khi tải danh sách Cảnh báo Gian lận')
+      message.error('Failed to load fraud security alerts')
     } finally {
       setLoading(false)
     }
@@ -53,14 +55,14 @@ export default function FraudAnomalyEnginePage() {
     try {
       const res = await apiClient.patch(`/admin/fraud-anomalies/alerts/${id}/status`, { status })
       if (res.data?.success) {
-        message.success('Cập nhật trạng thái xử lý cảnh báo thành công')
+        message.success('Alert resolution status updated successfully')
         fetchAlerts()
         fetchStats()
       } else {
-        message.error(res.data?.message || 'Lỗi khi cập nhật trạng thái')
+        message.error(res.data?.message || 'Error updating status')
       }
     } catch (err) {
-      message.error(err.response?.data?.message || 'Không thể kết nối máy chủ')
+      message.error(err.response?.data?.message || 'Failed to connect to server')
     }
   }
 
@@ -71,15 +73,15 @@ export default function FraudAnomalyEnginePage() {
       if (res.data?.success) {
         setSimResult(res.data.data)
         if (res.data.data.anomalyDetected) {
-          message.warning('Phát hiện cảnh báo vận tốc / vị trí quét bất thường!')
+          message.warning('Impossible velocity / geographic anomaly detected!')
         } else {
-          message.success('Xác thực thành công: Tọa độ hợp lệ')
+          message.success('Verification passed: coordinates are authentic and physically plausible')
         }
         fetchAlerts()
         fetchStats()
       }
     } catch (err) {
-      message.error(err.response?.data?.message || 'Lỗi khi chạy simulator Engine')
+      message.error(err.response?.data?.message || 'Failed to execute engine simulation')
     } finally {
       setSimLoading(false)
     }
@@ -87,10 +89,10 @@ export default function FraudAnomalyEnginePage() {
 
   const renderRiskBadge = (risk) => {
     const map = {
-      Critical: { color: 'magenta', text: 'NGHIÊM TRỌNG (CRITICAL)', icon: <AlertOutlined /> },
-      High: { color: 'red', text: 'CAO (HIGH)', icon: <ExclamationCircleOutlined /> },
-      Medium: { color: 'orange', text: 'TRUNG BÌNH', icon: <CompassOutlined /> },
-      Low: { color: 'blue', text: 'THẤP', icon: <CheckCircleOutlined /> }
+      Critical: { color: 'magenta', text: 'CRITICAL RISK', icon: <AlertOutlined /> },
+      High: { color: 'red', text: 'HIGH RISK', icon: <ExclamationCircleOutlined /> },
+      Medium: { color: 'orange', text: 'MEDIUM RISK', icon: <CompassOutlined /> },
+      Low: { color: 'blue', text: 'LOW RISK', icon: <CheckCircleOutlined /> }
     }
     const item = map[risk] || { color: 'default', text: risk }
     return <Tag color={item.color} icon={item.icon}>{item.text}</Tag>
@@ -98,10 +100,10 @@ export default function FraudAnomalyEnginePage() {
 
   const renderStatusBadge = (status) => {
     const map = {
-      Moi: { color: 'gold', text: 'MỚI CẢNH BÁO' },
-      DangXuLy: { color: 'processing', text: 'ĐANG ĐIỀU TRA' },
-      DaKiemChung: { color: 'cyan', text: 'ĐÃ KIỂM CHỨNG' },
-      BaoDongGia: { color: 'red', text: 'XÁC NHẬN HÀNG GIẢ' }
+      Moi: { color: 'gold', text: 'New Alert' },
+      DangXuLy: { color: 'processing', text: 'Investigating' },
+      DaKiemChung: { color: 'cyan', text: 'Verified Authentic' },
+      BaoDongGia: { color: 'red', text: 'Confirmed Counterfeit' }
     }
     const item = map[status] || { color: 'default', text: status }
     return <Tag color={item.color}>{item.text}</Tag>
@@ -109,77 +111,77 @@ export default function FraudAnomalyEnginePage() {
 
   const columns = [
     { 
-      title: 'Mã Hộp Thuốc (UID)', 
+      title: 'Item UID / Batch Details', 
       dataIndex: 'hop_thuoc_uid', 
       key: 'hop_thuoc_uid',
       width: 220,
       render: (uid, r) => (
         <div>
           <strong className="font-mono text-slate-800 break-all">{uid}</strong>
-          {r.ten_duoc_pham && <div className="text-xs text-brand-600 font-medium mt-1">{r.ten_duoc_pham} - Số Lô: {r.so_lo_san_xuat || 'N/A'}</div>}
+          {r.ten_duoc_pham && <div className="text-xs text-brand-600 font-medium mt-1">{r.ten_duoc_pham} - Batch: {r.so_lo_san_xuat || 'N/A'}</div>}
         </div>
       )
     },
     { 
-      title: 'Loại Cảnh Báo', 
+      title: 'Anomaly Type', 
       dataIndex: 'loai_canh_bao', 
       key: 'loai_canh_bao',
       width: 170,
       render: (type) => (
         type === 'VelocityAnomaly' 
-          ? <Tag color="purple" icon={<ThunderboltOutlined />}>Bất Thường Vận Tốc</Tag> 
-          : <Tag color="volcano">Bất Thường Tần Suất</Tag>
+          ? <Tag color="purple" icon={<ThunderboltOutlined />}>Velocity Anomaly</Tag> 
+          : <Tag color="volcano">Frequency Anomaly</Tag>
       )
     },
-    { title: 'Mức Độ Rủi Ro', key: 'risk', width: 190, render: (_, r) => renderRiskBadge(r.muc_do_rui_ro) },
+    { title: 'Risk Level', key: 'risk', width: 190, render: (_, r) => renderRiskBadge(r.muc_do_rui_ro) },
     { 
-      title: 'Khoảng Cách / Vận Tốc', 
+      title: 'Geographic Velocity', 
       key: 'velocity',
       width: 180,
       render: (_, r) => (
         <div>
           <div className="text-sm font-semibold text-slate-700">{r.khoang_cach_km ? `${r.khoang_cach_km} km` : '0 km'}</div>
-          <div className="text-xs text-red-500 font-mono">{r.van_toc_kmh ? `${Number(r.van_toc_kmh).toLocaleString()} km/h` : 'N/A'} ({r.thoi_gian_chenh_phut || 0} phút)</div>
+          <div className="text-xs text-red-500 font-mono">{r.van_toc_kmh ? `${Number(r.van_toc_kmh).toLocaleString()} km/h` : 'N/A'} ({r.thoi_gian_chenh_phut || 0} min)</div>
         </div>
       )
     },
     { 
-      title: 'Mô Tả Cảnh Báo Engine', 
+      title: 'Heuristic Description', 
       dataIndex: 'mo_ta', 
       key: 'mo_ta',
       width: 320,
       render: (text) => <span className="text-xs text-slate-600 leading-relaxed block">{text}</span> 
     },
-    { title: 'Trạng Thái', key: 'status', width: 160, render: (_, r) => renderStatusBadge(r.trang_thai) },
+    { title: 'Status', key: 'status', width: 160, render: (_, r) => renderStatusBadge(r.trang_thai) },
     {
-      title: 'Hành Động',
+      title: 'Actions',
       key: 'action',
       width: 220,
       render: (_, r) => (
         <Space size="small" direction="vertical">
           {r.trang_thai !== 'BaoDongGia' && (
             <Popconfirm
-              title="Xác nhận cảnh báo hàng giả?"
-              description="Đánh dấu lô/hộp thuốc này là hàng giả để cảnh báo toàn bộ người tiêu dùng."
+              title="Flag as Confirmed Counterfeit?"
+              description="This permanently flags this serial QR UID as counterfeit across all verification portals."
               onConfirm={() => handleUpdateStatus(r.id, 'BaoDongGia')}
-              okText="Báo Động Hàng Giả"
-              cancelText="Hủy"
+              okText="Flag Counterfeit"
+              cancelText="Cancel"
             >
               <Button type="primary" danger size="small" icon={<LockOutlined />}>
-                Báo Hàng Giả
+                Flag Counterfeit
               </Button>
             </Popconfirm>
           )}
           <Select
             size="small"
             value={r.trang_thai}
-            style={{ width: 140 }}
+            style={{ width: 150 }}
             onChange={(val) => handleUpdateStatus(r.id, val)}
             options={[
-              { label: 'Mới cảnh báo', value: 'Moi' },
-              { label: 'Đang điều tra', value: 'DangXuLy' },
-              { label: 'Đã kiểm chứng', value: 'DaKiemChung' },
-              { label: 'Báo động hàng giả', value: 'BaoDongGia' }
+              { label: 'New Alert', value: 'Moi' },
+              { label: 'Investigating', value: 'DangXuLy' },
+              { label: 'Verified Authentic', value: 'DaKiemChung' },
+              { label: 'Confirmed Counterfeit', value: 'BaoDongGia' }
             ]}
           />
         </Space>
@@ -193,14 +195,14 @@ export default function FraudAnomalyEnginePage() {
       <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <SafetyCertificateOutlined className="text-rose-600" /> Engine Chống Gian Lận QR & Cảnh Báo Hàng Giả
+            <SafetyCertificateOutlined className="text-rose-600" /> Fraud Detection & Anomaly Security Engine
           </h1>
-          <p className="text-sm text-slate-500">Phát hiện bất thường vận tốc quét địa lý (Haversine Anomaly) & tần suất nhân bản mã QR</p>
+          <p className="text-sm text-slate-500">Real-time anti-counterfeit heuristics, impossibility velocity scanner, and clone detection</p>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => { fetchAlerts(); fetchStats(); }}>Tải lại</Button>
+          <Button icon={<ReloadOutlined />} onClick={() => { fetchAlerts(); fetchStats(); }}>Refresh</Button>
           <Button type="primary" icon={<AimOutlined />} onClick={() => setIsSimulatorOpen(true)} className="bg-purple-600 hover:bg-purple-500">
-            Giả Lập Quét Engine (Simulator)
+            Attack Simulator Console
           </Button>
         </Space>
       </div>
@@ -209,22 +211,22 @@ export default function FraudAnomalyEnginePage() {
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="Tổng Vụ Cảnh Báo" value={stats.tong_so_canh_bao || 0} valueStyle={{ color: '#0284c7' }} prefix={<AlertOutlined />} />
+            <Statistic title="Total Security Alerts" value={stats.tong_so_canh_bao || 0} valueStyle={{ color: '#0284c7' }} prefix={<AlertOutlined />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="Rủi Ro Nghiêm Trọng (Critical)" value={stats.rui_ro_nghiem_trong || 0} valueStyle={{ color: '#c026d3' }} prefix={<ThunderboltOutlined />} />
+            <Statistic title="Critical Risk Incidents" value={stats.rui_ro_nghiem_trong || 0} valueStyle={{ color: '#c026d3' }} prefix={<ThunderboltOutlined />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="Bất Thường Vận Tốc (Velocity)" value={stats.bat_thuong_van_toc || 0} valueStyle={{ color: '#ea580c' }} prefix={<CompassOutlined />} />
+            <Statistic title="Velocity Anomalies" value={stats.bat_thuong_van_toc || 0} valueStyle={{ color: '#ea580c' }} prefix={<CompassOutlined />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="Xác Nhận Hàng Giả / Cloned QR" value={stats.da_xac_nhan_hang_gia || 0} valueStyle={{ color: '#dc2626' }} prefix={<LockOutlined />} />
+            <Statistic title="Confirmed Counterfeits" value={stats.da_xac_nhan_hang_gia || 0} valueStyle={{ color: '#dc2626' }} prefix={<LockOutlined />} />
           </Card>
         </Col>
       </Row>
@@ -233,47 +235,47 @@ export default function FraudAnomalyEnginePage() {
       <Card className="rounded-xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
           <Space wrap>
-            <span className="text-sm font-semibold text-slate-700">Rủi ro:</span>
+            <span className="text-sm font-semibold text-slate-700">Risk Level:</span>
             <Select
               value={filterRisk}
               onChange={setFilterRisk}
               style={{ width: 150 }}
               options={[
-                { label: 'Tất cả rủi ro', value: '' },
-                { label: 'Critical (Nghiêm trọng)', value: 'Critical' },
-                { label: 'High (Cao)', value: 'High' },
-                { label: 'Medium (Trung bình)', value: 'Medium' }
+                { label: 'All Risks', value: '' },
+                { label: 'Critical Risk', value: 'Critical' },
+                { label: 'High Risk', value: 'High' },
+                { label: 'Medium Risk', value: 'Medium' }
               ]}
             />
-            <span className="text-sm font-semibold text-slate-700">Loại cảnh báo:</span>
+            <span className="text-sm font-semibold text-slate-700">Alert Type:</span>
             <Select
               value={filterType}
               onChange={setFilterType}
               style={{ width: 170 }}
               options={[
-                { label: 'Tất cả loại', value: '' },
-                { label: 'Bất thường vận tốc', value: 'VelocityAnomaly' },
-                { label: 'Bất thường tần suất', value: 'FrequencyAnomaly' }
+                { label: 'All Types', value: '' },
+                { label: 'Velocity Anomaly', value: 'VelocityAnomaly' },
+                { label: 'Frequency Anomaly', value: 'FrequencyAnomaly' }
               ]}
             />
-            <span className="text-sm font-semibold text-slate-700">Trạng thái:</span>
+            <span className="text-sm font-semibold text-slate-700">Status:</span>
             <Select
               value={filterStatus}
               onChange={setFilterStatus}
-              style={{ width: 160 }}
+              style={{ width: 170 }}
               options={[
-                { label: 'Tất cả trạng thái', value: '' },
-                { label: 'Mới cảnh báo', value: 'Moi' },
-                { label: 'Đang điều tra', value: 'DangXuLy' },
-                { label: 'Đã kiểm chứng', value: 'DaKiemChung' },
-                { label: 'Báo động hàng giả', value: 'BaoDongGia' }
+                { label: 'All Statuses', value: '' },
+                { label: 'New Alert', value: 'Moi' },
+                { label: 'Investigating', value: 'DangXuLy' },
+                { label: 'Verified Authentic', value: 'DaKiemChung' },
+                { label: 'Confirmed Counterfeit', value: 'BaoDongGia' }
               ]}
             />
           </Space>
           <Input.Search
-            placeholder="Tìm theo UID, Mô tả, Dược phẩm..."
+            placeholder="Search by UID, Drug Name, Batch..."
             onSearch={(val) => { setSearch(val); fetchAlerts(); }}
-            style={{ width: 260 }}
+            style={{ width: 280 }}
             allowClear
           />
         </div>
@@ -290,7 +292,7 @@ export default function FraudAnomalyEnginePage() {
 
       {/* Simulator Modal */}
       <Modal
-        title="Bảng Điều Khiển Giả Lập Engine Quét Mã QR"
+        title="QR Geographic Anomaly & Velocity Engine Simulator"
         open={isSimulatorOpen}
         onCancel={() => { setIsSimulatorOpen(false); setSimResult(null); }}
         footer={null}
@@ -298,49 +300,49 @@ export default function FraudAnomalyEnginePage() {
         <Form form={form} layout="vertical" onFinish={handleRunSimulation}>
           <Form.Item 
             name="hop_thuoc_uid" 
-            label="UID Hộp Thuốc (UUID)" 
+            label="Package UID (UUID)" 
             initialValue="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
-            rules={[{ required: true, message: 'Nhập UID Hộp thuốc' }]}
+            rules={[{ required: true, message: 'Please enter package UID' }]}
           >
-            <Input placeholder="Ví dụ: a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d" />
+            <Input placeholder="e.g. a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d" />
           </Form.Item>
           
           <Row gutter={12}>
             <Col span={12}>
-              <Form.Item name="lat" label="Vĩ độ (Lat)" initialValue={10.8231} rules={[{ required: true }]}>
-                <InputNumber placeholder="10.8231 (TP.HCM)" style={{ width: '100%' }} precision={6} />
+              <Form.Item name="lat" label="Latitude (Lat)" initialValue={10.8231} rules={[{ required: true }]}>
+                <InputNumber placeholder="10.8231 (HCMC)" style={{ width: '100%' }} precision={6} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="lng" label="Kinh độ (Lng)" initialValue={106.6297} rules={[{ required: true }]}>
-                <InputNumber placeholder="106.6297 (TP.HCM)" style={{ width: '100%' }} precision={6} />
+              <Form.Item name="lng" label="Longitude (Lng)" initialValue={106.6297} rules={[{ required: true }]}>
+                <InputNumber placeholder="106.6297 (HCMC)" style={{ width: '100%' }} precision={6} />
               </Form.Item>
             </Col>
           </Row>
 
           <Button type="primary" htmlType="submit" loading={simLoading} block className="bg-purple-600 hover:bg-purple-500 mb-4">
-            Chạy Engine Kiểm Tra Gian Lận
+            Execute Fraud Detection Engine
           </Button>
         </Form>
 
         {simResult && (
           <div className="mt-4 p-4 border rounded-xl bg-slate-50 space-y-3">
-            <h3 className="font-bold text-slate-800">Kết quả tính toán Engine:</h3>
-            <div className="text-sm"><strong>Khoảng cách tính toán:</strong> {simResult.distance_km} km</div>
-            <div className="text-sm"><strong>Thời gian chênh lệch:</strong> {simResult.time_diff_minutes?.toFixed(1)} phút</div>
-            <div className="text-sm"><strong>Vận tốc ước tính:</strong> <span className="font-mono text-red-600 font-bold">{simResult.speed_kmh} km/h</span></div>
+            <h3 className="font-bold text-slate-800">Engine Mathematical Computation:</h3>
+            <div className="text-sm"><strong>Computed Distance:</strong> {simResult.distance_km} km</div>
+            <div className="text-sm"><strong>Elapsed Time Delta:</strong> {simResult.time_diff_minutes?.toFixed(1)} minutes</div>
+            <div className="text-sm"><strong>Estimated Physical Speed:</strong> <span className="font-mono text-red-600 font-bold">{simResult.speed_kmh} km/h</span></div>
             
             {simResult.anomalyDetected ? (
               <Alert
-                message="PHÁT HIỆN CẢNH BÁO GIAN LẬN VẬN TỐC GEOGRAPHIC VELOCITY!"
+                message="IMPOSSIBLE GEOGRAPHIC VELOCITY ANOMALY TRIGGERED!"
                 description={simResult.createdAlert?.mo_ta}
                 type="error"
                 showIcon
               />
             ) : (
               <Alert
-                message="XÁC THỰC HỢP LỆ"
-                description="Tọa độ quét và thời gian hợp lệ, không có dấu hiệu gian lận."
+                message="PHYSICALLY AUTHENTIC & VALID"
+                description="Scan coordinates and timestamp progression are authentic and physically plausible."
                 type="success"
                 showIcon
               />

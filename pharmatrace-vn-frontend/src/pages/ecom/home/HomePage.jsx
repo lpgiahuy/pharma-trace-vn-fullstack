@@ -82,27 +82,27 @@ export default function HomePage() {
   ]
 
   const BANNERS = [
-    { id: 1, title: 'Thuốc chính hãng, giao nhanh toàn quốc', cta: 'Mua ngay', to: '/products', image: 'https://wallpapercave.com/wp/wp15262378.jpg' },
-    { id: 2, title: 'Vitamin & Thực phẩm bổ sung – Giảm đến 30%', cta: 'Xem ưu đãi', to: '/products', image: 'https://thumbs.dreamstime.com/z/vitamins-supplements-shelves-different-types-pharmacy-45969522.jpg' },
-    { id: 3, title: 'Chăm sóc sức khỏe mẹ & bé toàn diện', cta: 'Khám phá ngay', to: '/products', image: 'https://www.vermontvisitingnurses.org/wp-content/uploads/2017/11/VNA-Maternal-Child-Health-Program-Vermont.jpg' },
-    { id: 4, title: 'Giao hàng miễn phí – Đơn từ 500.000đ', cta: 'Mua ngay', to: '/products', image: 'https://wallpapercave.com/wp/wp13751014.jpg' },
+    { id: 1, title: '100% Authentic Medications, Fast Nationwide Delivery', cta: 'Shop Now', to: '/products', image: 'https://wallpapercave.com/wp/wp15262378.jpg' },
+    { id: 2, title: 'Vitamins & Dietary Supplements – Up to 30% Off', cta: 'View Offers', to: '/products', image: 'https://thumbs.dreamstime.com/z/vitamins-supplements-shelves-different-types-pharmacy-45969522.jpg' },
+    { id: 3, title: 'Comprehensive Mother & Child Healthcare Essentials', cta: 'Explore Now', to: '/products', image: 'https://www.vermontvisitingnurses.org/wp-content/uploads/2017/11/VNA-Maternal-Child-Health-Program-Vermont.jpg' },
+    { id: 4, title: 'Free Nationwide Shipping on Orders over 500,000₫', cta: 'Shop Now', to: '/products', image: 'https://wallpapercave.com/wp/wp13751014.jpg' },
   ]
   const slideCount = Math.ceil(BANNERS.length / 2)
 
-  const SUGGESTIONS = ['khẩu trang', 'sữa dinh dưỡng', 'nước nhỏ mắt', 'omega 3', 'xịt chống nắng', 'probiotics', 'Mua 1 Tặng 1']
+  const SUGGESTIONS = ['face mask', 'nutritional milk', 'eye drops', 'omega 3', 'sunscreen spray', 'probiotics', 'Buy 1 Get 1']
 
   const QUICK_LINKS = [
-    { label: 'Đặt đơn thuốc', icon: Pill, to: '/account/prescriptions' },
-    { label: 'Liên hệ dược sĩ', icon: HeartPulse, to: '/blog' },
-    { label: 'Tìm nhà thuốc', icon: MapPin, to: '/pharmacies' },
+    { label: 'Upload Prescription', icon: Pill, to: '/account/prescriptions' },
+    { label: 'Consult Pharmacist', icon: HeartPulse, to: '/blog' },
+    { label: 'Find Pharmacies', icon: MapPin, to: '/pharmacies' },
   ]
 
   const ACTION_CARDS = [
-    { label: 'Tư vấn mua thuốc', icon: Pill, to: '/account/prescriptions', bg: 'bg-green-100', color: 'text-green-600' },
-    { label: 'Hệ thống nhà thuốc', icon: MapPin, to: '/pharmacies', bg: 'bg-blue-100', color: 'text-blue-600' },
-    { label: 'Liên hệ dược sĩ', icon: HeartPulse, to: '/blog', bg: 'bg-teal-100', color: 'text-teal-600' },
-    { label: 'Mã giảm giá riêng', icon: Tag, to: '/account/vouchers', bg: 'bg-amber-100', color: 'text-amber-600' },
-    { label: 'Kiểm tra sức khỏe', icon: Activity, to: '/blog', bg: 'bg-purple-100', color: 'text-purple-600' },
+    { label: 'Prescription Advice', icon: Pill, to: '/account/prescriptions', bg: 'bg-green-100', color: 'text-green-600' },
+    { label: 'Pharmacy Network', icon: MapPin, to: '/pharmacies', bg: 'bg-blue-100', color: 'text-blue-600' },
+    { label: 'Consult Pharmacist', icon: HeartPulse, to: '/blog', bg: 'bg-teal-100', color: 'text-teal-600' },
+    { label: 'Exclusive Vouchers', icon: Tag, to: '/account/vouchers', bg: 'bg-amber-100', color: 'text-amber-600' },
+    { label: 'Health Checks', icon: Activity, to: '/blog', bg: 'bg-purple-100', color: 'text-purple-600' },
   ]
 
   useEffect(() => {
@@ -211,7 +211,7 @@ export default function HomePage() {
                   <input
                     value={heroSearch}
                     onChange={e => setHeroSearch(e.target.value)}
-                    placeholder="Bạn đang tìm gì hôm nay..."
+                    placeholder="Search medications, vitamins, supplements..."
                     className="flex-1 h-full pl-12 pr-4 rounded-full focus:outline-none text-slate-800 placeholder:text-slate-400 text-[15px] font-medium"
                   />
                   </div>
@@ -254,7 +254,7 @@ export default function HomePage() {
               key={i}
               onClick={() => setBgSlide(i)}
               className={`rounded-full transition-all duration-300 ${i === bgSlide ? 'bg-white w-5 h-2' : 'bg-white/40 w-2 h-2 hover:bg-white/60'}`}
-              aria-label={`Nền ${i + 1}`}
+              aria-label={`Slide ${i + 1}`}
             />
           ))}
         </div>
@@ -299,14 +299,14 @@ export default function HomePage() {
                 <button
                   onClick={() => setCurrentSlide(s => (s - 1 + slideCount) % slideCount)}
                   className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-all z-10"
-                  aria-label="Slide trước"
+                  aria-label="Previous slide"
                 >
                   <ChevronLeft className="w-5 h-5 text-slate-700" />
                 </button>
                 <button
                   onClick={() => setCurrentSlide(s => (s + 1) % slideCount)}
                   className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md transition-all z-10"
-                  aria-label="Slide sau"
+                  aria-label="Next slide"
                 >
                   <ChevronRight className="w-5 h-5 text-slate-700" />
                 </button>
@@ -431,7 +431,7 @@ export default function HomePage() {
             <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
                 <h2 className="section-title">{t('home.recommended')}</h2>
                 <div className="flex items-center gap-6">
-                    {['Sức khỏe', 'Làm đẹp', 'Vitamin'].map(tab => (
+                    {['Healthcare', 'Beauty Care', 'Vitamins'].map(tab => (
                         <button key={tab} className="text-sm font-bold text-slate-400 hover:text-brand-500 transition-colors uppercase tracking-widest">{tab}</button>
                     ))}
                 </div>
@@ -466,7 +466,7 @@ export default function HomePage() {
               <div className="aspect-[16/9] rounded-xl overflow-hidden mb-4">
                 <img src={blog.coverImage} alt={blog.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
               </div>
-              <span className="text-[10px] font-black text-brand-500 uppercase tracking-widest mb-2 block">{blog.category || 'Sức khỏe'}</span>
+              <span className="text-[10px] font-black text-brand-500 uppercase tracking-widest mb-2 block">{blog.category || 'Healthcare'}</span>
               <h3 className="text-[15px] font-black text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-2 mb-2 leading-tight">
                 {blog.title}
               </h3>

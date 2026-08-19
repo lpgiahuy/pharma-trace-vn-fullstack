@@ -25,7 +25,7 @@ export default function RmaPage() {
       const res = await apiClient.get('/admin/crm-rma/rma-requests', { params })
       if (res.data?.success) setRmas(res.data.data || [])
     } catch (err) {
-      message.error('Lỗi khi tải danh sách Yêu cầu Đổi trả RMA')
+      message.error('Failed to load RMA return requests')
     } finally {
       setLoading(false)
     }
@@ -52,7 +52,7 @@ export default function RmaPage() {
       const res = await apiClient.get(`/admin/crm-rma/rma-requests/${rma.id}`)
       if (res.data?.success) setRmaDetail(res.data.data)
     } catch (err) {
-      message.error('Lỗi khi tải chi tiết phiếu RMA')
+      message.error('Failed to load RMA details')
     } finally {
       setRmaLoading(false)
     }
@@ -62,59 +62,59 @@ export default function RmaPage() {
     try {
       const res = await apiClient.patch(`/admin/crm-rma/rma-requests/${id}/status`, { status })
       if (res.data?.success) {
-        message.success('Cập nhật trạng thái phiếu RMA thành công!')
+        message.success('RMA request status updated successfully!')
         fetchRmas()
         fetchStats()
         if (isRmaModalOpen && rmaDetail?.id === id) {
           handleViewRmaDetail({ id })
         }
       } else {
-        message.error(res.data?.message || 'Lỗi khi cập nhật trạng thái')
+        message.error(res.data?.message || 'Error updating status')
       }
     } catch (err) {
-      message.error(err.response?.data?.message || 'Không thể thực hiện yêu cầu')
+      message.error(err.response?.data?.message || 'Failed to process request')
     }
   }
 
   const renderRmaStatusBadge = (status) => {
     const map = {
-      ChoDuyet: { color: 'gold', text: 'CHỜ DUYỆT' },
-      DaDuyet: { color: 'processing', text: 'ĐÃ DUYỆT ĐỔI TRẢ' },
-      DaHoanTien: { color: 'green', text: 'ĐÃ HOÀN TIỀN' },
-      TuChoi: { color: 'error', text: 'TỪ CHỐI' }
+      ChoDuyet: { color: 'gold', text: 'PENDING REVIEW' },
+      DaDuyet: { color: 'processing', text: 'RETURN APPROVED' },
+      DaHoanTien: { color: 'green', text: 'REFUNDED' },
+      TuChoi: { color: 'error', text: 'REJECTED' }
     }
     const item = map[status] || { color: 'default', text: status }
     return <Tag color={item.color}>{item.text}</Tag>
   }
 
   const rmaColumns = [
-    { title: 'Mã Phiếu', dataIndex: 'id', key: 'id', width: 100, render: (id) => `#RMA-${id}` },
-    { title: 'ID Đơn Hàng', dataIndex: 'don_hang_id', key: 'don_hang_id', width: 120, render: (id) => `#${id}` },
-    { title: 'Khách Hàng', dataIndex: 'ten_khach_hang', key: 'ten_khach_hang', width: 180, render: (t, r) => t || r.so_dien_thoai },
-    { title: 'Lý Do Đổi Trả Hàng', dataIndex: 'ly_do_tra', key: 'ly_do_tra', width: 280 },
+    { title: 'RMA Voucher', dataIndex: 'id', key: 'id', width: 120, render: (id) => `#RMA-${id}` },
+    { title: 'Order ID', dataIndex: 'don_hang_id', key: 'don_hang_id', width: 120, render: (id) => `#${id}` },
+    { title: 'Customer', dataIndex: 'ten_khach_hang', key: 'ten_khach_hang', width: 180, render: (t, r) => t || r.so_dien_thoai },
+    { title: 'Return Reason', dataIndex: 'ly_do_tra', key: 'ly_do_tra', width: 280 },
     { 
-      title: 'Giá Trị Đơn (₫)', 
+      title: 'Order Value (₫)', 
       dataIndex: 'tong_tien_don_hang', 
       key: 'tong_tien_don_hang',
       width: 160,
-      render: (val) => Number(val) > 0 ? `${Number(val).toLocaleString('vi-VN')} ₫` : 'N/A' 
+      render: (val) => Number(val) > 0 ? `${Number(val).toLocaleString()} ₫` : 'N/A' 
     },
-    { title: 'Trạng Thái Phiếu', key: 'status', width: 160, render: (_, r) => renderRmaStatusBadge(r.trang_thai_duyet) },
+    { title: 'RMA Status', key: 'status', width: 160, render: (_, r) => renderRmaStatusBadge(r.trang_thai_duyet) },
     {
-      title: 'Hoàn Tiền Đơn Hàng',
+      title: 'Order Refund',
       key: 'refund',
       width: 170,
       render: (_, r) => (
         <div>
           {r.trang_thai_duyet === 'DaDuyet' && (
-            <Popconfirm title="Xác nhận hoàn tiền cho khách hàng?" onConfirm={() => handleUpdateRmaStatus(r.id, 'DaHoanTien')}>
+            <Popconfirm title="Confirm customer refund processing?" onConfirm={() => handleUpdateRmaStatus(r.id, 'DaHoanTien')}>
               <Button size="small" type="primary" icon={<DollarOutlined className="text-white" />} className="bg-emerald-600 hover:bg-emerald-500">
-                Hoàn Tiền
+                Process Refund
               </Button>
             </Popconfirm>
           )}
           {r.trang_thai_duyet === 'DaHoanTien' && (
-            <Tag color="green" icon={<CheckCircleOutlined />}>ĐÃ HOÀN TIỀN</Tag>
+            <Tag color="green" icon={<CheckCircleOutlined />}>REFUNDED</Tag>
           )}
           {(r.trang_thai_duyet === 'ChoDuyet' || r.trang_thai_duyet === 'TuChoi') && (
             <span className="text-slate-400 text-xs">-</span>
@@ -123,12 +123,12 @@ export default function RmaPage() {
       )
     },
     {
-      title: 'Hành Động',
+      title: 'Actions',
       key: 'action',
       width: 130,
       render: (_, r) => (
         <Button size="small" icon={<EyeOutlined />} onClick={() => handleViewRmaDetail(r)} type="primary" ghost>
-          Chi Tiết
+          Details
         </Button>
       )
     }
@@ -145,12 +145,12 @@ export default function RmaPage() {
       <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <HistoryOutlined className="text-orange-600" /> Quản Lý Yêu Cầu Đổi Trả Hàng (RMA)
+            <HistoryOutlined className="text-orange-600" /> Return Merchandise Authorization (RMA)
           </h1>
-          <p className="text-sm text-slate-500">Tiếp nhận, kiểm tra lý do trả hàng và phê duyệt hoàn tiền đơn hàng</p>
+          <p className="text-sm text-slate-500">Receive, inspect return defect claims, and approve customer refunds</p>
         </div>
         <Button icon={<ReloadOutlined />} onClick={() => { fetchStats(); fetchRmas(); }}>
-          Tải lại
+          Refresh
         </Button>
       </div>
 
@@ -158,22 +158,22 @@ export default function RmaPage() {
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="Tổng Yêu Cầu RMA" value={totalCount} valueStyle={{ color: '#0284c7' }} prefix={<FileTextOutlined />} />
+            <Statistic title="Total RMA Requests" value={totalCount} valueStyle={{ color: '#0284c7' }} prefix={<FileTextOutlined />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="Yêu Cầu Chờ Duyệt" value={pendingCount} valueStyle={{ color: '#d97706' }} prefix={<HistoryOutlined />} />
+            <Statistic title="Pending Review" value={pendingCount} valueStyle={{ color: '#d97706' }} prefix={<HistoryOutlined />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="Đã Phê Duyệt Đổi Trả" value={approvedCount} valueStyle={{ color: '#2563eb' }} prefix={<CheckCircleOutlined />} />
+            <Statistic title="Return Approved" value={approvedCount} valueStyle={{ color: '#2563eb' }} prefix={<CheckCircleOutlined />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="Đã Hoàn Tiền Xong" value={refundedCount} valueStyle={{ color: '#16a34a' }} prefix={<DollarOutlined />} />
+            <Statistic title="Refunds Completed" value={refundedCount} valueStyle={{ color: '#16a34a' }} prefix={<DollarOutlined />} />
           </Card>
         </Col>
       </Row>
@@ -182,24 +182,24 @@ export default function RmaPage() {
       <Card className="rounded-xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
           <Space wrap>
-            <span className="text-sm font-semibold text-slate-700">Trạng thái phê duyệt:</span>
+            <span className="text-sm font-semibold text-slate-700">Approval Status:</span>
             <Select
               value={filterRmaStatus}
               onChange={setFilterRmaStatus}
               style={{ width: 180 }}
               options={[
-                { label: 'Tất cả trạng thái', value: '' },
-                { label: 'Chờ duyệt', value: 'ChoDuyet' },
-                { label: 'Đã duyệt đổi trả', value: 'DaDuyet' },
-                { label: 'Đã hoàn tiền', value: 'DaHoanTien' },
-                { label: 'Từ chối', value: 'TuChoi' }
+                { label: 'All Statuses', value: '' },
+                { label: 'Pending Review', value: 'ChoDuyet' },
+                { label: 'Return Approved', value: 'DaDuyet' },
+                { label: 'Refunded', value: 'DaHoanTien' },
+                { label: 'Rejected', value: 'TuChoi' }
               ]}
             />
           </Space>
           <Input.Search
-            placeholder="Tìm theo Lý do, Tên KH, SĐT..."
+            placeholder="Search by Reason, Customer, Phone..."
             onSearch={(val) => { setSearch(val); fetchRmas(); }}
-            style={{ width: 260 }}
+            style={{ width: 280 }}
             allowClear
           />
         </div>
@@ -216,27 +216,27 @@ export default function RmaPage() {
 
       {/* Modal Chi Tiết Phiếu Trả Hàng RMA & Phê Duyệt */}
       <Modal
-        title={`Chi Tiết & Phê Duyệt Yêu Cầu Đổi Trả Hàng #RMA-${rmaDetail?.id || ''}`}
+        title={`RMA Return Request Details & Approval — #RMA-${rmaDetail?.id || ''}`}
         open={isRmaModalOpen}
         onCancel={() => { setIsRmaModalOpen(false); setRmaDetail(null); }}
         width={850}
         footer={
           rmaDetail && rmaDetail.trang_thai_duyet === 'ChoDuyet' ? (
             <div className="flex justify-end gap-2">
-              <Popconfirm title="Từ chối yêu cầu đổi trả này?" onConfirm={() => handleUpdateRmaStatus(rmaDetail.id, 'TuChoi')}>
-                <Button danger icon={<CloseCircleOutlined />}>Từ Chối Yêu Cầu</Button>
+              <Popconfirm title="Reject this RMA return request?" onConfirm={() => handleUpdateRmaStatus(rmaDetail.id, 'TuChoi')}>
+                <Button danger icon={<CloseCircleOutlined />}>Reject Request</Button>
               </Popconfirm>
-              <Popconfirm title="Xác nhận duyệt chấp nhận đổi trả?" onConfirm={() => handleUpdateRmaStatus(rmaDetail.id, 'DaDuyet')}>
+              <Popconfirm title="Confirm approval of return request?" onConfirm={() => handleUpdateRmaStatus(rmaDetail.id, 'DaDuyet')}>
                 <Button type="primary" icon={<CheckCircleOutlined />} className="bg-blue-600 hover:bg-blue-500">
-                  Duyệt Đổi Trả Hàng
+                  Approve Return
                 </Button>
               </Popconfirm>
             </div>
           ) : rmaDetail && rmaDetail.trang_thai_duyet === 'DaDuyet' ? (
             <div className="flex justify-end">
-              <Popconfirm title="Xác nhận hoàn tiền cho đơn hàng này?" onConfirm={() => handleUpdateRmaStatus(rmaDetail.id, 'DaHoanTien')}>
+              <Popconfirm title="Confirm refund payout for this order?" onConfirm={() => handleUpdateRmaStatus(rmaDetail.id, 'DaHoanTien')}>
                 <Button type="primary" icon={<DollarOutlined className="text-white" />} className="bg-emerald-600 hover:bg-emerald-500">
-                  Xác Nhận Hoàn Tiền Đơn Hàng
+                  Confirm Refund Payout
                 </Button>
               </Popconfirm>
             </div>
@@ -245,29 +245,29 @@ export default function RmaPage() {
       >
         {rmaDetail && (
           <div className="space-y-4">
-            <Descriptions title="Thông Tin Phiếu Trả Hàng" bordered column={2} size="small">
-              <Descriptions.Item label="Mã Phiếu Trả"><strong>#RMA-{rmaDetail.id}</strong></Descriptions.Item>
-              <Descriptions.Item label="Mã Đơn Hàng"><strong>#{rmaDetail.don_hang_id}</strong></Descriptions.Item>
-              <Descriptions.Item label="Khách Hàng">{rmaDetail.ten_khach_hang}</Descriptions.Item>
-              <Descriptions.Item label="Số Điện Thoại">{rmaDetail.so_dien_thoai}</Descriptions.Item>
-              <Descriptions.Item label="Ngày Yêu Cầu">{new Date(rmaDetail.ngay_yeu_cau).toLocaleString('vi-VN')}</Descriptions.Item>
-              <Descriptions.Item label="Trạng Thái">{renderRmaStatusBadge(rmaDetail.trang_thai_duyet)}</Descriptions.Item>
-              <Descriptions.Item label="Lý Do Đổi Trả" span={2}>
+            <Descriptions title="Return Voucher Summary" bordered column={2} size="small">
+              <Descriptions.Item label="RMA Number"><strong>#RMA-{rmaDetail.id}</strong></Descriptions.Item>
+              <Descriptions.Item label="Order ID"><strong>#{rmaDetail.don_hang_id}</strong></Descriptions.Item>
+              <Descriptions.Item label="Customer">{rmaDetail.ten_khach_hang}</Descriptions.Item>
+              <Descriptions.Item label="Phone Number">{rmaDetail.so_dien_thoai}</Descriptions.Item>
+              <Descriptions.Item label="Requested At">{new Date(rmaDetail.ngay_yeu_cau).toLocaleString()}</Descriptions.Item>
+              <Descriptions.Item label="Status">{renderRmaStatusBadge(rmaDetail.trang_thai_duyet)}</Descriptions.Item>
+              <Descriptions.Item label="Return Reason" span={2}>
                 <span className="text-red-600 font-medium">{rmaDetail.ly_do_tra}</span>
               </Descriptions.Item>
             </Descriptions>
 
-            <h3 className="font-bold text-slate-800 text-base mt-4">Danh Sách Sản Phẩm Đăng Ký Đổi Trả</h3>
+            <h3 className="font-bold text-slate-800 text-base mt-4">Registered Return Product Items</h3>
             <Table
               dataSource={rmaDetail.items || []}
               rowKey="id"
               loading={rmaLoading}
               pagination={false}
               columns={[
-                { title: 'Tên Sản Phẩm / Dược Phẩm', dataIndex: 'ten_duoc_pham', key: 'ten_duoc_pham', render: (t, r) => <div><strong>{t || r.ten_thuong_mai}</strong><div className="text-xs text-slate-400">Mã: {r.ma_duoc_pham || 'N/A'}</div></div> },
-                { title: 'Số Lượng Trả', dataIndex: 'so_luong', key: 'so_luong', render: (v) => <span className="font-bold text-blue-600">{v}</span> },
-                { title: 'Đơn Giá (₫)', dataIndex: 'gia_ban', key: 'gia_ban', render: (v) => `${Number(v || 0).toLocaleString('vi-VN')} ₫` },
-                { title: 'Thành Tiền Hoàn (₫)', dataIndex: 'thanh_tien', key: 'thanh_tien', render: (v) => <strong className="text-rose-600">{Number(v || 0).toLocaleString('vi-VN')} ₫</strong> }
+                { title: 'Product / Drug Name', dataIndex: 'ten_duoc_pham', key: 'ten_duoc_pham', render: (t, r) => <div><strong>{t || r.ten_thuong_mai}</strong><div className="text-xs text-slate-400">Code: {r.ma_duoc_pham || 'N/A'}</div></div> },
+                { title: 'Return Qty', dataIndex: 'so_luong', key: 'so_luong', render: (v) => <span className="font-bold text-blue-600">{v}</span> },
+                { title: 'Unit Price (₫)', dataIndex: 'gia_ban', key: 'gia_ban', render: (v) => `${Number(v || 0).toLocaleString()} ₫` },
+                { title: 'Refund Subtotal (₫)', dataIndex: 'thanh_tien', key: 'thanh_tien', render: (v) => <strong className="text-rose-600">{Number(v || 0).toLocaleString()} ₫</strong> }
               ]}
             />
           </div>

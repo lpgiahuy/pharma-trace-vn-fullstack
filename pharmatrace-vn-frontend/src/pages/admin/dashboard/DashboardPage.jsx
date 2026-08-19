@@ -205,7 +205,7 @@ export default function DashboardPage() {
           <p className="text-xs text-slate-400 mb-4">{t('admin.active_products_only')}</p>
           {categoryCount.length === 0 ? (
             <div className="flex items-center justify-center h-[260px] text-slate-400 text-sm">
-              Chưa có dữ liệu
+              No data available
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
@@ -228,7 +228,7 @@ export default function DashboardPage() {
                 </Pie>
                 <Tooltip
                   contentStyle={chartTooltipStyle}
-                  formatter={(v, name) => [`${v} sản phẩm`, name]}
+                  formatter={(v, name) => [`${v} products`, name]}
                 />
                 <Legend
                   iconType="circle"

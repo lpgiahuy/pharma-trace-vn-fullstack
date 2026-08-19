@@ -23,7 +23,7 @@ export default function LotBatchMonitorPage() {
       const res = await apiClient.get('/admin/lots', { params })
       if (res.data?.success) setLots(res.data.data || [])
     } catch (err) {
-      message.error('Lỗi khi tải danh sách Lô sản phẩm')
+      message.error('Failed to load batch lots list')
     } finally {
       setLoading(false)
     }
@@ -53,16 +53,16 @@ export default function LotBatchMonitorPage() {
       }
       const res = await apiClient.post('/admin/lots', payload)
       if (res.data?.success) {
-        message.success('Tạo lô sản phẩm thành công!')
+        message.success('Batch lot created successfully!')
         setIsCreateModalOpen(false)
         form.resetFields()
         fetchLots()
         fetchStats()
       } else {
-        message.error(res.data?.message || 'Lỗi khi tạo lô sản phẩm')
+        message.error(res.data?.message || 'Error creating batch lot')
       }
     } catch (err) {
-      message.error(err.response?.data?.message || 'Không thể tạo lô sản phẩm')
+      message.error(err.response?.data?.message || 'Failed to create batch lot')
     }
   }
 
@@ -70,57 +70,57 @@ export default function LotBatchMonitorPage() {
     try {
       const res = await apiClient.patch(`/admin/lots/${id}/recall`)
       if (res.data?.success) {
-        message.success('Đã kích hoạt lệnh THU HỒI SẢN PHẨM cho Lô này!')
+        message.success('PRODUCT RECALL ORDER activated for this Batch!')
         fetchLots()
         fetchStats()
       } else {
-        message.error(res.data?.message || 'Lỗi thu hồi lô sản phẩm')
+        message.error(res.data?.message || 'Error recalling batch')
       }
     } catch (err) {
-      message.error(err.response?.data?.message || 'Không thể thực hiện lệnh thu hồi')
+      message.error(err.response?.data?.message || 'Failed to execute recall order')
     }
   }
 
   const renderStatusTag = (status, days) => {
     switch (status) {
       case 'ThuHoi':
-        return <Tag color="volcano" icon={<ExclamationCircleOutlined />}>ĐÃ THU HỒI</Tag>
+        return <Tag color="volcano" icon={<ExclamationCircleOutlined />}>RECALLED</Tag>
       case 'HetHan':
-        return <Tag color="red" icon={<CloseCircleOutlined />}>HẾT HẠN ({Math.abs(days)} ngày trước)</Tag>
+        return <Tag color="red" icon={<CloseCircleOutlined />}>EXPIRED ({Math.abs(days)}d ago)</Tag>
       case 'CanDate':
-        return <Tag color="warning" icon={<AlertOutlined />}>CẬN DATE (Còn {days} ngày)</Tag>
+        return <Tag color="warning" icon={<AlertOutlined />}>NEAR EXPIRY ({days}d remaining)</Tag>
       default:
-        return <Tag color="green" icon={<CheckCircleOutlined />}>HỢP LỆ (Còn {days} ngày)</Tag>
+        return <Tag color="green" icon={<CheckCircleOutlined />}>VALID ({days}d remaining)</Tag>
     }
   }
 
   const columns = [
-    { title: 'Số Lô', dataIndex: 'so_lo', key: 'so_lo', render: (text) => <strong>{text}</strong> },
-    { title: 'Tên Dược Phẩm', dataIndex: 'ten_thuoc', key: 'ten_thuoc', render: (t, r) => t || `ID: ${r.duoc_pham_id}` },
-    { title: 'Ngày Sản Xuất', dataIndex: 'ngay_san_xuat', key: 'ngay_san_xuat', render: (d) => new Date(d).toLocaleDateString('vi-VN') },
-    { title: 'Hạn Sử Dụng', dataIndex: 'han_su_dung', key: 'han_su_dung', render: (d) => new Date(d).toLocaleDateString('vi-VN') },
+    { title: 'Batch Number', dataIndex: 'so_lo', key: 'so_lo', render: (text) => <strong>{text}</strong> },
+    { title: 'Product Name', dataIndex: 'ten_thuoc', key: 'ten_thuoc', render: (t, r) => t || `ID: ${r.duoc_pham_id}` },
+    { title: 'Mfg Date', dataIndex: 'ngay_san_xuat', key: 'ngay_san_xuat', render: (d) => new Date(d).toLocaleDateString() },
+    { title: 'Exp Date', dataIndex: 'han_su_dung', key: 'han_su_dung', render: (d) => new Date(d).toLocaleDateString() },
     { 
-      title: 'Cảnh Báo HSD / FEFO', 
+      title: 'Expiry Status / FEFO', 
       key: 'status', 
       render: (_, r) => renderStatusTag(r.trang_thai_hsd, r.ngay_con_han) 
     },
     {
-      title: 'Hành động',
+      title: 'Actions',
       key: 'action',
       render: (_, r) => (
         r.trang_thai_hsd !== 'ThuHoi' ? (
           <Popconfirm
-            title="Kích hoạt THU HỒI SẢN PHẨM?"
-            description="Lệnh thu hồi sẽ chuyển trạng thái Lô sang THU HỒI và cảnh báo toàn bộ các gói thuốc thuộc Lô này."
+            title="Activate PRODUCT RECALL?"
+            description="Recall order will change batch status to RECALLED and alert all downstream distributed packages."
             onConfirm={() => handleRecallLot(r.id)}
-            okText="Xác nhận Thu Hồi"
-            cancelText="Hủy"
+            okText="Confirm Recall"
+            cancelText="Cancel"
             okButtonProps={{ danger: true }}
           >
-            <Button danger size="small" type="primary">Thu Hồi Lô</Button>
+            <Button danger size="small" type="primary">Recall Batch</Button>
           </Popconfirm>
         ) : (
-          <span className="text-xs text-slate-400 font-semibold">Đã khóa lô</span>
+          <span className="text-xs text-slate-400 font-semibold">Locked / Recalled</span>
         )
       )
     }
@@ -132,14 +132,14 @@ export default function LotBatchMonitorPage() {
       <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100">
         <div>
           <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <CalendarOutlined className="text-brand-600" /> Quản Lý Lô Sản Phẩm & Cảnh Báo FEFO
+            <CalendarOutlined className="text-brand-600" /> Lot & Batch Expiration Monitor (FEFO)
           </h1>
-          <p className="text-sm text-slate-500">Giám sát hạn sử dụng (First Expired, First Out) và Thu hồi sản phẩm (Product Recall)</p>
+          <p className="text-sm text-slate-500">Monitor First Expired, First Out (FEFO) lifecycle rules and emergency batch recalls</p>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => { fetchLots(); fetchStats(); }}>Tải lại</Button>
+          <Button icon={<ReloadOutlined />} onClick={() => { fetchLots(); fetchStats(); }}>Refresh</Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsCreateModalOpen(true)}>
-            Tạo Lô Sản Phẩm Mới
+            Create New Batch Lot
           </Button>
         </Space>
       </div>
@@ -148,22 +148,22 @@ export default function LotBatchMonitorPage() {
       <Row gutter={16}>
         <Col span={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="Tổng Số Lô Sản Phẩm" value={stats.tong_so_lo || 0} valueStyle={{ color: '#0284c7' }} />
+            <Statistic title="Total Product Lots" value={stats.tong_so_lo || 0} valueStyle={{ color: '#0284c7' }} />
           </Card>
         </Col>
         <Col span={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="Lô Cận Date (<= 60 ngày)" value={stats.lo_can_date || 0} valueStyle={{ color: '#d97706' }} prefix={<AlertOutlined />} />
+            <Statistic title="Near Expiry Lots (<= 60 days)" value={stats.lo_can_date || 0} valueStyle={{ color: '#d97706' }} prefix={<AlertOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="Lô Đã Hết Hạn" value={stats.lo_het_han || 0} valueStyle={{ color: '#dc2626' }} prefix={<CloseCircleOutlined />} />
+            <Statistic title="Expired Lots" value={stats.lo_het_han || 0} valueStyle={{ color: '#dc2626' }} prefix={<CloseCircleOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
           <Card className="rounded-xl border border-slate-100 shadow-sm">
-            <Statistic title="Lô Đã Kích Hoạt Thu Hồi" value={stats.lo_thu_hoi || 0} valueStyle={{ color: '#ea580c' }} prefix={<ExclamationCircleOutlined />} />
+            <Statistic title="Active Recalled Lots" value={stats.lo_thu_hoi || 0} valueStyle={{ color: '#ea580c' }} prefix={<ExclamationCircleOutlined />} />
           </Card>
         </Col>
       </Row>
@@ -172,21 +172,21 @@ export default function LotBatchMonitorPage() {
       <Card className="rounded-xl border border-slate-100 shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <Space>
-            <span className="text-sm font-semibold text-slate-700">Lọc Trạng Thái:</span>
+            <span className="text-sm font-semibold text-slate-700">Filter Status:</span>
             <Select
               value={filterStatus}
               onChange={setFilterStatus}
               style={{ width: 180 }}
               options={[
-                { label: 'Tất cả Lô', value: '' },
-                { label: 'Hợp lệ', value: 'HopLe' },
-                { label: 'Cận Date (<= 60d)', value: 'CanDate' },
-                { label: 'Hết hạn', value: 'HetHan' },
-                { label: 'Đã Thu Hồi', value: 'ThuHoi' }
+                { label: 'All Lots', value: '' },
+                { label: 'Valid / In Date', value: 'HopLe' },
+                { label: 'Near Expiry (<= 60d)', value: 'CanDate' },
+                { label: 'Expired', value: 'HetHan' },
+                { label: 'Recalled', value: 'ThuHoi' }
               ]}
             />
             <Input.Search
-              placeholder="Tìm theo Số lô hoặc Tên thuốc..."
+              placeholder="Search by lot number or medication..."
               onSearch={(val) => { setSearch(val); fetchLots(); }}
               style={{ width: 260 }}
               allowClear
@@ -205,23 +205,23 @@ export default function LotBatchMonitorPage() {
 
       {/* Modal Tạo Lô Mới */}
       <Modal
-        title="Tạo Lô Sản Phẩm Mới"
+        title="Create New Batch Lot"
         open={isCreateModalOpen}
         onCancel={() => setIsCreateModalOpen(false)}
         onOk={() => form.submit()}
       >
         <Form form={form} layout="vertical" onFinish={handleCreateLot}>
-          <Form.Item name="duoc_pham_id" label="ID Dược Phẩm" rules={[{ required: true, message: 'Nhập ID Dược phẩm' }]}>
-            <InputNumber placeholder="Nhập ID (VD: 991)" style={{ width: '100%' }} />
+          <Form.Item name="duoc_pham_id" label="Product ID" rules={[{ required: true, message: 'Please enter Product ID' }]}>
+            <InputNumber placeholder="Enter product ID (e.g. 991)" style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="so_lo" label="Số Lô (Batch No.)" rules={[{ required: true, message: 'Nhập Số Lô' }]}>
-            <Input placeholder="Ví dụ: BATCH-2026-LOT10" />
+          <Form.Item name="so_lo" label="Batch / Lot Number" rules={[{ required: true, message: 'Please enter Batch Number' }]}>
+            <Input placeholder="e.g. BATCH-2026-LOT10" />
           </Form.Item>
-          <Form.Item name="ngay_san_xuat" label="Ngày Sản Xuất" rules={[{ required: true, message: 'Chọn Ngày sản xuất' }]}>
-            <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="Chọn ngày" />
+          <Form.Item name="ngay_san_xuat" label="Manufacturing Date (MFG)" rules={[{ required: true, message: 'Please select Manufacturing Date' }]}>
+            <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="Select date" />
           </Form.Item>
-          <Form.Item name="han_su_dung" label="Hạn Sử Dụng (EXP)" rules={[{ required: true, message: 'Chọn Hạn sử dụng' }]}>
-            <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="Chọn ngày" />
+          <Form.Item name="han_su_dung" label="Expiration Date (EXP)" rules={[{ required: true, message: 'Please select Expiration Date' }]}>
+            <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="Select date" />
           </Form.Item>
         </Form>
       </Modal>

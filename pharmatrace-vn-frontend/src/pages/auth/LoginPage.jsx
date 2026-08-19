@@ -19,7 +19,7 @@ export default function LoginPage() {
   const from = location.state?.from?.pathname || '/'
 
   const customerSchema = z.object({
-    identifier: z.string().min(3, 'Vui lòng nhập Email hoặc Số điện thoại'),
+    identifier: z.string().min(3, 'Please enter Email or Phone number'),
     password: z.string().min(6, t('auth.validation.pw_min')),
   })
 
@@ -43,7 +43,7 @@ export default function LoginPage() {
       const internalRoles = ['QuanLyKho', 'NhanVienKho', 'SuperAdmin', 'superadmin', 'Admin', 'admin', 'NhanVienBanHang', 'QuanLyCuaHang']
       if (internalRoles.includes(userRole)) {
         await useAuthStore.getState().logout()
-        toast.error('Tài khoản hoặc mật khẩu không chính xác!')
+        toast.error('Incorrect username or password!')
         return
       }
 
@@ -51,7 +51,7 @@ export default function LoginPage() {
       const target = (from && from !== '/login') ? from : '/'
       navigate(target, { replace: true })
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message || 'Tài khoản hoặc mật khẩu không chính xác!')
+      toast.error(err.response?.data?.message || err.message || 'Incorrect username or password!')
     }
   }
 
@@ -67,7 +67,7 @@ export default function LoginPage() {
         <Input
           label={t('auth.email_or_phone')}
           type="text"
-          placeholder="0909 123 456 hoặc name@example.com"
+          placeholder="0909 123 456 or name@example.com"
           error={errors.identifier?.message}
           required
           {...register('identifier')}
@@ -100,7 +100,7 @@ export default function LoginPage() {
       <p className="mt-6 text-center text-sm text-slate-500">
         {t('auth.no_account')}{' '}
         <Link to="/register" className="font-semibold text-brand-600 hover:underline">
-          Đăng ký ngay
+          Sign up now
         </Link>
       </p>
     </div>
