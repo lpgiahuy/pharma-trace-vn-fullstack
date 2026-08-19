@@ -202,7 +202,7 @@ const getAvailableUIDsForOrder = async (orderId) => {
                 don_hang_id: null
             },
             select: { uid: true, trang_thai: true, lo_thuoc_id: true },
-            take: Math.max(item.so_luong * 3, 10)
+            take: 200
         });
 
         // Ensure available UIDs exist for test fulfillment
