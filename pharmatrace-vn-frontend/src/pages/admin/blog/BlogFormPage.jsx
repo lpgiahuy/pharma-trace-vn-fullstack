@@ -57,11 +57,11 @@ export default function BlogFormPage() {
       if (isEdit) await blogService.update(id, payload)
       else        await blogService.create(payload)
 
-      toast.success(isEdit ? 'Bài viết đã được cập nhật!' : 'Bài viết đã được đăng!')
+      toast.success(isEdit ? 'Article updated successfully!' : 'Article published successfully!')
       navigate('/admin/blog')
     } catch (error) {
       console.error(error)
-      toast.error('Lưu bài viết thất bại')
+      toast.error('Failed to save article')
     }
     finally { setLoading(false) }
   }
@@ -70,44 +70,44 @@ export default function BlogFormPage() {
     setCoverPreview(e.target.value)
   }
 
-  if (initLoading) return <div className="text-center py-20 text-slate-400">Đang tải…</div>
+  if (initLoading) return <div className="text-center py-20 text-slate-400">Loading…</div>
 
   return (
     <div className="animate-fade-in pb-20">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <AButton icon={<ArrowLeftOutlined />} onClick={() => navigate('/admin/blog')}>Quay lại</AButton>
-          <h1 className="text-2xl font-display font-bold text-slate-900">{isEdit ? 'Chỉnh sửa bài viết' : 'Bài đăng mới'}</h1>
+          <AButton icon={<ArrowLeftOutlined />} onClick={() => navigate('/admin/blog')}>Back</AButton>
+          <h1 className="text-2xl font-display font-bold text-slate-900">{isEdit ? 'Edit Blog Article' : 'New Article Post'}</h1>
         </div>
       </div>
 
       <Form form={form} layout="vertical" onFinish={onFinish}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <Card title="Trình soạn thảo nội dung" className="shadow-sm border-slate-200">
-              <Form.Item label="Tiêu đề bài viết" name="title" rules={[{ required: true }]}>
-                <Input placeholder="VD: 10 Mẹo để có sức khỏe tim mạch tốt" size="large" />
+            <Card title="Content Editor" className="shadow-sm border-slate-200">
+              <Form.Item label="Article Title" name="title" rules={[{ required: true, message: 'Please enter article title' }]}>
+                <Input placeholder="e.g. 10 Tips for Optimal Cardiovascular Health" size="large" />
               </Form.Item>
 
-              <Form.Item label="Nội dung" name="content" rules={[{ required: true }]} className="blog-editor-item mb-0">
+              <Form.Item label="Article Content" name="content" rules={[{ required: true, message: 'Please write article content' }]} className="blog-editor-item mb-0">
                 <ReactQuill
                   theme="snow"
                   modules={quillModules}
-                  placeholder="Viết nội dung bài viết y tế tại đây..."
+                  placeholder="Write medical or healthcare content here..."
                   style={{ height: '400px', marginBottom: '50px' }}
                 />
               </Form.Item>
             </Card>
 
-            <Card title="Tóm tắt & Thông tin" className="shadow-sm border-slate-200">
-              <Form.Item label="Tóm tắt ngắn" name="excerpt">
-                <TextArea rows={3} placeholder="Tóm tắt ngắn hiển thị trên trang danh sách bài viết…" />
+            <Card title="Summary & Metadata" className="shadow-sm border-slate-200">
+              <Form.Item label="Short Excerpt" name="excerpt">
+                <TextArea rows={3} placeholder="Brief summary displayed on article listing cards…" />
               </Form.Item>
             </Card>
           </div>
 
           <div className="space-y-6">
-            <Card title="Ảnh bìa" className="shadow-sm border-slate-200">
+            <Card title="Cover Banner Image" className="shadow-sm border-slate-200">
               <div className="space-y-4">
                 <div className="w-full aspect-video bg-slate-50 border border-slate-200 rounded-lg overflow-hidden flex items-center justify-center relative group">
                   {coverPreview ? (
@@ -115,12 +115,12 @@ export default function BlogFormPage() {
                   ) : (
                     <div className="text-center p-4">
                       <EyeOutlined className="text-2xl text-slate-300 mb-1" />
-                      <p className="text-[10px] text-slate-400">Xem trước URL</p>
+                      <p className="text-[10px] text-slate-400">URL Preview</p>
                     </div>
                   )}
                 </div>
 
-                <Form.Item label="URL ảnh bìa" name="coverImage">
+                <Form.Item label="Cover Image URL" name="coverImage">
                   <Input
                     placeholder="https://images.unsplash.com/..."
                     onChange={handleUrlChange}
@@ -129,19 +129,19 @@ export default function BlogFormPage() {
               </div>
             </Card>
 
-            <Card title="Thông tin đăng bài" className="shadow-sm border-slate-200">
-              <Form.Item label="Danh mục" name="category" rules={[{ required: true }]}>
-                <Select placeholder="Chọn danh mục" options={[
-                  { value: 'Health Tips',    label: 'Mẹo sức khỏe' },
-                  { value: 'Medicine Guide', label: 'Hướng dẫn dùng thuốc' },
-                  { value: 'Wellness',       label: 'Lối sống lành mạnh' },
-                  { value: 'Industry News',  label: 'Tin tức ngành' },
+            <Card title="Publish Settings" className="shadow-sm border-slate-200">
+              <Form.Item label="Category" name="category" rules={[{ required: true, message: 'Please select category' }]}>
+                <Select placeholder="Select category" options={[
+                  { value: 'Health Tips',    label: 'Health Tips & Advice' },
+                  { value: 'Medicine Guide', label: 'Medication Usage Guide' },
+                  { value: 'Wellness',       label: 'Wellness & Nutrition' },
+                  { value: 'Industry News',  label: 'Pharma Industry News' },
                 ]} />
               </Form.Item>
 
               <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
                 <p className="text-xs text-blue-700 leading-relaxed">
-                  <strong>Lưu ý:</strong> Bài viết blog công khai và hiển thị với tất cả người dùng. Đảm bảo nội dung chính xác.
+                  <strong>Notice:</strong> Blog articles are public and visible to all patients and portal visitors. Ensure medical accuracy.
                 </p>
               </div>
             </Card>
@@ -150,9 +150,9 @@ export default function BlogFormPage() {
 
         <div className="mt-8 flex gap-3">
           <AButton type="primary" htmlType="submit" loading={loading} icon={<SaveOutlined />} size="large" className="px-10">
-            {isEdit ? 'Cập nhật bài viết' : 'Đăng bài viết'}
+            {isEdit ? 'Update Article' : 'Publish Article'}
           </AButton>
-          <AButton onClick={() => navigate('/admin/blog')} size="large">Hủy</AButton>
+          <AButton onClick={() => navigate('/admin/blog')} size="large">Cancel</AButton>
         </div>
       </Form>
     </div>

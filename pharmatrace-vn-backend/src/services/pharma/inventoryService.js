@@ -1,7 +1,8 @@
 import * as inventoryModel from '../../models/pharma/inventoryModel.js';
+import { generateSignature, generateBoxPin } from '../../utils/qrCrypto.js';
 
 const importNewBatch = async (payload) => {
-    const { duoc_pham_id, don_vi_id, so_lo, ngay_sx, hsd, so_luong_hop } = payload;
+    const { duoc_pham_id, don_vi_id, so_lo, ngay_sx, hsd, so_luong_hop, don_gia } = payload;
 
     // Validate input data
     if (new Date(ngay_sx) >= new Date(hsd)) {
@@ -18,7 +19,7 @@ const importNewBatch = async (payload) => {
 
     // Call the Stored Procedure to handle all inventory updates in one go
     const newBatch = await inventoryModel.callImportProcedure(
-        duoc_pham_id, don_vi_id, so_lo, ngay_sx, hsd, so_luong_hop
+        duoc_pham_id, don_vi_id, so_lo, ngay_sx, hsd, so_luong_hop, payload.quy_cach_id || null, don_gia || 0
     );
 
     // After the procedure, check the current inventory level for this product at this unit
@@ -31,4 +32,24 @@ const importNewBatch = async (payload) => {
     };
 };
 
-export { importNewBatch };
+const getBatchQRDetails = async (batchId) => {
+    const boxes = await inventoryModel.getBoxesByBatch(batchId);
+    return boxes.map(box => {
+        const pin = generateBoxPin(box.uid);
+        return {
+            uid: box.uid,
+            trang_thai: box.trang_thai,
+            sig: generateSignature(box.uid),
+            logistics_barcode: box.uid,
+            secret_pin: pin,
+            auth_url: `/trace?uid=${box.uid}&pin=${pin}`
+        };
+    });
+};
+
+const fetchInventoryList = async (userContext) => {
+    return await inventoryModel.getAllBatches(userContext);
+};
+
+export { importNewBatch, getBatchQRDetails, fetchInventoryList };
+

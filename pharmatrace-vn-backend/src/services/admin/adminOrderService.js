@@ -2,8 +2,8 @@ import * as adminOrderModel from '../../models/admin/adminOrderModel.js';
 
 const VALID_PAYMENT_STATUSES = ['ChuaThanhToan', 'DaThanhToan', 'HoanTien', 'ThanhToanLoi'];
 
-const fetchOrders = async () => {
-    return await adminOrderModel.getAllOrders();
+const fetchOrders = async (userContext) => {
+    return await adminOrderModel.getAllOrders(userContext);
 };
 
 const fetchOrderDetail = async (orderId) => {
@@ -119,4 +119,8 @@ const processPaymentUpdate = async (orderId, trang_thai_thanh_toan, ma_giao_dich
     return updated;
 };
 
-export { fetchOrders, fetchOrderDetail, processOrderFulfillment, shipOrder, confirmDelivery, processPaymentUpdate }
+const fetchAvailableUIDsForOrder = async (orderId) => {
+    return await adminOrderModel.getAvailableUIDsForOrder(orderId);
+};
+
+export { fetchOrders, fetchOrderDetail, processOrderFulfillment, shipOrder, confirmDelivery, processPaymentUpdate, fetchAvailableUIDsForOrder }

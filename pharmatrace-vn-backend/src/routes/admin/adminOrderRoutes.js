@@ -1,5 +1,5 @@
 import express from 'express';
-import { getOrders, getOrderById, fulfillOrder, handleStartShipping, confirmOrderDelivery, updateOrderPayment } from '../../controllers/admin/adminOrderCtrl.js';
+import { getOrders, getOrderById, fulfillOrder, handleStartShipping, confirmOrderDelivery, updateOrderPayment, getAvailableUIDs } from '../../controllers/admin/adminOrderCtrl.js';
 import { protect } from '../../middlewares/authMiddleware.js';
 import { authorizeRoles } from '../../middlewares/roleMiddleware.js';
 
@@ -14,7 +14,7 @@ const router = express.Router();
 
 // Security: All order operations require authentication and specific role permissions
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'NhanVienBanHang', 'QuanLyKho'));
+router.use(authorizeRoles('SuperAdmin', 'QuanLyCuaHang', 'NhanVienBanHang', 'QuanLyKho'));
 
 /**
  * @swagger
@@ -102,6 +102,7 @@ router.get('/:id', getOrderById);
  *         description: Order not found
  */
 router.post('/:id/fulfill', fulfillOrder);
+router.get('/:id/available-uids', getAvailableUIDs);
 
 /**
  * @swagger

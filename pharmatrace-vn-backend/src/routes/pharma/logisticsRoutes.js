@@ -1,6 +1,11 @@
 import express from 'express';
 import {
     transferWarehouse,
+    getTransferHistory,
+    getPendingIncomingTransfers,
+    getInitialInbounds,
+    confirmTransferReceipt,
+    cancelStockTransfer,
     handleDisposal,
     handleRMA,
     handleBatchRecall,
@@ -24,14 +29,19 @@ const router = express.Router();
 router.use(protect);
 
 // GET read-only: all warehouse staff can view units, products, batches
-const allStaff = authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienBanHang');
-router.get('/units',                   allStaff, getAllLogisticsUnits);
-router.get('/units/:id/products',      allStaff, getProductsInUnit);
-router.get('/units/:id/batches',       allStaff, getBatchesInUnit);
-router.get('/units/:id/uids',          allStaff, getUIDsForTransfer);
+const allStaff = authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienKho', 'QuanLyCuaHang', 'NhanVienBanHang');
+router.get('/units', allStaff, getAllLogisticsUnits);
+router.get('/units/:id/products', allStaff, getProductsInUnit);
+router.get('/units/:id/batches', allStaff, getBatchesInUnit);
+router.get('/units/:id/uids', allStaff, getUIDsForTransfer);
+router.get('/transfers', allStaff, getTransferHistory);
+router.get('/transfers/pending', allStaff, getPendingIncomingTransfers);
+router.get('/inbound-history', allStaff, getInitialInbounds);
+router.post('/transfer/confirm', allStaff, confirmTransferReceipt);
+router.post('/transfer/:id/cancel', allStaff, cancelStockTransfer);
 
-// POST write operations: only managers and above
-router.use(authorizeRoles('SuperAdmin', 'QuanLyKho'));
+// POST write operations: only warehouse staff and above
+router.use(authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienKho'));
 
 /**
  * @swagger

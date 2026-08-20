@@ -13,16 +13,58 @@ const transferWarehouse = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            message: `Transfer completed successfully! Transferred ${data.so_luong_chuyen} boxes to the new warehouse.`,
+            message: `Tạo yêu cầu chuyển kho thành công cho ${data.so_luong_chuyen} hộp thuốc. Đang chờ kho nhận xác nhận!`,
             data: data
         });
     } catch (error) {
-        // if procedure throws an error, it means some UIDs were invalid or not in the source warehouse
         if (error.statusCode) res.status(error.statusCode);
         else res.status(400);
         
         next(error);
     }
+};
+
+const getTransferHistory = async (req, res, next) => {
+    try {
+        const { tu_don_vi_id, den_don_vi_id, don_vi_id } = req.query;
+        let filter = null;
+        if (tu_don_vi_id) filter = { tu_don_vi_id };
+        else if (den_don_vi_id) filter = { den_don_vi_id };
+        else if (don_vi_id) filter = { don_vi_id };
+        else if (req.user?.don_vi_id) filter = { tu_don_vi_id: req.user.don_vi_id };
+
+        const data = await logisticsService.getTransferHistoryService(filter);
+        res.status(200).json({ success: true, data });
+    } catch (error) { next(error); }
+};
+
+const getPendingIncomingTransfers = async (req, res, next) => {
+    try {
+        const unitId = req.query.don_vi_id || req.user?.don_vi_id;
+        if (!unitId) {
+            return res.status(200).json({ success: true, data: [] });
+        }
+        const data = await logisticsService.getPendingIncomingTransfersService(unitId);
+        res.status(200).json({ success: true, data });
+    } catch (error) { next(error); }
+};
+
+const getInitialInbounds = async (req, res, next) => {
+    try {
+        const unitId = req.query.don_vi_id || req.user?.don_vi_id;
+        if (!unitId) {
+            return res.status(200).json({ success: true, data: [] });
+        }
+        const data = await logisticsService.getInitialInboundsService(unitId);
+        res.status(200).json({ success: true, data });
+    } catch (error) { next(error); }
+};
+
+const confirmTransferReceipt = async (req, res, next) => {
+    try {
+        const data = await logisticsService.confirmTransferReceiptService(req.body);
+        res.status(200).json({ success: true, message: 'Đã xác nhận nhận hàng và cập nhật tồn kho thành công!', data });
+    } catch (error) { next(error); }
 };
 
 const handleDisposal = async (req, res, next) => {
@@ -83,8 +125,24 @@ const getUIDsForTransfer = async (req, res, next) => {
     } catch (error) { next(error); }
 };
 
+const cancelStockTransfer = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { mang_uid } = req.body || {};
+        const result = await logisticsService.cancelTransferService(id, mang_uid);
+        res.status(200).json({ success: true, message: result.message });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export {
     transferWarehouse,
+    getTransferHistory,
+    getPendingIncomingTransfers,
+    getInitialInbounds,
+    confirmTransferReceipt,
+    cancelStockTransfer,
     handleDisposal,
     handleRMA,
     handleBatchRecall,

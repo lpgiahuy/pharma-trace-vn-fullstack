@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:22-alpine
 
 # Install build dependencies required for compiling native modules like bcrypt
 RUN apk add --no-cache python3 make g++
@@ -13,6 +13,9 @@ RUN npm ci
 
 # Copy the rest of the backend source code
 COPY . .
+
+# Generate Prisma Client
+RUN npx prisma generate
 
 # Expose the application port
 EXPOSE 3002

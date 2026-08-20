@@ -14,7 +14,7 @@ const router = express.Router();
 
 // SECURITY: Must be logged in with Pharmacist, Admin, or Sales role to view and approve prescriptions
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'NhanVienBanHang'));
+router.use(authorizeRoles('SuperAdmin', 'QuanLyCuaHang', 'NhanVienBanHang'));
 
 /**
  * @swagger

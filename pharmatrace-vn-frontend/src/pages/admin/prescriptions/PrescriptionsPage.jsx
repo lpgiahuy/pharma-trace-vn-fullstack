@@ -7,16 +7,16 @@ import { formatDateTime } from '@/utils'
 import toast from 'react-hot-toast'
 
 const STATUS_META = {
-  ChoDuyet: { color: 'orange',  label: 'Chờ duyệt' },
-  HopLe:    { color: 'green',   label: 'Đã duyệt' },
-  TuChoi:   { color: 'red',     label: 'Từ chối' },
+  ChoDuyet: { color: 'orange',  label: 'Pending Review' },
+  HopLe:    { color: 'green',   label: 'Approved' },
+  TuChoi:   { color: 'red',     label: 'Rejected' },
 }
 
 const TABS = [
-  { key: '', label: 'Tất cả' },
-  { key: 'ChoDuyet', label: 'Chờ duyệt' },
-  { key: 'HopLe',    label: 'Đã duyệt' },
-  { key: 'TuChoi',   label: 'Từ chối' },
+  { key: '', label: 'All Prescriptions' },
+  { key: 'ChoDuyet', label: 'Pending Review' },
+  { key: 'HopLe',    label: 'Approved' },
+  { key: 'TuChoi',   label: 'Rejected' },
 ]
 
 export default function PrescriptionsPage() {
@@ -30,7 +30,7 @@ export default function PrescriptionsPage() {
     setLoading(true)
     prescriptionAdminService.getAll(status)
       .then(rows => setData(Array.isArray(rows) ? rows : []))
-      .catch(() => toast.error('Tải danh sách toa thuốc thất bại'))
+      .catch(() => toast.error('Failed to load prescriptions list'))
       .finally(() => setLoading(false))
   }
 
@@ -41,9 +41,9 @@ export default function PrescriptionsPage() {
     try {
       await prescriptionAdminService.updateStatus(id, newStatus)
       setData(prev => prev.map(p => p.id === id ? { ...p, trang_thai_duyet: newStatus } : p))
-      toast.success(newStatus === 'HopLe' ? 'Đã duyệt toa thuốc' : 'Đã từ chối toa thuốc')
+      toast.success(newStatus === 'HopLe' ? 'Prescription approved successfully' : 'Prescription rejected')
     } catch {
-      toast.error('Cập nhật toa thuốc thất bại')
+      toast.error('Failed to update prescription status')
     } finally {
       setUpdating(null)
     }
@@ -51,7 +51,7 @@ export default function PrescriptionsPage() {
 
   const cols = [
     {
-      title: 'Khách hàng',
+      title: 'Customer',
       key: 'customer',
       render: (_, row) => (
         <div className="flex items-center gap-2">
@@ -64,7 +64,7 @@ export default function PrescriptionsPage() {
       ),
     },
     {
-      title: 'Bác sĩ',
+      title: 'Physician / Doctor',
       key: 'doctor',
       render: (_, row) => (
         <div>
@@ -74,20 +74,20 @@ export default function PrescriptionsPage() {
       ),
     },
     {
-      title: 'Chẩn đoán',
+      title: 'Clinical Diagnosis',
       dataIndex: 'chuan_doan',
       key: 'diagnosis',
       ellipsis: true,
       render: v => v ? <Tooltip title={v}><span>{v}</span></Tooltip> : <span className="text-slate-400">—</span>,
     },
     {
-      title: 'Ngày',
+      title: 'Submitted Date',
       dataIndex: 'ngay_tao',
       key: 'date',
       render: v => <span className="text-xs text-slate-500">{formatDateTime(v)}</span>,
     },
     {
-      title: 'Trạng thái',
+      title: 'Approval Status',
       dataIndex: 'trang_thai_duyet',
       key: 'status',
       render: v => {
@@ -96,12 +96,12 @@ export default function PrescriptionsPage() {
       },
     },
     {
-      title: 'Thao tác',
+      title: 'Actions',
       key: 'actions',
       width: 100,
       render: (_, row) => (
         <div className="flex gap-1 items-center">
-          <Tooltip title="Xem ảnh toa thuốc">
+          <Tooltip title="View prescription scan">
             <AButton
               size="small"
               icon={<EyeOutlined />}
@@ -110,7 +110,7 @@ export default function PrescriptionsPage() {
           </Tooltip>
           {row.trang_thai_duyet === 'ChoDuyet' && (
             <>
-              <Tooltip title="Duyệt">
+              <Tooltip title="Approve">
                 <AButton
                   size="small"
                   type="primary"
@@ -119,7 +119,7 @@ export default function PrescriptionsPage() {
                   onClick={() => handleUpdateStatus(row.id, 'HopLe')}
                 />
               </Tooltip>
-              <Tooltip title="Từ chối">
+              <Tooltip title="Reject">
                 <AButton
                   size="small"
                   danger
@@ -138,8 +138,8 @@ export default function PrescriptionsPage() {
   return (
     <div className="space-y-4 animate-fade-in">
       <div>
-        <h1 className="text-xl font-display font-bold text-slate-900">Toa thuốc</h1>
-        <p className="text-slate-500 text-sm">Xem xét và duyệt toa thuốc của khách hàng</p>
+        <h1 className="text-xl font-display font-bold text-slate-900">Rx Prescriptions Review</h1>
+        <p className="text-slate-500 text-sm">Review uploaded physician prescriptions for regulatory compliance verification</p>
       </div>
 
       <div className="card">
@@ -157,13 +157,13 @@ export default function PrescriptionsPage() {
             loading={loading}
             pagination={{ pageSize: 15 }}
             size="middle"
-            locale={{ emptyText: 'Không có toa thuốc' }}
+            locale={{ emptyText: 'No prescriptions found' }}
           />
         </div>
       </div>
 
       <Modal
-        title={`Toa thuốc — ${imgModal.name}`}
+        title={`Prescription Document — ${imgModal.name}`}
         open={imgModal.open}
         onCancel={() => setImgModal({ open: false, src: '', name: '' })}
         footer={null}
@@ -180,7 +180,7 @@ export default function PrescriptionsPage() {
               fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
             />
           ) : (
-            <p className="text-slate-400">Không có ảnh</p>
+            <p className="text-slate-400">No image available</p>
           )}
         </div>
       </Modal>

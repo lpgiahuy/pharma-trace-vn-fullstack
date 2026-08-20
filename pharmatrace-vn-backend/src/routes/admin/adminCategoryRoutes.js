@@ -43,136 +43,16 @@ const router = express.Router();
 router.get('/public', getPublicCategories);
 
 // ==============================================================================
-// 2. AUTHENTICATION & AUTHORIZATION MIDDLEWARE
+// 2. AUTHENTICATION MIDDLEWARE
 // ==============================================================================
 router.use(protect);
-router.use(authorizeRoles('SuperAdmin', 'NhanVienBanHang'));
 
 // ==============================================================================
-// 3. ADMIN-ONLY API
+// 3. ADMIN API
 // ==============================================================================
-/**
- * @swagger
- * /admin/categories:
- *   get:
- *     summary: Get all categories (Admin only)
- *     description: Requires authentication. Returns all categories including inactive ones (trang_thai = false).
- *     tags: [Admin - Categories]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Successfully retrieved all categories
- */
-router.get('/', getAllCategoriesAdmin);
-
-/**
- * @swagger
- * /admin/categories:
- *   post:
- *     summary: Create a new product category
- *     tags: [Admin - Categories]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - ten_danh_muc
- *             properties:
- *               ten_danh_muc:
- *                 type: string
- *                 example: "Functional Foods"
- *               danh_muc_cha_id:
- *                 type: integer
- *                 nullable: true
- *                 example: null
- *                 description: Parent category ID (null if root category)
- *               hinh_anh_icon:
- *                 type: string
- *                 example: "url_hinh_anh_tu_cloudinary"
- *               thu_tu_hien_thi:
- *                 type: integer
- *                 example: 2
- *                 description: Display order on the menu
- *     responses:
- *       201:
- *         description: Category created successfully
- *       400:
- *         description: Category name already exists or missing required information
- */
-router.post('/', createCategory);
-
-/**
- * @swagger
- * /admin/categories/{id}:
- *   put:
- *     summary: Update category information
- *     tags: [Admin - Categories]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID of the category to update
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               ten_danh_muc:
- *                 type: string
- *                 example: "Functional Foods (Updated)"
- *               danh_muc_cha_id:
- *                 type: integer
- *                 nullable: true
- *                 example: null
- *               hinh_anh_icon:
- *                 type: string
- *               thu_tu_hien_thi:
- *                 type: integer
- *               trang_thai:
- *                 type: boolean
- *                 example: true
- *     responses:
- *       200:
- *         description: Category updated successfully
- *       400:
- *         description: Duplicate category name
- *       404:
- *         description: Category not found
- */
-router.put('/:id', updateCategory);
-
-/**
- * @swagger
- * /admin/categories/{id}:
- *   delete:
- *     summary: Soft delete a category (Hide from customers)
- *     tags: [Admin - Categories]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID of the category to soft delete
- *     responses:
- *       200:
- *         description: Category hidden successfully
- *       404:
- *         description: Category not found
- */
-router.delete('/:id', deleteCategory);
+router.get('/', authorizeRoles('SuperAdmin', 'Admin', 'QuanLyCuaHang', 'NhanVienBanHang'), getAllCategoriesAdmin);
+router.post('/', authorizeRoles('SuperAdmin', 'Admin', 'QuanLyCuaHang'), createCategory);
+router.put('/:id', authorizeRoles('SuperAdmin', 'Admin', 'QuanLyCuaHang'), updateCategory);
+router.delete('/:id', authorizeRoles('SuperAdmin', 'Admin', 'QuanLyCuaHang'), deleteCategory);
 
 export default router;

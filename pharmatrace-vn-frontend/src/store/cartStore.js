@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import toast from 'react-hot-toast'
 import apiClient from '@/services/apiClient'
 import { STORAGE_KEYS } from '@/constants'
+import { getPortalKey, getPortalToken } from '@/utils/portalAuth'
 
 export const useCartStore = create(
   persist(
@@ -77,13 +78,11 @@ export const useCartStore = create(
 
       // ── Server cart sync ──────────────────────────────────────────────────
       fetchCart: async () => {
-        const accessToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
-        if (!accessToken) return
+        const portal = getPortalKey(window.location.pathname)
+        if (portal !== 'customer') return
 
-        // Cart API is customer-only — skip for admin/manager/warehouse roles
-        const { useAuthStore } = await import('./authStore')
-        const user = useAuthStore.getState().user
-        if (user && user.role !== 'customer') return
+        const customerToken = getPortalToken('customer')
+        if (!customerToken) return
 
         try {
           const { data } = await apiClient.get('/cart')

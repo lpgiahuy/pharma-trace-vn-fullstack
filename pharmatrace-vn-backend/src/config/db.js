@@ -4,14 +4,19 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+let connectionString = process.env.DATABASE_URL;
+if (connectionString && process.env.DB_HOST && process.env.DB_HOST !== 'localhost') {
+    connectionString = connectionString.replace(/@([^/:]+):/, `@${process.env.DB_HOST}:`);
+}
+
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString,
     // Fallback for local development if DATABASE_URL is not set
-    user: process.env.DATABASE_URL ? undefined : process.env.DB_USER,
-    password: process.env.DATABASE_URL ? undefined : process.env.DB_PASSWORD,
-    host: process.env.DATABASE_URL ? undefined : process.env.DB_HOST,
-    port: process.env.DATABASE_URL ? undefined : process.env.DB_PORT,
-    database: process.env.DATABASE_URL ? undefined : process.env.DB_NAME,
+    user: connectionString ? undefined : process.env.DB_USER,
+    password: connectionString ? undefined : process.env.DB_PASSWORD,
+    host: connectionString ? undefined : process.env.DB_HOST,
+    port: connectionString ? undefined : process.env.DB_PORT,
+    database: connectionString ? undefined : process.env.DB_NAME,
     max: 20,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });

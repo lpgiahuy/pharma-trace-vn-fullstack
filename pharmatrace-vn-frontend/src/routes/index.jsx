@@ -7,60 +7,68 @@ import { AuthLayout } from '@/layouts/AuthLayout'
 import { ProtectedRoute, GuestRoute } from './ProtectedRoute'
 
 // ── Auth ────────────────────────────────────────────────────────────────────
-const LoginPage        = lazy(() => import('@/pages/auth/LoginPage'))
-const RegisterPage     = lazy(() => import('@/pages/auth/RegisterPage'))
-const ForgotPassword   = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
-const ResetPassword    = lazy(() => import('@/pages/auth/ResetPasswordPage'))
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
+const AdminLoginPage = lazy(() => import('@/pages/auth/AdminLoginPage'))
+const WarehouseLoginPage = lazy(() => import('@/pages/auth/WarehouseLoginPage'))
+const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'))
+const ForgotPassword = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
+const ResetPassword = lazy(() => import('@/pages/auth/ResetPasswordPage'))
 
 // ── Ecom ────────────────────────────────────────────────────────────────────
-const HomePage         = lazy(() => import('@/pages/ecom/home/HomePage'))
-const ProductListPage  = lazy(() => import('@/pages/ecom/products/ProductListPage'))
-const ProductDetailPage= lazy(() => import('@/pages/ecom/products/ProductDetailPage'))
-const CartPage         = lazy(() => import('@/pages/ecom/cart/CartPage'))
-const CheckoutPage     = lazy(() => import('@/pages/ecom/cart/CheckoutPage'))
+const HomePage = lazy(() => import('@/pages/ecom/home/HomePage'))
+const ProductListPage = lazy(() => import('@/pages/ecom/products/ProductListPage'))
+const ProductDetailPage = lazy(() => import('@/pages/ecom/products/ProductDetailPage'))
+const CartPage = lazy(() => import('@/pages/ecom/cart/CartPage'))
+const CheckoutPage = lazy(() => import('@/pages/ecom/cart/CheckoutPage'))
 const OrderSuccessPage = lazy(() => import('@/pages/ecom/cart/OrderSuccessPage'))
-const AccountPage      = lazy(() => import('@/pages/ecom/account/AccountPage'))
-const ProfilePage      = lazy(() => import('@/pages/ecom/account/ProfilePage'))
-const OrdersPage       = lazy(() => import('@/pages/ecom/account/OrdersPage'))
-const OrderDetailPage  = lazy(() => import('@/pages/ecom/account/OrderDetailPage'))
-const WishlistPage     = lazy(() => import('@/pages/ecom/account/WishlistPage'))
+const AccountPage = lazy(() => import('@/pages/ecom/account/AccountPage'))
+const ProfilePage = lazy(() => import('@/pages/ecom/account/ProfilePage'))
+const OrdersPage = lazy(() => import('@/pages/ecom/account/OrdersPage'))
+const OrderDetailPage = lazy(() => import('@/pages/ecom/account/OrderDetailPage'))
+const WishlistPage = lazy(() => import('@/pages/ecom/account/WishlistPage'))
 const PrescriptionPage = lazy(() => import('@/pages/ecom/account/PrescriptionPage'))
-const RmaPage          = lazy(() => import('@/pages/ecom/account/RmaPage'))
-const BlogListPage     = lazy(() => import('@/pages/ecom/blog/BlogListPage'))
-const BlogDetailPage   = lazy(() => import('@/pages/ecom/blog/BlogDetailPage'))
+const RmaPage = lazy(() => import('@/pages/ecom/account/RmaPage'))
+const BlogListPage = lazy(() => import('@/pages/ecom/blog/BlogListPage'))
+const BlogDetailPage = lazy(() => import('@/pages/ecom/blog/BlogDetailPage'))
 const CustomerHelpPage = lazy(() => import('@/pages/ecom/help/HelpPage'))
-const TracePage        = lazy(() => import('@/pages/trace/TracePage'))
-const NotFoundPage     = lazy(() => import('@/pages/NotFoundPage'))
+const TracePage = lazy(() => import('@/pages/trace/TracePage'))
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const UnauthorizedPage = lazy(() => import('@/pages/UnauthorizedPage'))
 
 // ── Admin ───────────────────────────────────────────────────────────────────
-const AdminDashboard      = lazy(() => import('@/pages/admin/dashboard/DashboardPage'))
-const AdminProducts       = lazy(() => import('@/pages/admin/products/ProductsPage'))
-const AdminProductForm    = lazy(() => import('@/pages/admin/products/ProductFormPage'))
-const AdminCategories     = lazy(() => import('@/pages/admin/products/CategoriesPage'))
-const AdminOrders         = lazy(() => import('@/pages/admin/orders/OrdersPage'))
-const AdminOrderDetail    = lazy(() => import('@/pages/admin/orders/OrderDetailPage'))
-const AdminRma            = lazy(() => import('@/pages/admin/orders/RmaPage'))
-const AdminVouchers       = lazy(() => import('@/pages/admin/vouchers/VouchersPage'))
-const AdminBlog           = lazy(() => import('@/pages/admin/blog/BlogPage'))
-const AdminBlogForm       = lazy(() => import('@/pages/admin/blog/BlogFormPage'))
-const AdminStaff          = lazy(() => import('@/pages/admin/staff/StaffPage'))
-const AdminCustomers      = lazy(() => import('@/pages/admin/customers/CustomersPage'))
-const AdminPrescriptions  = lazy(() => import('@/pages/admin/prescriptions/PrescriptionsPage'))
-const AdminUnits          = lazy(() => import('@/pages/admin/units/UnitsPage'))
-const AdminHelp           = lazy(() => import('@/pages/admin/help/HelpPage'))
+const AdminDashboard = lazy(() => import('@/pages/admin/dashboard/DashboardPage'))
+const AdminProducts = lazy(() => import('@/pages/admin/products/ProductsPage'))
+const AdminProductForm = lazy(() => import('@/pages/admin/products/ProductFormPage'))
+const AdminCategories = lazy(() => import('@/pages/admin/products/CategoriesPage'))
+const AdminOrders = lazy(() => import('@/pages/admin/orders/OrdersPage'))
+const AdminOrderDetail = lazy(() => import('@/pages/admin/orders/OrderDetailPage'))
+const AdminRma = lazy(() => import('@/pages/admin/rma/RmaPage'))
+const AdminVouchers = lazy(() => import('@/pages/admin/vouchers/VouchersPage'))
+const AdminBlog = lazy(() => import('@/pages/admin/blog/BlogPage'))
+const AdminBlogForm = lazy(() => import('@/pages/admin/blog/BlogFormPage'))
+const AdminStaff = lazy(() => import('@/pages/admin/staff/StaffPage'))
+const AdminCustomers = lazy(() => import('@/pages/admin/customers/CustomersPage'))
+const AdminPrescriptions = lazy(() => import('@/pages/admin/prescriptions/PrescriptionsPage'))
+const AdminUnits = lazy(() => import('@/pages/admin/units/UnitsPage'))
+const AdminHelp = lazy(() => import('@/pages/admin/help/HelpPage'))
+const AdminProcurement = lazy(() => import('@/pages/admin/procurement/ProcurementPage'))
+const AdminLotMonitor = lazy(() => import('@/pages/admin/inventory/LotBatchMonitorPage'))
+const AdminLogisticsCod = lazy(() => import('@/pages/admin/logistics/LogisticsCodPage'))
+const AdminFraudAnomaly = lazy(() => import('@/pages/admin/security/FraudAnomalyEnginePage'))
+const AdminCrmLoyalty = lazy(() => import('@/pages/admin/crm/CrmLoyaltyPage'))
+const AdminFinance = lazy(() => import('@/pages/admin/finance/FinancePage'))
 
 // ── Warehouse ────────────────────────────────────────────────────────────────
-const InboundPage           = lazy(() => import('@/pages/warehouse/inbound/InboundPage'))
-const FulfillmentPage       = lazy(() => import('@/pages/warehouse/fulfillment/FulfillmentPage'))
-const TransferPage          = lazy(() => import('@/pages/warehouse/transfer/TransferPage'))
-const DisposalPage          = lazy(() => import('@/pages/warehouse/disposal/DisposalPage'))
-const RecallPage            = lazy(() => import('@/pages/warehouse/recall/RecallPage'))
-const ScannerPage           = lazy(() => import('@/pages/warehouse/scanner/ScannerPage'))
-const WarehouseProfilePage  = lazy(() => import('@/pages/warehouse/profile/WarehouseProfilePage'))
+const InboundPage = lazy(() => import('@/pages/warehouse/inbound/InboundPage'))
+const FulfillmentPage = lazy(() => import('@/pages/warehouse/fulfillment/FulfillmentPage'))
+const TransferPage = lazy(() => import('@/pages/warehouse/transfer/TransferPage'))
+const DisposalPage = lazy(() => import('@/pages/warehouse/disposal/DisposalPage'))
+const RecallPage = lazy(() => import('@/pages/warehouse/recall/RecallPage'))
+const ScannerPage = lazy(() => import('@/pages/warehouse/scanner/ScannerPage'))
+const WarehouseProfilePage = lazy(() => import('@/pages/warehouse/profile/WarehouseProfilePage'))
 
-const ADMIN_ROLES     = ['admin', 'manager']
-const WAREHOUSE_ROLES = ['admin', 'manager', 'staff']
+const ADMIN_ROLES = ['SuperAdmin', 'superadmin', 'NhanVienBanHang', 'Admin', 'admin', 'manager', 'staff', 'QuanLyCuaHang']
+const WAREHOUSE_ROLES = ['SuperAdmin', 'superadmin', 'QuanLyKho', 'NhanVienKho']
 
 /**
  * Loading component tạm thời trong khi chờ tải file JS
@@ -79,64 +87,74 @@ export const AppRoutes = () => (
     <Routes>
       {/* Auth */}
       <Route element={<AuthLayout />}>
-        <Route path="/login"           element={<GuestRoute><LoginPage /></GuestRoute>} />
-        <Route path="/register"        element={<GuestRoute><RegisterPage /></GuestRoute>} />
+        <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+        <Route path="/admin/login" element={<GuestRoute><AdminLoginPage /></GuestRoute>} />
+        <Route path="/warehouse/login" element={<GuestRoute><WarehouseLoginPage /></GuestRoute>} />
+        <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
         <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
-        <Route path="/reset-password"  element={<GuestRoute><ResetPassword /></GuestRoute>} />
+        <Route path="/reset-password" element={<GuestRoute><ResetPassword /></GuestRoute>} />
       </Route>
 
       {/* Ecom – public */}
       <Route element={<MainLayout />}>
-        <Route path="/"              element={<HomePage />} />
-        <Route path="/products"      element={<ProductListPage />} />
-        <Route path="/products/:id"  element={<ProductDetailPage />} />
-        <Route path="/cart"          element={<CartPage />} />
-        <Route path="/blog"          element={<BlogListPage />} />
-        <Route path="/blog/:slug"    element={<BlogDetailPage />} />
-        <Route path="/help"          element={<CustomerHelpPage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/products" element={<ProductListPage />} />
+        <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/blog" element={<BlogListPage />} />
+        <Route path="/blog/:slug" element={<BlogDetailPage />} />
+        <Route path="/help" element={<CustomerHelpPage />} />
 
         {/* Ecom – protected */}
-        <Route path="/checkout"           element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
-        <Route path="/order-success/:id"  element={<ProtectedRoute><OrderSuccessPage /></ProtectedRoute>} />
-        <Route path="/account"            element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
-        <Route path="/account/profile"    element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        <Route path="/account/orders"     element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+        <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+        <Route path="/order-success/:id" element={<ProtectedRoute><OrderSuccessPage /></ProtectedRoute>} />
+        <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+        <Route path="/account/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/account/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
         <Route path="/account/orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
-        <Route path="/account/wishlist"   element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
+        <Route path="/account/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
         <Route path="/account/prescriptions" element={<ProtectedRoute><PrescriptionPage /></ProtectedRoute>} />
-        <Route path="/account/rma"        element={<ProtectedRoute><RmaPage /></ProtectedRoute>} />
+        <Route path="/account/rma" element={<ProtectedRoute><RmaPage /></ProtectedRoute>} />
       </Route>
 
       {/* Admin */}
       <Route element={<ProtectedRoute roles={ADMIN_ROLES}><AdminLayout /></ProtectedRoute>}>
-        <Route path="/admin"                   element={<AdminDashboard />} />
-        <Route path="/admin/products"          element={<AdminProducts />} />
-        <Route path="/admin/products/new"      element={<AdminProductForm />} />
-        <Route path="/admin/products/:id/edit" element={<AdminProductForm />} />
-        <Route path="/admin/categories"        element={<AdminCategories />} />
-        <Route path="/admin/orders"            element={<AdminOrders />} />
-        <Route path="/admin/orders/:id"        element={<AdminOrderDetail />} />
-        <Route path="/admin/rma"               element={<AdminRma />} />
-        <Route path="/admin/vouchers"          element={<AdminVouchers />} />
-        <Route path="/admin/blog"              element={<AdminBlog />} />
-        <Route path="/admin/blog/new"          element={<AdminBlogForm />} />
-        <Route path="/admin/blog/:id/edit"     element={<AdminBlogForm />} />
-        <Route path="/admin/staff"             element={<AdminStaff />} />
-        <Route path="/admin/customers"         element={<AdminCustomers />} />
-        <Route path="/admin/prescriptions"     element={<AdminPrescriptions />} />
-        <Route path="/admin/help"              element={<AdminHelp />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/profile" element={<WarehouseProfilePage />} />
+        <Route path="/admin/products" element={<AdminProducts />} />
+        <Route path="/admin/products/new" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang']}><AdminProductForm /></ProtectedRoute>} />
+        <Route path="/admin/products/:id/edit" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang']}><AdminProductForm /></ProtectedRoute>} />
+        <Route path="/admin/categories" element={<AdminCategories />} />
+        <Route path="/admin/orders" element={<AdminOrders />} />
+        <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
+        <Route path="/admin/rma" element={<AdminRma />} />
+        <Route path="/admin/crm/loyalty" element={<AdminCrmLoyalty />} />
+        <Route path="/admin/vouchers" element={<AdminVouchers />} />
+        <Route path="/admin/blog" element={<AdminBlog />} />
+        <Route path="/admin/blog/new" element={<AdminBlogForm />} />
+        <Route path="/admin/blog/:id/edit" element={<AdminBlogForm />} />
+        <Route path="/admin/staff" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin']}><AdminStaff /></ProtectedRoute>} />
+        <Route path="/admin/customers" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin', 'Admin', 'admin', 'QuanLyCuaHang', 'NhanVienBanHang']}><AdminCustomers /></ProtectedRoute>} />
+        <Route path="/admin/prescriptions" element={<AdminPrescriptions />} />
+        <Route path="/admin/procurement" element={<AdminProcurement />} />
+        <Route path="/admin/inventory/lots" element={<AdminLotMonitor />} />
+        <Route path="/admin/logistics/cod" element={<AdminLogisticsCod />} />
+        <Route path="/admin/security/fraud-anomalies" element={<AdminFraudAnomaly />} />
+        <Route path="/admin/finance" element={<ProtectedRoute roles={['SuperAdmin', 'superadmin']}><AdminFinance /></ProtectedRoute>} />
+        <Route path="/admin/help" element={<AdminHelp />} />
       </Route>
 
       {/* Warehouse */}
       <Route element={<ProtectedRoute roles={WAREHOUSE_ROLES}><WarehouseLayout /></ProtectedRoute>}>
-        <Route path="/warehouse"               element={<Navigate to="/warehouse/inbound" replace />} />
-        <Route path="/warehouse/inbound"       element={<InboundPage />} />
-        <Route path="/warehouse/fulfillment"   element={<FulfillmentPage />} />
-        <Route path="/warehouse/transfer"      element={<TransferPage />} />
-        <Route path="/warehouse/disposal"      element={<DisposalPage />} />
-        <Route path="/warehouse/recall"        element={<RecallPage />} />
-        <Route path="/warehouse/scanner"       element={<ScannerPage />} />
-        <Route path="/warehouse/profile"       element={<WarehouseProfilePage />} />
+        <Route path="/warehouse" element={<Navigate to="/warehouse/inbound" replace />} />
+        <Route path="/warehouse/inbound" element={<InboundPage />} />
+        <Route path="/warehouse/procurement" element={<AdminProcurement />} />
+        <Route path="/warehouse/fulfillment" element={<FulfillmentPage />} />
+        <Route path="/warehouse/transfer" element={<TransferPage />} />
+        <Route path="/warehouse/disposal" element={<DisposalPage />} />
+        <Route path="/warehouse/recall" element={<RecallPage />} />
+        <Route path="/warehouse/scanner" element={<ScannerPage />} />
+        <Route path="/warehouse/profile" element={<WarehouseProfilePage />} />
       </Route>
 
       {/* Traceability — public, standalone dark layout */}
@@ -144,7 +162,7 @@ export const AppRoutes = () => (
 
       {/* Misc */}
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
-      <Route path="*"             element={<NotFoundPage />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   </Suspense>
 )

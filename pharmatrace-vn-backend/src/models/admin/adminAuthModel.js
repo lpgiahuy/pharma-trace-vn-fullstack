@@ -1,25 +1,40 @@
-import pool from '../../config/db.js';
+import prisma from '../../config/prisma.js';
 
 // find employee by email (used for login)
 const getEmployeeByEmail = async (email) => {
-    const query = `
-        SELECT id, don_vi_id, ho_ten, email, mat_khau_hash, vai_tro 
-        FROM NhanVien 
-        WHERE email = $1 AND trang_thai = TRUE;
-    `;
-    const result = await pool.query(query, [email]);
-    return result.rows[0];
+    return await prisma.nhanvien.findFirst({
+        where: {
+            email,
+            trang_thai: true
+        },
+        select: {
+            id: true,
+            don_vi_id: true,
+            ho_ten: true,
+            email: true,
+            mat_khau_hash: true,
+            vai_tro: true
+        }
+    });
 };
 
 // helper function to create the first SuperAdmin (used during system initialization)
 const createFirstAdmin = async (don_vi_id, ho_ten, email, mat_khau_hash, vai_tro) => {
-    const query = `
-        INSERT INTO NhanVien (don_vi_id, ho_ten, email, mat_khau_hash, vai_tro)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, ho_ten, email, vai_tro;
-    `;
-    const result = await pool.query(query, [don_vi_id, ho_ten, email, mat_khau_hash, vai_tro]);
-    return result.rows[0];
+    return await prisma.nhanvien.create({
+        data: {
+            don_vi_id,
+            ho_ten,
+            email,
+            mat_khau_hash,
+            vai_tro
+        },
+        select: {
+            id: true,
+            ho_ten: true,
+            email: true,
+            vai_tro: true
+        }
+    });
 };
 
 export { getEmployeeByEmail, createFirstAdmin };

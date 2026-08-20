@@ -2,7 +2,7 @@ import * as adminOrderService from '../../services/admin/adminOrderService.js';
 
 const getOrders = async (req, res, next) => {
     try {
-        const data = await adminOrderService.fetchOrders();
+        const data = await adminOrderService.fetchOrders(req.user);
         res.status(200).json({ success: true, data });
     } catch (error) {
         next(error);
@@ -90,4 +90,17 @@ const updateOrderPayment = async (req, res, next) => {
     }
 };
 
-export { getOrders, getOrderById, fulfillOrder, handleStartShipping, confirmOrderDelivery, updateOrderPayment };
+const getAvailableUIDs = async (req, res, next) => {
+    try {
+        const orderId = req.params.id;
+        const data = await adminOrderService.fetchAvailableUIDsForOrder(orderId);
+        res.status(200).json({
+            success: true,
+            data
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export { getOrders, getOrderById, fulfillOrder, handleStartShipping, confirmOrderDelivery, updateOrderPayment, getAvailableUIDs };

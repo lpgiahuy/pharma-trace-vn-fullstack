@@ -5,9 +5,9 @@ import { unitService } from '@/services/user.service'
 import toast from 'react-hot-toast'
 
 const UNIT_TYPES = [
-  { value: 'NhaMay',        label: 'Nhà Máy' },
-  { value: 'NhaPhanPhoi',   label: 'Nhà Phân Phối' },
-  { value: 'NhaThuoc',      label: 'Nhà Thuốc' },
+  { value: 'NhaMay',        label: 'Manufacturing Plant / Factory' },
+  { value: 'NhaPhanPhoi',   label: 'Distribution Center / Warehouse' },
+  { value: 'NhaThuoc',      label: 'Retail Pharmacy' },
 ]
 
 const TYPE_COLORS = {
@@ -34,11 +34,11 @@ export default function UnitsPage() {
     setEditing(unit)
     if (unit) {
       form.setFieldsValue({
-        ten_don_vi:  unit.name,
-        loai_don_vi: unit.type,
-        dia_chi:     unit.address,
-        toa_do_lat:  unit.lat,
-        toa_do_lng:  unit.lng,
+        ten_don_vi:  unit.ten_don_vi || unit.name || '',
+        loai_don_vi: unit.loai_don_vi || unit.type || '',
+        dia_chi:     unit.dia_chi || unit.address || '',
+        toa_do_lat:  unit.toa_do_lat ?? unit.lat ?? null,
+        toa_do_lng:  unit.toa_do_lng ?? unit.lng ?? null,
       })
     } else {
       form.resetFields()
@@ -51,21 +51,21 @@ export default function UnitsPage() {
     try {
       if (editing) await unitService.update(editing.id, vals)
       else         await unitService.create(vals)
-      toast.success(editing ? 'Đã cập nhật đơn vị' : 'Đã tạo đơn vị')
+      toast.success(editing ? 'Facility updated successfully' : 'Facility created successfully')
       setOpen(false)
       fetchData()
-    } catch { toast.error('Lưu thất bại') }
+    } catch { toast.error('Failed to save facility') }
     finally { setSaving(false) }
   }
 
   const handleDelete = async (id) => {
-    try { await unitService.delete(id); toast.success('Đã xóa đơn vị'); fetchData() }
-    catch { toast.error('Xóa thất bại') }
+    try { await unitService.delete(id); toast.success('Facility deleted successfully'); fetchData() }
+    catch { toast.error('Failed to delete facility') }
   }
 
   const cols = [
     {
-      title: 'Tên đơn vị',
+      title: 'Facility Name',
       dataIndex: 'name',
       key: 'name',
       render: (v, row) => (
@@ -76,13 +76,13 @@ export default function UnitsPage() {
       ),
     },
     {
-      title: 'Loại',
+      title: 'Facility Type',
       dataIndex: 'type',
       key: 'type',
       render: v => <Tag color={TYPE_COLORS[v] || 'default'}>{UNIT_TYPES.find(t => t.value === v)?.label || v}</Tag>,
     },
     {
-      title: 'Tọa độ',
+      title: 'GPS Coordinates',
       key: 'coords',
       render: (_, row) => row.lat && row.lng
         ? (
@@ -96,7 +96,7 @@ export default function UnitsPage() {
             {Number(row.lat).toFixed(5)}, {Number(row.lng).toFixed(5)}
           </a>
         )
-        : <span className="text-slate-400 text-xs italic">Chưa thiết lập</span>,
+        : <span className="text-slate-400 text-xs italic">Not configured</span>,
     },
     {
       title: '',
@@ -105,7 +105,7 @@ export default function UnitsPage() {
       render: (_, row) => (
         <div className="flex gap-1">
           <AButton size="small" icon={<EditOutlined />} onClick={() => openModal(row)} />
-          <Popconfirm title="Xóa đơn vị?" onConfirm={() => handleDelete(row.id)} okText="Xóa" okButtonProps={{ danger: true }}>
+          <Popconfirm title="Delete facility?" onConfirm={() => handleDelete(row.id)} okText="Delete" okButtonProps={{ danger: true }}>
             <AButton size="small" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </div>
@@ -117,10 +117,10 @@ export default function UnitsPage() {
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-display font-bold text-slate-900">Đơn vị & Địa điểm</h1>
-          <p className="text-slate-500 text-sm">Quản lý nhà máy, nhà phân phối và nhà thuốc</p>
+          <h1 className="text-xl font-display font-bold text-slate-900">Facilities & Distribution Units</h1>
+          <p className="text-slate-500 text-sm">Manage factories, distribution warehouses, and retail pharmacy network</p>
         </div>
-        <AButton type="primary" icon={<PlusOutlined />} onClick={() => openModal()} size="large">Thêm đơn vị</AButton>
+        <AButton type="primary" icon={<PlusOutlined />} onClick={() => openModal()} size="large">Add Facility</AButton>
       </div>
 
       <div className="card p-4">
@@ -128,48 +128,48 @@ export default function UnitsPage() {
       </div>
 
       <Modal
-        title={editing ? 'Chỉnh sửa đơn vị' : 'Đơn vị mới'}
+        title={editing ? 'Edit Facility' : 'Add New Facility'}
         open={open}
         onCancel={() => setOpen(false)}
         onOk={() => form.submit()}
-        okText="Lưu"
+        okText="Save"
         confirmLoading={saving}
         centered
       >
         <Form form={form} layout="vertical" onFinish={handleSave} className="mt-4">
-          <Form.Item label="Tên đơn vị" name="ten_don_vi" rules={[{ required: true, message: 'Vui lòng nhập tên đơn vị' }]}>
-            <Input placeholder="VD: Nhà máy Dược Hậu Giang" />
+          <Form.Item label="Facility Name" name="ten_don_vi" rules={[{ required: true, message: 'Please enter facility name' }]}>
+            <Input placeholder="e.g. Hau Giang Pharma Factory" />
           </Form.Item>
 
-          <Form.Item label="Loại đơn vị" name="loai_don_vi" rules={[{ required: true, message: 'Vui lòng chọn loại' }]}>
-            <Select options={UNIT_TYPES} placeholder="Chọn loại đơn vị" />
+          <Form.Item label="Facility Type" name="loai_don_vi" rules={[{ required: true, message: 'Please select type' }]}>
+            <Select options={UNIT_TYPES} placeholder="Select facility type" />
           </Form.Item>
 
-          <Form.Item label="Địa chỉ" name="dia_chi">
-            <Input.TextArea rows={2} placeholder="VD: 288 Bis Nguyễn Văn Cừ, Quận 5, TP.HCM" />
+          <Form.Item label="Physical Address" name="dia_chi">
+            <Input.TextArea rows={2} placeholder="e.g. 288 Bis Nguyen Van Cu, Dist 5, HCMC" />
           </Form.Item>
 
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
-              label="Vĩ độ"
+              label="Latitude"
               name="toa_do_lat"
               rules={[{
-                validator: (_, v) => (!v || (v >= -90 && v <= 90)) ? Promise.resolve() : Promise.reject('Phải trong khoảng -90 đến 90')
+                validator: (_, v) => (!v || (v >= -90 && v <= 90)) ? Promise.resolve() : Promise.reject('Must be between -90 and 90')
               }]}
             >
-              <InputNumber style={{ width: '100%' }} step={0.00001} placeholder="VD: 10.76269" />
+              <InputNumber style={{ width: '100%' }} step={0.00001} placeholder="e.g. 10.76269" />
             </Form.Item>
             <Form.Item
-              label="Kinh độ"
+              label="Longitude"
               name="toa_do_lng"
               rules={[{
-                validator: (_, v) => (!v || (v >= -180 && v <= 180)) ? Promise.resolve() : Promise.reject('Phải trong khoảng -180 đến 180')
+                validator: (_, v) => (!v || (v >= -180 && v <= 180)) ? Promise.resolve() : Promise.reject('Must be between -180 and 180')
               }]}
             >
-              <InputNumber style={{ width: '100%' }} step={0.00001} placeholder="VD: 106.68278" />
+              <InputNumber style={{ width: '100%' }} step={0.00001} placeholder="e.g. 106.68278" />
             </Form.Item>
           </div>
-          <p className="text-xs text-slate-400 -mt-2">Tọa độ GPS bắt buộc cho tính năng tìm nhà thuốc gần nhất.</p>
+          <p className="text-xs text-slate-400 -mt-2">GPS coordinates are utilized for nearest pharmacy routing and map tracking.</p>
         </Form>
       </Modal>
     </div>

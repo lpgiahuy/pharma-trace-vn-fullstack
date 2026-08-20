@@ -3,6 +3,7 @@ import toast from 'react-hot-toast'
 import { env } from '@/config/env'
 import { STORAGE_KEYS } from '@/constants'
 import { isTokenExpired } from '@/utils'
+import { getPortalKey, getPortalToken, getPortalStorageKeys, setPortalAuth, clearPortalAuth } from '@/utils/portalAuth'
 
 const apiClient = axios.create({
   baseURL: env.API_BASE_URL,
@@ -21,26 +22,17 @@ const processQueue = (error, token = null) => {
 
 apiClient.interceptors.request.use(
   async (config) => {
-    let accessToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
-    
-    // Fallback: Try to get token from persisted auth state if direct key is missing
-    if (!accessToken) {
-      try {
-        const saved = localStorage.getItem('pharma-auth')
-        if (saved) {
-          const { state } = JSON.parse(saved)
-          accessToken = state?.accessToken
-        }
-      } catch (e) {}
-    }
+    const portal = getPortalKey(window.location.pathname)
+    const keys = getPortalStorageKeys(portal)
+    let accessToken = getPortalToken(portal)
 
     if (!accessToken) return config
 
-    const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+    const refreshToken = localStorage.getItem(keys.REFRESH_TOKEN)
     const shouldRefresh =
       refreshToken &&
       isTokenExpired(accessToken) === false &&
-      Date.now() > (Number(localStorage.getItem('pharma_token_expiry')) - env.REFRESH_TOKEN_THRESHOLD)
+      Date.now() > (Number(localStorage.getItem(keys.TOKEN_EXPIRY)) - env.REFRESH_TOKEN_THRESHOLD)
 
     if (shouldRefresh && !isRefreshing) {
       isRefreshing = true
@@ -48,8 +40,8 @@ apiClient.interceptors.request.use(
         const { data } = await axios.post(`${env.API_BASE_URL}/auth/refresh`, { refreshToken })
         const newToken = data.data?.token || data.accessToken || data.token
         const newExpiry = data.data?.expiresAt || data.expiresAt || (Date.now() + 3600000)
-        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, newToken)
-        localStorage.setItem('pharma_token_expiry', newExpiry)
+        
+        setPortalAuth(portal, null, newToken, refreshToken, newExpiry)
         config.headers.Authorization = `Bearer ${newToken}`
         processQueue(null, newToken)
       } catch (err) {
@@ -72,7 +64,6 @@ apiClient.interceptors.response.use(
   async (error) => {
     const original = error.config
 
-    // ── Debug logging for all API errors ──────────────────────────────────
     if (error.response) {
       console.error(
         `[API ${error.response.status}] ${original?.method?.toUpperCase()} ${original?.url}`,
@@ -80,8 +71,12 @@ apiClient.interceptors.response.use(
       )
     }
 
-    if (error.response?.status === 401 && !original._retry) {
-      const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+    const isLoginEndpoint = original?.url?.includes('/login') || original?.url?.includes('/register')
+
+    if (error.response?.status === 401 && !original._retry && !isLoginEndpoint) {
+      const portal = getPortalKey(window.location.pathname)
+      const keys = getPortalStorageKeys(portal)
+      const refreshToken = localStorage.getItem(keys.REFRESH_TOKEN)
       if (!refreshToken) { _logout(); return Promise.reject(error) }
 
       if (isRefreshing) {
@@ -100,8 +95,7 @@ apiClient.interceptors.response.use(
         const { data } = await axios.post(`${env.API_BASE_URL}/auth/refresh`, { refreshToken })
         const newToken = data.data?.token || data.accessToken || data.token
         const newExpiry = data.data?.expiresAt || data.expiresAt || (Date.now() + 3600000)
-        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, newToken)
-        localStorage.setItem('pharma_token_expiry', newExpiry)
+        setPortalAuth(portal, null, newToken, refreshToken, newExpiry)
         processQueue(null, newToken)
         original.headers.Authorization = `Bearer ${newToken}`
         return apiClient(original)
@@ -118,7 +112,6 @@ apiClient.interceptors.response.use(
       toast.error('You do not have permission to perform this action.')
     }
 
-    // Skip error toast for auth endpoints (token expiry is expected)
     const isAuthEndpoint = original?.url?.includes('/auth/')
     if (error.response?.status >= 500 && !isAuthEndpoint) {
       toast.error('Server error. Please try again later.')
@@ -133,9 +126,15 @@ apiClient.interceptors.response.use(
 )
 
 const _logout = () => {
-  Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key))
-  localStorage.removeItem('pharma_token_expiry')
-  window.location.href = '/login'
+  const portal = getPortalKey(window.location.pathname)
+  let redirectUrl = '/login'
+  if (portal === 'warehouse') {
+    redirectUrl = '/warehouse/login'
+  } else if (portal === 'admin') {
+    redirectUrl = '/admin/login'
+  }
+  clearPortalAuth(portal)
+  window.location.href = redirectUrl
 }
 
 export default apiClient

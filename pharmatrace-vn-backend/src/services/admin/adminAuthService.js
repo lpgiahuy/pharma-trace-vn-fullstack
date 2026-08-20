@@ -6,7 +6,7 @@ const loginAdmin = async (email, password) => {
     // find employee by email
     const employee = await adminAuthModel.getEmployeeByEmail(email);
     if (!employee) {
-        const error = new Error('Account not found or has been disabled!');
+        const error = new Error('Email hoặc mật khẩu không chính xác!');
         error.statusCode = 401;
         throw error;
     }
@@ -14,13 +14,16 @@ const loginAdmin = async (email, password) => {
     // check password
     const isMatch = await bcrypt.compare(password, employee.mat_khau_hash);
     if (!isMatch) {
-        const error = new Error('Incorrect password!');
+        const error = new Error('Email hoặc mật khẩu không chính xác!');
         error.statusCode = 401;
         throw error;
     }
 
     // generate JWT token
-    const token = generateToken(employee.id, employee.vai_tro);
+    const token = generateToken(employee.id, employee.vai_tro, {
+        don_vi_id: employee.don_vi_id,
+        type: 'staff'
+    });
 
     return {
         nhan_vien: {

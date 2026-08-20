@@ -92,20 +92,20 @@ export default function PrescriptionPage() {
         {/* Metadata fields matching ToaThuoc table */}
         <div className="grid sm:grid-cols-2 gap-4">
           <Input
-            label="Doctor Name (Tên bác sĩ)"
-            placeholder="e.g. Dr. Nguyen Van A"
+            label="Doctor Name"
+            placeholder="e.g. Dr. John Doe"
             error={errors.ten_bac_si?.message}
             {...register('ten_bac_si')}
           />
           <Input
-            label="Hospital (Bệnh viện)"
-            placeholder="e.g. Bệnh viện Chợ Rẫy"
+            label="Hospital / Clinic"
+            placeholder="e.g. Cho Ray Hospital"
             error={errors.ten_benh_vien?.message}
             {...register('ten_benh_vien')}
           />
         </div>
         <Input
-          label="Diagnosis (Chẩn đoán)"
+          label="Diagnosis"
           placeholder="e.g. Type 2 Diabetes, Hypertension"
           error={errors.chuan_doan?.message}
           {...register('chuan_doan')}

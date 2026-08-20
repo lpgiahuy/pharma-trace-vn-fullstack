@@ -2,7 +2,7 @@ import * as authModel from '../../models/ecom/authModel.js';
 import { hashPassword, comparePassword } from '../../utils/hashHelper.js';
 import { generateToken } from '../../utils/jwtHelper.js';
 
-const registerUser = async (ho_ten, so_dien_thoai, mat_khau) => {
+const registerUser = async (ho_ten, so_dien_thoai, mat_khau, email = null, dia_chi = null) => {
     // Check if user already exists
     const userExists = await authModel.findUserByPhone(so_dien_thoai);
     if (userExists) {
@@ -13,7 +13,7 @@ const registerUser = async (ho_ten, so_dien_thoai, mat_khau) => {
 
     const hashedPass = await hashPassword(mat_khau);
     
-    const newUser = await authModel.createUser(ho_ten, so_dien_thoai, hashedPass);
+    const newUser = await authModel.createUser(ho_ten, so_dien_thoai, hashedPass, email, dia_chi);
     
     // Gererate token for the new user
     const token = generateToken(newUser.id);
@@ -21,11 +21,11 @@ const registerUser = async (ho_ten, so_dien_thoai, mat_khau) => {
     return { user: newUser, token };
 };
 
-const loginUser = async (so_dien_thoai, mat_khau) => {
-    // find user by phone number
-    const user = await authModel.findUserByPhone(so_dien_thoai);
+const loginUser = async (identifier, mat_khau) => {
+    // find user by phone number or email
+    const user = await authModel.findUserByIdentifier(identifier);
     if (!user) {
-        const error = new Error('Account does not exist');
+        const error = new Error('Tài khoản hoặc mật khẩu không chính xác');
         error.statusCode = 401;
         throw error;
     }
@@ -33,7 +33,7 @@ const loginUser = async (so_dien_thoai, mat_khau) => {
     // compare password
     const isMatch = await comparePassword(mat_khau, user.mat_khau_hash);
     if (!isMatch) {
-        const error = new Error('Incorrect password');
+        const error = new Error('Tài khoản hoặc mật khẩu không chính xác');
         error.statusCode = 401;
         throw error;
     }
@@ -41,12 +41,16 @@ const loginUser = async (so_dien_thoai, mat_khau) => {
     // generate token and return user info
     const token = generateToken(user.id);
     delete user.mat_khau_hash; 
+    user.dia_chi = user.dia_chi_mac_dinh;
 
     return { user, token };
 };
 
 const getUserProfile = async (id) => {
-    const user = await authModel.findUserById(id);
+    let user = await authModel.findUserById(id);
+    if (!user) {
+        user = await authModel.findStaffById(id);
+    }
     if (!user) {
         const error = new Error('User not found');
         error.statusCode = 404;

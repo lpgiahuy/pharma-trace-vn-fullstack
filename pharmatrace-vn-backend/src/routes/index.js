@@ -11,6 +11,12 @@ import adminVoucherRoutes from './admin/adminVoucherRoutes.js';
 import adminCategoryRoutes from './admin/adminCategoryRoutes.js';
 import adminBlogRoutes from './admin/adminBlogRoutes.js';
 import adminRmaRoutes from './admin/adminRmaRoutes.js';
+import procurementRoutes from './admin/procurementRoutes.js';
+import lotRoutes from './admin/lotRoutes.js';
+import logisticsCodRoutes from './admin/logisticsCodRoutes.js';
+import fraudAnomalyRoutes from './admin/fraudAnomalyRoutes.js';
+import crmLoyaltyRmaRoutes from './admin/crmLoyaltyRmaRoutes.js';
+import financeRoutes from './admin/financeRoutes.js';
 
 // --- 2. Pharma & Logistics Routes ---
 import traceRoutes from './pharma/traceRoutes.js';
@@ -47,6 +53,12 @@ router.use('/admin/vouchers', adminVoucherRoutes); // admin voucher management r
 router.use('/admin/categories', adminCategoryRoutes); // admin category management routes (CRUD categories) - auth required for admin
 router.use('/admin/blogs', adminBlogRoutes); // admin blog management routes (CRUD blogs) - auth required for admin
 router.use('/admin/rma', adminRmaRoutes); // admin RMA management routes (view all RMAs, update RMA status) - auth required for admin xong
+router.use('/admin/procurement', procurementRoutes); // admin procurement & PO management routes
+router.use('/admin/lots', lotRoutes); // admin lot/batch & FEFO expiry management routes
+router.use('/admin/logistics-cod', logisticsCodRoutes); // admin logistics & COD reconciliation routes
+router.use('/admin/fraud-anomalies', fraudAnomalyRoutes); // admin QR fraud anomaly engine routes
+router.use('/admin/crm-rma', crmLoyaltyRmaRoutes); // admin CRM loyalty & RMA return management routes
+router.use('/admin/finance', financeRoutes); // admin finance, cashbook, AR/AP & PnL analytics routes
 
 // ==========================================
 // 2. PHARMA & LOGISTICS ROUTES

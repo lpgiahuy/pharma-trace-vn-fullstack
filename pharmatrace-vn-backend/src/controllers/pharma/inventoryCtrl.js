@@ -22,4 +22,37 @@ const importInventory = async (req, res, next) => {
     }
 };
 
-export { importInventory };
+const getBatchQRs = async (req, res, next) => {
+    try {
+        const { batchId } = req.params;
+        if (!batchId) {
+            res.status(400);
+            throw new Error('Missing required batchId parameter.');
+        }
+
+        const data = await inventoryService.getBatchQRDetails(batchId);
+
+        res.status(200).json({
+            success: true,
+            data: data
+        });
+    } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
+        next(error);
+    }
+};
+
+const getInventoryList = async (req, res, next) => {
+    try {
+        const data = await inventoryService.fetchInventoryList(req.user);
+        res.status(200).json({
+            success: true,
+            data: data
+        });
+    } catch (error) {
+        if (error.statusCode) res.status(error.statusCode);
+        next(error);
+    }
+};
+
+export { importInventory, getBatchQRs, getInventoryList };

@@ -2657,7 +2657,7 @@ CREATE TABLE public.nhanvien (
     mat_khau_hash character varying(255) NOT NULL,
     vai_tro character varying(50),
     trang_thai boolean DEFAULT true,
-    CONSTRAINT nhanvien_vai_tro_check CHECK (((vai_tro)::text = ANY (ARRAY[('SuperAdmin'::character varying)::text, ('QuanLyKho'::character varying)::text, ('NhanVienBanHang'::character varying)::text])))
+    CONSTRAINT nhanvien_vai_tro_check CHECK (((vai_tro)::text = ANY (ARRAY[('SuperAdmin'::character varying)::text, ('QuanLyCuaHang'::character varying)::text, ('QuanLyKho'::character varying)::text, ('NhanVienBanHang'::character varying)::text])))
 );
 
 

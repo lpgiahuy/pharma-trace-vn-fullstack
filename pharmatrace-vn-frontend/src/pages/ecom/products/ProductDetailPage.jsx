@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import { ShoppingCart, Heart, Star, Shield, Truck, RotateCcw, Plus, Minus, ChevronRight } from 'lucide-react'
+import { ShoppingCart, Heart, Star, Shield, Truck, RotateCcw, Plus, Minus, ChevronRight, Award, Building2, Globe, Package, Thermometer } from 'lucide-react'
 import { productService } from '@/services/product.service'
 import { wishlistService } from '@/services/wishlist.service'
 import { useCartStore } from '@/store/cartStore'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 import { PageLoader } from '@/components/ui/Spinner'
 import { ErrorState } from '@/components/ui/EmptyState'
 import { Badge } from '@/components/ui/Badge'
@@ -84,7 +84,7 @@ export default function ProductDetailPage() {
   const [reviewSubmitting, setReviewSubmitting] = useState(false)
   
   const addItem = useCartStore(s => s.addItem)
-  const user = useAuthStore(s => s.user)
+  const { user } = useAuth()
   const [isFavorite, setIsFavorite] = useState(false)
   const [isToggling, setIsToggling] = useState(false)
 
@@ -246,34 +246,34 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          {/* Price & Discount Box */}
-          <div className="bg-slate-50/80 p-6 rounded-2xl border border-slate-100 mb-6 shadow-sm">
+          {/* Price & Discount */}
+          <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-100 mb-6">
             {activeOriginalPrice && activePrice < activeOriginalPrice && (
-              <div className="inline-flex items-center bg-medical-red text-white text-[10px] font-black px-2 py-1 rounded mb-3 shadow-sm uppercase tracking-tight">
+              <div className="inline-flex items-center bg-medical-red text-white text-[11px] font-bold px-2 py-0.5 rounded mb-2 shadow-sm uppercase tracking-tight">
                 {t('product.discount_amount', { 
                   amount: formatCurrency(activeOriginalPrice - activePrice), 
-                  defaultValue: `GIẢM ${formatCurrency(activeOriginalPrice - activePrice)}` 
+                  defaultValue: `SAVE ${formatCurrency(activeOriginalPrice - activePrice)}` 
                 })}
               </div>
             )}
             
             <div className="flex items-baseline gap-3">
-              <span className="text-3xl md:text-4xl font-display font-black text-brand-600 tracking-tight">
+              <span className="text-2xl sm:text-3xl font-display font-bold text-brand-600">
                 {formatCurrency(activePrice)}
-                <span className="text-lg md:text-xl font-bold text-slate-400 ml-1.5 uppercase">
+                <span className="text-sm font-medium text-slate-500 ml-1.5">
                   /{selectedVariant?.unit || product.unit}
                 </span>
               </span>
               
               {activeOriginalPrice && activePrice < activeOriginalPrice && (
-                <span className="text-lg md:text-xl text-slate-300 line-through font-medium decor-slate-200">
+                <span className="text-base text-slate-400 line-through">
                   {formatCurrency(activeOriginalPrice)}
                 </span>
               )}
             </div>
 
-            <p className="text-[10px] sm:text-[11px] text-slate-400 mt-4 leading-relaxed italic border-t border-slate-200/60 pt-3">
-              * {t('product.price_disclaimer', { defaultValue: 'Giá đã bao gồm thuế. Phí vận chuyển và các chi phí khác (nếu có) sẽ được thể hiện khi đặt hàng.' })}
+            <p className="text-[11px] text-slate-400 mt-2 leading-relaxed italic">
+              * {t('product.price_disclaimer', { defaultValue: 'Price includes applicable taxes. Shipping rates calculated at checkout.' })}
             </p>
           </div>
 
@@ -450,7 +450,7 @@ export default function ProductDetailPage() {
               {product.chi_tiet_thuoc?.chong_chi_dinh && (
                 <section className="p-5 bg-red-50/50 rounded-2xl border border-red-100 shadow-sm" role="alert">
                   <h3 className="text-base font-bold text-red-900 mb-2.5 flex items-center gap-2">
-                    🚫 {t('product.contraindications', { defaultValue: 'Contraindications' })}
+                    {t('product.contraindications', { defaultValue: 'Contraindications' })}
                   </h3>
                   <div className="text-red-800 font-medium">
                     <RenderSafeContent content={product.chi_tiet_thuoc.chong_chi_dinh} className="text-base leading-relaxed" />
@@ -542,14 +542,14 @@ export default function ProductDetailPage() {
           {activeTab === 'thong_tin_san_xuat' && product.chi_tiet_thuoc?.thong_tin_san_xuat && (
             <div className="grid gap-5 sm:grid-cols-2 animate-fade-in">
               {[
-                { label: t('product.manufacturing.brand'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.thuong_hieu, icon: '🏷️' },
-                { label: t('product.manufacturing.manufacturer'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.nha_san_xuat, icon: '🏭' },
-                { label: t('product.manufacturing.origin'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.xuat_xu, icon: '📍' },
-                { label: t('product.manufacturing.packaging'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.quy_cach, icon: '📦' },
-                { label: t('product.manufacturing.storage'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.bao_quan, icon: '🌡️' },
+                { label: t('product.manufacturing.brand'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.thuong_hieu, icon: <Award className="w-5 h-5 text-brand-600" /> },
+                { label: t('product.manufacturing.manufacturer'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.nha_san_xuat, icon: <Building2 className="w-5 h-5 text-brand-600" /> },
+                { label: t('product.manufacturing.origin'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.xuat_xu, icon: <Globe className="w-5 h-5 text-brand-600" /> },
+                { label: t('product.manufacturing.packaging'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.quy_cach, icon: <Package className="w-5 h-5 text-brand-600" /> },
+                { label: t('product.manufacturing.storage'), value: product.chi_tiet_thuoc.thong_tin_san_xuat.bao_quan, icon: <Thermometer className="w-5 h-5 text-brand-600" /> },
               ].filter(i => i.value).map(item => (
                 <div key={item.label} className="flex items-start gap-4 p-5 bg-white rounded-3xl border border-slate-100 shadow-sm hover:border-brand-200 hover:shadow-md transition-all group">
-                  <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-xl group-hover:bg-brand-50 transition-colors">
+                  <div className="w-10 h-10 rounded-2xl bg-brand-50 flex items-center justify-center text-xl group-hover:bg-brand-100 transition-colors flex-shrink-0">
                     {item.icon}
                   </div>
                   <div className="flex flex-col">

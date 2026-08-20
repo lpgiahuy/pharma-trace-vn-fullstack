@@ -1,31 +1,67 @@
-import pool from '../../config/db.js';
+import prisma, { serializeBigInt } from '../../config/prisma.js';
 
 // get info box by uid 
-const   getBoxInfo = async (uid) => {
-    const query = `
-        SELECT ht.uid, ht.trang_thai, lt.so_lo, lt.han_su_dung, dp.ten_thuoc
+const getBoxInfo = async (uid) => {
+    const result = await prisma.$queryRawUnsafe(`
+        SELECT 
+            ht.uid, 
+            ht.trang_thai, 
+            ht.secret_pin_hash,
+            ht.ngay_kich_hoat,
+            ht.so_lan_quet_pin,
+            ht.trang_thai_kich_hoat,
+            lt.so_lo, 
+            lt.han_su_dung, 
+            lt.ngay_san_xuat,
+            dp.id AS duoc_pham_id,
+            dp.ten_thuoc,
+            dp.hinh_anh_url,
+            dp.la_thuoc_ke_don
         FROM HopThuoc ht
         JOIN LoThuoc lt ON ht.lo_thuoc_id = lt.id
         JOIN DuocPham dp ON lt.duoc_pham_id = dp.id
         WHERE ht.uid = $1;
-    `;
-    const result = await pool.query(query, [uid]);
-    return result.rows[0];
+    `, uid);
+    return result[0] || null;
+};
+
+// record PIN scan and update activation state
+const recordPinScan = async (uid, isFirstActivation) => {
+    if (isFirstActivation) {
+        await prisma.hopthuoc.update({
+            where: { uid },
+            data: {
+                so_lan_quet_pin: 1,
+                ngay_kich_hoat: new Date(),
+                trang_thai_kich_hoat: 'DaKichHoat'
+            }
+        });
+    } else {
+        await prisma.hopthuoc.update({
+            where: { uid },
+            data: {
+                so_lan_quet_pin: { increment: 1 }
+            }
+        });
+    }
 };
 
 // insert log scan
 const insertScanLog = async (uid, lat, lng, ip) => {
-    const query = `
-        INSERT INTO NhatKyXacThuc (hop_thuoc_uid, toa_do_lat, toa_do_lng, ip_address) 
-        VALUES ($1, $2, $3, $4) RETURNING *;
-    `;
-    const result = await pool.query(query, [uid, lat, lng, ip]);
-    return result.rows[0];
+    const result = await prisma.nhatkyxacthuc.create({
+        data: {
+            hop_thuoc_uid: uid,
+            toa_do_lat: lat ? parseFloat(lat) : null,
+            toa_do_lng: lng ? parseFloat(lng) : null,
+            ip_address: ip
+        }
+    });
+    return serializeBigInt(result);
 };
 
 // get distribution history by uid
 const getDistributionHistory = async (uid) => {
-    const query = `
+    const result = await prisma.$queryRawUnsafe(`
         SELECT
             lsp.loai_giao_dich,
             lsp.thoi_gian,
@@ -37,29 +73,24 @@ const getDistributionHistory = async (uid) => {
         LEFT JOIN DonVi dv_den ON lsp.den_don_vi_id = dv_den.id
         WHERE lsp.hop_thuoc_uid = $1
         ORDER BY lsp.thoi_gian ASC;
-    `;
-    const result = await pool.query(query, [uid]);
-    return result.rows;
+    `, uid);
+    return serializeBigInt(result);
 };
 
 const getQRRiskScore = async (uid) => {
-    const query = `SELECT fn_check_qr_risk_score($1) AS risk_score;`;
-    const result = await pool.query(query, [uid]);
-    return parseInt(result.rows[0].risk_score);
+    const result = await prisma.$queryRawUnsafe(
+        `SELECT fn_check_qr_risk_score($1) AS risk_score;`, uid
+    );
+    return parseInt(result[0].risk_score);
 };
 
-// Returns all scan stats needed to display the two SQL fraud checks in the UI:
-// 1. Scan frequency (>=10 per minute in last 24h → fraud)
-// 2. Movement speed (>1000 km/h between any two scans → fraud)
+// Returns all scan stats needed to display the two SQL fraud checks in the UI
 const getScanDetails = async (uid) => {
-    // All-time totals + first/last scan dates
     const totalsQuery = `
         SELECT COUNT(*) AS total_scans, MIN(thoi_gian_quet) AS first_scan, MAX(thoi_gian_quet) AS last_scan
         FROM NhatKyXacThuc
         WHERE hop_thuoc_uid = $1;
     `;
-
-    // Max scans in any 1-minute window in last 24h — mirrors fn_check_qr_risk_score check #1
     const freqQuery = `
         SELECT COALESCE(MAX(scan_count), 0) AS max_per_minute
         FROM (
@@ -72,8 +103,6 @@ const getScanDetails = async (uid) => {
               AND thoi_gian_quet > NOW() - INTERVAL '24 hours'
         ) sub;
     `;
-
-    // Whether any two consecutive location-tagged scans exceed 1000 km/h — mirrors fn_check_qr_risk_score check #2
     const speedQuery = `
         WITH ordered AS (
             SELECT
@@ -94,18 +123,18 @@ const getScanDetails = async (uid) => {
     `;
 
     const [totals, freq, speed] = await Promise.all([
-        pool.query(totalsQuery, [uid]),
-        pool.query(freqQuery,   [uid]),
-        pool.query(speedQuery,  [uid]),
+        prisma.$queryRawUnsafe(totalsQuery, uid),
+        prisma.$queryRawUnsafe(freqQuery, uid),
+        prisma.$queryRawUnsafe(speedQuery, uid),
     ]);
 
     return {
-        total:             parseInt(totals.rows[0].total_scans)     || 0,
-        firstScan:         totals.rows[0].first_scan                || null,
-        lastScan:          totals.rows[0].last_scan                 || null,
-        maxPerMinute:      parseInt(freq.rows[0].max_per_minute)    || 0,
-        hasLocationAnomaly: speed.rows[0].has_anomaly === true,
+        total:              parseInt(totals[0].total_scans)     || 0,
+        firstScan:          totals[0].first_scan                || null,
+        lastScan:           totals[0].last_scan                 || null,
+        maxPerMinute:       parseInt(freq[0].max_per_minute)    || 0,
+        hasLocationAnomaly: speed[0].has_anomaly === true,
     };
 };
 
-export { getBoxInfo, insertScanLog, getDistributionHistory, getQRRiskScore, getScanDetails };
+export { getBoxInfo, insertScanLog, getDistributionHistory, getQRRiskScore, getScanDetails, recordPinScan };

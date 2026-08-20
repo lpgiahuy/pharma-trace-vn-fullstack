@@ -2,9 +2,10 @@ import { Link, useLocation } from 'react-router-dom'
 import { Layout, Menu } from 'antd'
 import {
   InboxOutlined, CheckSquareOutlined, SwapOutlined,
-  DeleteOutlined, AlertOutlined, QrcodeOutlined, UserOutlined
+  DeleteOutlined, AlertOutlined, QrcodeOutlined, UserOutlined, DashboardOutlined, ShoppingCartOutlined
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '@/store/authStore'
 const Logo = 'https://res.cloudinary.com/dc64co0el/image/upload/v1777731026/Logo_ck5ouv.svg'
 
 const { Sider } = Layout
@@ -12,9 +13,13 @@ const { Sider } = Layout
 export const WarehouseSidebar = ({ collapsed, onCollapse }) => {
   const { pathname } = useLocation()
   const { t } = useTranslation()
+  const { user } = useAuth()
+  const userRole = user?.role || user?.vai_tro
+  const isSuperAdmin = ['SuperAdmin', 'superadmin'].includes(userRole)
 
   const menuItems = [
     { key: '/warehouse/inbound',    icon: <InboxOutlined />,       label: <Link to="/warehouse/inbound">{t('warehouse.inbound')}</Link> },
+    { key: '/warehouse/procurement',icon: <ShoppingCartOutlined />,label: <Link to="/warehouse/procurement">{t('warehouse.procurement')}</Link> },
     { key: '/warehouse/fulfillment',icon: <CheckSquareOutlined />, label: <Link to="/warehouse/fulfillment">{t('warehouse.fulfillment')}</Link> },
     { key: '/warehouse/transfer',   icon: <SwapOutlined />,        label: <Link to="/warehouse/transfer">{t('warehouse.transfer')}</Link> },
     { key: '/warehouse/disposal',   icon: <DeleteOutlined />,      label: <Link to="/warehouse/disposal">{t('warehouse.disposal')}</Link> },
@@ -22,6 +27,9 @@ export const WarehouseSidebar = ({ collapsed, onCollapse }) => {
     { key: '/warehouse/scanner',    icon: <QrcodeOutlined />,      label: <Link to="/warehouse/scanner">{t('warehouse.scanner')}</Link> },
     { type: 'divider' },
     { key: '/warehouse/profile',    icon: <UserOutlined />,        label: <Link to="/warehouse/profile">{t('warehouse.my_profile')}</Link> },
+    ...(isSuperAdmin ? [
+      { key: '/admin',              icon: <DashboardOutlined />,   label: <Link to="/admin">{t('admin.admin_portal')}</Link> }
+    ] : []),
   ]
 
   return (

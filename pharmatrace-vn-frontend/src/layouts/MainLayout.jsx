@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, Navigate } from 'react-router-dom'
 import { Suspense } from 'react'
 import { Header } from '@/components/shared/Header'
 import { Footer } from '@/components/shared/Footer'
@@ -7,20 +7,23 @@ import { CartDrawer } from '@/components/shared/CartDrawer'
 import { ChatbotWidget } from '@/components/shared/ChatbotWidget'
 import { PageLoader } from '@/components/ui/Spinner'
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
+import { useAuthStore } from '@/store/authStore'
 
-export const MainLayout = () => (
-  <div className="min-h-screen flex flex-col bg-white">
-    <Header />
-    <main className="flex-1">
-      <ErrorBoundary>
-        <Suspense fallback={<PageLoader />}>
-          <Outlet />
-        </Suspense>
-      </ErrorBoundary>
-    </main>
-    <Footer />
-    <BottomNav />
-    <CartDrawer />
-    <ChatbotWidget />
-  </div>
-)
+export const MainLayout = () => {
+  return (
+    <div className="min-h-screen flex flex-col bg-white">
+      <Header />
+      <main className="flex-1">
+        <ErrorBoundary>
+          <Suspense fallback={<PageLoader />}>
+            <Outlet />
+          </Suspense>
+        </ErrorBoundary>
+      </main>
+      <Footer />
+      <BottomNav />
+      <CartDrawer />
+      <ChatbotWidget />
+    </div>
+  )
+}

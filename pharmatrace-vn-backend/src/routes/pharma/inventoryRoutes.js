@@ -1,10 +1,9 @@
 import express from 'express';
-import { importInventory } from '../../controllers/pharma/inventoryCtrl.js';
+import { importInventory, getBatchQRs, getInventoryList } from '../../controllers/pharma/inventoryCtrl.js';
 import { protect } from '../../middlewares/authMiddleware.js';
 import { authorizeRoles } from '../../middlewares/roleMiddleware.js'; 
 
 const router = express.Router();
-
 /**
  * @swagger
  * tags:
@@ -73,8 +72,48 @@ const router = express.Router();
 router.post(
   '/nhap-kho',
   protect,
-  authorizeRoles('SuperAdmin', 'QuanLyKho'),
+  authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienKho'),
   importInventory
 );
 
-export default router;
+router.get(
+  '/nhap-kho',
+  protect,
+  authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienKho'),
+  getInventoryList
+);
+
+
+/**
+ * @swagger
+ * /inventory/batch/{batchId}/qrs:
+ *   get:
+ *     summary: Get all box UIDs and QR signatures for a specific batch for label printing
+ *     tags: [Pharma - Inventory]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: batchId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the batch (LoThuoc)
+ *     responses:
+ *       200:
+ *         description: List of box UIDs and signatures
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: Batch not found
+ */
+router.get(
+  '/batch/:batchId/qrs',
+  protect,
+  authorizeRoles('SuperAdmin', 'QuanLyKho', 'NhanVienKho'),
+  getBatchQRs
+);
+
+export default router;

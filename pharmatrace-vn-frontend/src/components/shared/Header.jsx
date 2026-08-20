@@ -14,7 +14,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore, useAuth } from "@/store/authStore";
 import { useUIStore } from "@/store/uiStore";
 import { Avatar } from "@/components/ui/Avatar";
 import { useCategoryStore } from "@/store/categoryStore";
@@ -25,11 +25,11 @@ const Logo =
   "https://res.cloudinary.com/dc64co0el/image/upload/v1777731026/Logo_ck5ouv.svg";
 
 const NAV_LINKS = [
-  { label: "Thuốc", to: "/products" },
-  { label: "Tra cứu bệnh", to: "/blog" },
-  { label: "Thực phẩm bảo vệ", to: "/products" },
-  { label: "Mẹ và bé", to: "/products" },
-  { label: "Nhãn hàng PharmaTrace VN", to: "/products" },
+  { label: "Medications", to: "/products" },
+  { label: "Health Library", to: "/blog" },
+  { label: "Supplements", to: "/products" },
+  { label: "Mom & Baby", to: "/products" },
+  { label: "PharmaTrace VN Brands", to: "/products" },
 ];
 
 export const Header = () => {
@@ -43,7 +43,10 @@ export const Header = () => {
     setCartDrawerOpen,
   } = useUIStore();
   const itemCount = useCartStore((s) => s.getItemCount());
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuth();
+  const userRole = user?.role || user?.vai_tro;
+  const isInternalStaff = ["SuperAdmin", "superadmin", "Admin", "admin", "NhanVienBanHang", "QuanLyCuaHang", "QuanLyKho", "NhanVienKho", "manager", "staff"].includes(userRole);
+  const isCustomerLoggedIn = isAuthenticated && !isInternalStaff;
   const navigate = useNavigate();
   const location = useLocation();
   const { categories, fetchCategories } = useCategoryStore();
@@ -123,21 +126,6 @@ export const Header = () => {
             <MapPin className="w-3.5 h-3.5 text-brand-500" />{" "}
             {t("nav.pharmacies")}
           </Link>
-          <div className="h-3 w-px bg-slate-200" />
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => i18n.changeLanguage("vi")}
-              className={`text-[10px] font-black px-1.5 py-0.5 rounded transition-all ${i18n.language === "vi" ? "bg-brand-500 text-white shadow-sm" : "text-slate-400 hover:bg-slate-50"}`}
-            >
-              VI
-            </button>
-            <button
-              onClick={() => i18n.changeLanguage("en")}
-              className={`text-[10px] font-black px-1.5 py-0.5 rounded transition-all ${i18n.language?.startsWith("en") ? "bg-brand-500 text-white shadow-sm" : "text-slate-400 hover:bg-slate-50"}`}
-            >
-              EN
-            </button>
-          </div>
         </div>
       </div>
 
@@ -223,7 +211,7 @@ export const Header = () => {
                 <Bell className="w-5 h-5" />
               </button>
 
-              {isAuthenticated ? (
+              {isCustomerLoggedIn ? (
                 <div className="relative group">
                   <button className="flex items-center gap-1.5 px-3 py-1.5 text-white hover:bg-white/10 rounded-xl transition-all">
                     <User className="w-5 h-5" />
@@ -261,17 +249,6 @@ export const Header = () => {
                       <Heart className="w-4 h-4 text-medical-red" />{" "}
                       {t("nav.wishlist")}
                     </Link>
-                    {(user?.role === "admin" || user?.role === "manager") && (
-                      <Link
-                        to="/admin"
-                        className="flex items-center gap-3 px-5 py-2.5 text-sm text-brand-600 font-black bg-brand-50/50 hover:bg-brand-50 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[18px]">
-                          admin_panel_settings
-                        </span>{" "}
-                        {t("nav.admin_portal")}
-                      </Link>
-                    )}
                     <div className="mx-3 my-2 border-t border-slate-100" />
                     <button
                       onClick={logout}

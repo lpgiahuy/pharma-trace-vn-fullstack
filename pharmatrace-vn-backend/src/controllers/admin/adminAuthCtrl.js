@@ -12,13 +12,13 @@ const login = async (req, res, next) => {
 
         if (!email || !password) {
             res.status(400);
-            throw new Error('Email and password are required!');
+            throw new Error('Vui lòng nhập email và mật khẩu!');
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             res.status(400);
-            throw new Error('Invalid email format!');
+            throw new Error('Định dạng email không hợp lệ!');
         }
 
         const data = await adminAuthService.loginAdmin(email, password);

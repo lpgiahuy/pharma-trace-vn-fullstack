@@ -4,20 +4,26 @@ import {
   DashboardOutlined, ShoppingOutlined, AppstoreOutlined,
   OrderedListOutlined, TeamOutlined, TagOutlined, FileTextOutlined,
   SwapOutlined, AlertOutlined, UserOutlined, FileDoneOutlined,
-  BankOutlined, QuestionCircleOutlined,
+  BankOutlined, QuestionCircleOutlined, ShoppingCartOutlined, CalendarOutlined, CarOutlined, SafetyCertificateOutlined, CrownOutlined, HistoryOutlined,
 } from '@ant-design/icons'
 import { Pill as PillIcon } from 'lucide-react'
 const Logo = 'https://res.cloudinary.com/dc64co0el/image/upload/v1777731026/Logo_ck5ouv.svg'
 
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '@/store/authStore'
 
 const { Sider } = Layout
 
-export const AdminSidebar = ({ collapsed, onCollapse, isMobile }) => {
+export function AdminSidebar({ collapsed: collapsedProp, isCollapsed, onCollapse, isMobile, mobileOpen, onMobileClose }) {
+  const collapsed = collapsedProp ?? isCollapsed ?? false
+  const location = useLocation()
   const { t } = useTranslation()
+  const { user } = useAuth()
+  const userRole = user?.role || user?.vai_tro
+  const isSuperAdmin = ['SuperAdmin', 'superadmin'].includes(userRole)
 
   const menuItems = [
-    { key: '/admin',           icon: <DashboardOutlined />, label: <Link to="/admin">{t('admin.dashboard')}</Link> },
+    { key: '/admin',                icon: <DashboardOutlined />, label: <Link to="/admin">{t('admin.dashboard')}</Link> },
     {
       key: 'products-group', icon: <ShoppingOutlined />, label: t('admin.products'),
       children: [
@@ -25,17 +31,23 @@ export const AdminSidebar = ({ collapsed, onCollapse, isMobile }) => {
         { key: '/admin/categories',  label: <Link to="/admin/categories">{t('admin.categories')}</Link> },
       ],
     },
-    {
-      key: 'orders-group', icon: <OrderedListOutlined />, label: t('admin.orders_rma'),
-      children: [
-        { key: '/admin/orders', label: <Link to="/admin/orders">{t('admin.orders')}</Link> },
-        { key: '/admin/rma',    label: <Link to="/admin/rma">{t('admin.rma')}</Link> },
-      ],
-    },
+    { key: '/admin/orders',         icon: <OrderedListOutlined />, label: <Link to="/admin/orders">{t('admin.orders')}</Link> },
+    { key: '/admin/rma',            icon: <HistoryOutlined />,     label: <Link to="/admin/rma">{t('admin.rma')}</Link> },
+    ...(isSuperAdmin ? [
+      { key: '/warehouse/inbound',   icon: <BankOutlined />,      label: <Link to="/warehouse/inbound">{t('admin.warehouse_wms')}</Link> }
+    ] : []),
     { key: '/admin/vouchers',       icon: <TagOutlined />,       label: <Link to="/admin/vouchers">{t('admin.vouchers')}</Link> },
+    { key: '/admin/procurement',    icon: <ShoppingCartOutlined />, label: <Link to="/admin/procurement">{t('admin.procurement')}</Link> },
+    { key: '/admin/inventory/lots', icon: <CalendarOutlined />,     label: <Link to="/admin/inventory/lots">{t('admin.inventory_lots')}</Link> },
+    { key: '/admin/logistics/cod',  icon: <CarOutlined />,          label: <Link to="/admin/logistics/cod">{t('admin.logistics_cod')}</Link> },
+    { key: '/admin/security/fraud-anomalies', icon: <SafetyCertificateOutlined />, label: <Link to="/admin/security/fraud-anomalies">{t('admin.fraud_anomalies')}</Link> },
+    { key: '/admin/crm/loyalty',    icon: <CrownOutlined />,        label: <Link to="/admin/crm/loyalty">{t('admin.crm_loyalty')}</Link> },
     { key: '/admin/blog',           icon: <FileTextOutlined />,  label: <Link to="/admin/blog">{t('admin.blog_news')}</Link> },
-    { key: '/admin/staff',          icon: <TeamOutlined />,      label: <Link to="/admin/staff">{t('admin.staff_rbac')}</Link> },
-    { key: '/admin/customers',      icon: <UserOutlined />,      label: <Link to="/admin/customers">{t('admin.customers')}</Link> },
+    ...(isSuperAdmin ? [
+      { key: '/admin/finance',        icon: <BankOutlined />,         label: <Link to="/admin/finance">{t('admin.finance')}</Link> },
+      { key: '/admin/staff',          icon: <TeamOutlined />,      label: <Link to="/admin/staff">{t('admin.staff_rbac')}</Link> },
+      { key: '/admin/customers',      icon: <UserOutlined />,      label: <Link to="/admin/customers">{t('admin.customers')}</Link> },
+    ] : []),
     { key: '/admin/prescriptions',  icon: <FileDoneOutlined />,  label: <Link to="/admin/prescriptions">{t('admin.prescriptions')}</Link> },
     { key: '/admin/help',           icon: <QuestionCircleOutlined />, label: <Link to="/admin/help">{t('admin.help')}</Link> },
   ]
@@ -99,3 +111,5 @@ export const AdminSidebar = ({ collapsed, onCollapse, isMobile }) => {
     </Sider>
   )
 }
+
+export default AdminSidebar

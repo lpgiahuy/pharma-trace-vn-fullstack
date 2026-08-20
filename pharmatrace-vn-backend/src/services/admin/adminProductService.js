@@ -37,12 +37,14 @@ const removeProduct = async (id) => {
             error.statusCode = 404;
             throw error;
         }
-        return true;
+        return { message: 'Đã xóa vĩnh viễn sản phẩm thành công.' };
     } catch (error) {
-        if (error.code === '23503') { // Foreign key violation
-            const err = new Error('Cannot delete this product because it has associated data (inventory, orders, etc.). Please hide it instead.');
-            err.statusCode = 400;
-            throw err;
+        if (error.code === '23503' || error.code === 'P2003') {
+            await adminProductModel.softDeleteProduct(id);
+            return {
+                isSoftDeleted: true,
+                message: 'Sản phẩm này đã có lô thuốc/đơn hàng liên quan nên hệ thống đã tự động chuyển sang trạng thái ẨN để bảo toàn lịch sử dữ liệu.'
+            };
         }
         throw error;
     }

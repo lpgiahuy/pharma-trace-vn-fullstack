@@ -12,12 +12,20 @@ const normalizeProduct = (p) => {
   if (!p) return p
 
   let basePrice = Number(p.gia_ban) || p.price || 0
+  let originalPrice = p.gia_goc ? Number(p.gia_goc) : (p.originalPrice ? Number(p.originalPrice) : null)
   let baseUnit = p.don_vi_ban || p.unit || ''
+  let discountPercent = p.phan_tram_giam ? Number(p.phan_tram_giam) : (p.discountPercent || p.discount || 0)
 
   if (p.quy_cach_dong_goi && Array.isArray(p.quy_cach_dong_goi) && p.quy_cach_dong_goi.length > 0) {
     const baseVariant = p.quy_cach_dong_goi.find(q => q.la_don_vi_co_ban) || p.quy_cach_dong_goi[0]
     basePrice = Number(baseVariant.gia_ban) || basePrice
+    originalPrice = baseVariant.gia_goc ? Number(baseVariant.gia_goc) : originalPrice
+    discountPercent = baseVariant.phan_tram_giam ? Number(baseVariant.phan_tram_giam) : discountPercent
     baseUnit = baseVariant.ten_don_vi || baseUnit
+  }
+
+  if (originalPrice && originalPrice > basePrice && (!discountPercent || discountPercent === 0)) {
+    discountPercent = Math.max(0, Math.round(((originalPrice - basePrice) / originalPrice) * 100))
   }
 
   let chi_tiet = p.chi_tiet_thuoc || {}
@@ -38,7 +46,9 @@ const normalizeProduct = (p) => {
     id:             p.id,
     name:           p.ten_thuoc       || p.name        || 'Unknown Product',
     price:          basePrice,
-    originalPrice:  p.gia_goc ? Number(p.gia_goc) : p.originalPrice || null,
+    originalPrice:  (originalPrice && originalPrice > basePrice) ? originalPrice : null,
+    discount:       discountPercent,
+    discountPercent: discountPercent,
     image:          p.hinh_anh_url    || p.hinh_anh    || p.image || 'https://placehold.co/400x400/e6f2ff/0b7de8?text=No+Image',
     description:    p.mo_ta_ngan      || p.mo_ta       || p.description || '',
     isPrescription: p.la_thuoc_ke_don ?? p.isPrescription ?? false,
@@ -64,6 +74,8 @@ const normalizeProduct = (p) => {
           id:    q.quy_cach_id || q.id,
           label: q.ten_don_vi  || q.label,
           price: Number(q.gia_ban) || 0,
+          originalPrice: q.gia_goc ? Number(q.gia_goc) : null,
+          discountPercent: q.phan_tram_giam ? Number(q.phan_tram_giam) : 0,
           isBase: q.la_don_vi_co_ban ?? false,
         }))
       : null,
@@ -137,6 +149,11 @@ export const productService = {
     return normalizeProduct(result)
   },
 
+  async getAdminById(id) {
+    const { data } = await apiClient.get(`/admin/products/${id}`)
+    return data.data || data
+  },
+
   async create(payload) {
     const { data } = await apiClient.post('/admin/products', payload)
     return data.data || data
@@ -159,7 +176,7 @@ export const productService = {
 
   async deleteProduct(id) {
     const { data } = await apiClient.delete(`/admin/products/${id}`)
-    return data.data || data
+    return data
   },
 
   async uploadImage(id, formData) {
@@ -205,6 +222,22 @@ export const productService = {
     }
   },
 
+  async getCategoriesAdmin() {
+    try {
+      const { data } = await apiClient.get('/admin/categories')
+      const result = data.data || data
+      const cats = Array.isArray(result) ? result : (result.items || result.data || [])
+      return cats.map(c => ({
+        ...c,
+        id: c.id,
+        name: c.ten_danh_muc || c.name,
+      }))
+    } catch (error) {
+      console.error('[productService.getCategoriesAdmin]', error.response?.data || error.message)
+      return []
+    }
+  },
+
   async getBrands() {
     try {
       const { data } = await apiClient.get('/products/brands')
@@ -227,7 +260,7 @@ export const productService = {
 
   async deleteCategory(id) {
     const { data } = await apiClient.delete(`/admin/categories/${id}`)
-    return data.data || data
+    return data
   },
 
   async getReviews(productId, params = {}) {

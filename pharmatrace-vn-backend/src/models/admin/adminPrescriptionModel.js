@@ -1,34 +1,28 @@
-import pool from '../../config/db.js';
+import prisma, { serializeBigInt } from '../../config/prisma.js';
 
 // Get list of prescriptions (optionally filtered by status: ChoDuyet, HopLe, TuChoi)
 export const getPrescriptions = async (status) => {
-    let query = `
-        SELECT t.id, t.hinh_anh_toa, t.ten_bac_si, t.ten_benh_vien, t.chuan_doan, t.ngay_tao, t.trang_thai_duyet,
-               k.ho_ten AS ten_khach_hang, k.so_dien_thoai
-        FROM ToaThuoc t
-        JOIN KhachHang k ON t.khach_hang_id = k.id
-    `;
-    const params = [];
-    
-    // Filter by status if provided, otherwise return all
-    if (status) {
-        query += ` WHERE t.trang_thai_duyet = $1`;
-        params.push(status);
-    }
-    query += ` ORDER BY t.ngay_tao DESC;`;
-
-    const result = await pool.query(query, params);
-    return result.rows;
+    const prescriptions = await prisma.toathuoc.findMany({
+        where: status ? { trang_thai_duyet: status } : undefined,
+        orderBy: { ngay_tao: 'desc' },
+        include: {
+            khachhang: { select: { ho_ten: true, so_dien_thoai: true } }
+        }
+    });
+    return serializeBigInt(prescriptions.map(t => ({
+        ...t,
+        ten_khach_hang: t.khachhang?.ho_ten || null,
+        so_dien_thoai: t.khachhang?.so_dien_thoai || null,
+        khachhang: undefined
+    })));
 };
 
 // Pharmacist updates prescription approval status
 export const updatePrescriptionStatus = async (id, trang_thai) => {
-    const query = `
-        UPDATE ToaThuoc
-        SET trang_thai_duyet = $1
-        WHERE id = $2
-        RETURNING id, trang_thai_duyet;
-    `;
-    const result = await pool.query(query, [trang_thai, id]);
-    return result.rows[0];
+    const result = await prisma.toathuoc.update({
+        where: { id: Number(id) },
+        data: { trang_thai_duyet: trang_thai },
+        select: { id: true, trang_thai_duyet: true }
+    });
+    return result;
 };

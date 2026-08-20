@@ -99,6 +99,11 @@ export const orderService = {
     return data.data || data
   },
 
+  async getAvailableUIDs(id) {
+    const { data } = await apiClient.get(`/admin/orders/${id}/available-uids`)
+    return data.data || data
+  },
+
   async shipOrder(id) {
     const { data } = await apiClient.patch(`/admin/orders/${id}/ship`)
     return data.data || data
@@ -111,6 +116,11 @@ export const orderService = {
 
   async cancel(id, reason) {
     const { data } = await apiClient.patch(`/orders/${id}/cancel`, { reason })
+    return data.data || data
+  },
+
+  async confirmReceipt(id) {
+    const { data } = await apiClient.patch(`/orders/${id}/confirm-receipt`)
     return data.data || data
   },
 

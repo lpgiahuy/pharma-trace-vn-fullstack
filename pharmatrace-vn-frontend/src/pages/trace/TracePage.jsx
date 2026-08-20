@@ -13,17 +13,20 @@ import {
   MapPin, Clock, Eye, AlertTriangle, QrCode,
   ChevronRight, RotateCcw, Trash2, History,
   ScanLine, CheckCircle2, XCircle, Info,
-  ArrowLeft,
+  ArrowLeft, PackageCheck,
 } from 'lucide-react'
 import { traceService, DEMO_CODES } from '@/services/trace.service'
 import { formatDate, formatDateTime, cn } from '@/utils'
 import { Spinner } from '@/components/ui/Spinner'
 import { Button } from '@/components/ui/Button'
+import toast from 'react-hot-toast'
+import { scanQRFromFile } from '@/utils/scanQRFromFile'
+
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
   authentic: {
-    label:       'VERIFIED AUTHENTIC',
+    label:       'CHÍNH HÃNG — XÁC THỰC LẦN ĐẦU',
     color:       'text-emerald-700',
     bg:          'bg-emerald-50',
     border:      'border-emerald-300',
@@ -34,10 +37,38 @@ const STATUS_CONFIG = {
     AntIcon:     CheckCircleOutlined,
     antColor:    'green',
     alertType:   'success',
-    message:     'This product is genuine and safe to use.',
+    message:     'Sản phẩm chính hãng trong chuỗi phân phối PharmaTrace. Kích hoạt bảo mật thành công lần đầu tiên!',
   },
-  warning: {
-    label:       'SUSPICIOUS ACTIVITY',
+  repeated_authentic: {
+    label:       'SẢN PHẨM CHÍNH HÃNG (ĐÃ KÍCH HOẠT TRƯỚC ĐÓ)',
+    color:       'text-blue-700',
+    bg:          'bg-blue-50',
+    border:      'border-blue-300',
+    iconBg:      'bg-blue-100',
+    badgeBg:     'bg-blue-500',
+    glowClass:   'shadow-[0_0_40px_rgba(59,130,246,0.15)]',
+    Icon:        ShieldCheck,
+    AntIcon:     CheckCircleOutlined,
+    antColor:    'blue',
+    alertType:   'info',
+    message:     'Sản phẩm chính hãng đã kích hoạt trước đó. Nếu bạn là người mua sản phẩm này, bạn hoàn toàn có thể yên tâm sử dụng.',
+  },
+  activated_need_pin: {
+    label:       'MÃ VẬN HÀNH (ĐÃ KÍCH HOẠT MÃ PIN TRƯỚC ĐÓ)',
+    color:       'text-blue-700',
+    bg:          'bg-blue-50',
+    border:      'border-blue-300',
+    iconBg:      'bg-blue-100',
+    badgeBg:     'bg-blue-500',
+    glowClass:   'shadow-[0_0_40px_rgba(59,130,246,0.15)]',
+    Icon:        ShieldCheck,
+    AntIcon:     CheckCircleOutlined,
+    antColor:    'blue',
+    alertType:   'info',
+    message:     'Mã vận hành ngoài vỏ hộp hợp lệ. Mã bảo mật của hộp thuốc này đã được kích hoạt trước đó. Bạn có thể nhập mã PIN cào bên dưới để đối soát xác thực.',
+  },
+  pin_required: {
+    label:       'MÃ VẬN HÀNH (CHƯA XÁC THỰC MÃ PIN)',
     color:       'text-amber-700',
     bg:          'bg-amber-50',
     border:      'border-amber-300',
@@ -48,24 +79,10 @@ const STATUS_CONFIG = {
     AntIcon:     WarningOutlined,
     antColor:    'warning',
     alertType:   'warning',
-    message:     'This code shows suspicious scan activity. Verify with the pharmacist before use.',
+    message:     'Mã vận hành ngoài vỏ hộp hợp lệ. Để xác thực chính hãng 100%, vui lòng cào lớp bạc trên tem và quét mã QR hoặc nhập mã PIN bên dưới.',
   },
-  recalled: {
-    label:       'BATCH RECALLED',
-    color:       'text-red-700',
-    bg:          'bg-red-50',
-    border:      'border-red-300',
-    iconBg:      'bg-red-100',
-    badgeBg:     'bg-red-500',
-    glowClass:   'shadow-[0_0_40px_rgba(239,68,68,0.18)]',
-    Icon:        ShieldX,
-    AntIcon:     StopOutlined,
-    antColor:    'error',
-    alertType:   'error',
-    message:     'DO NOT USE. This batch has been recalled. Return to point of purchase.',
-  },
-  fake: {
-    label:       'COUNTERFEIT DETECTED',
+  invalid_pin: {
+    label:       'MÃ PIN KHÔNG CHÍNH XÁC',
     color:       'text-red-800',
     bg:          'bg-red-50',
     border:      'border-red-400',
@@ -76,16 +93,61 @@ const STATUS_CONFIG = {
     AntIcon:     CloseCircleOutlined,
     antColor:    'error',
     alertType:   'error',
-    message:     'WARNING: This product cannot be verified. It may be counterfeit. Do not consume.',
+    message:     'Mã PIN bảo mật không chính xác. Vui lòng kiểm tra lại lớp cào hoặc liên hệ nhà thuốc nếu nghi ngờ tem bị làm giả.',
+  },
+  warning: {
+    label:       'HOẠT ĐỘNG ĐÁNG NGỜ',
+    color:       'text-amber-700',
+    bg:          'bg-amber-50',
+    border:      'border-amber-300',
+    iconBg:      'bg-amber-100',
+    badgeBg:     'bg-amber-500',
+    glowClass:   'shadow-[0_0_40px_rgba(245,158,11,0.15)]',
+    Icon:        ShieldAlert,
+    AntIcon:     WarningOutlined,
+    antColor:    'warning',
+    alertType:   'warning',
+    message:     'Mã này có dấu hiệu quét bất thường. Vui lòng kiểm tra với dược sĩ trước khi sử dụng.',
+  },
+  recalled: {
+    label:       'LÔ THUỐC BỊ THU HỒI',
+    color:       'text-red-700',
+    bg:          'bg-red-50',
+    border:      'border-red-300',
+    iconBg:      'bg-red-100',
+    badgeBg:     'bg-red-500',
+    glowClass:   'shadow-[0_0_40px_rgba(239,68,68,0.18)]',
+    Icon:        ShieldX,
+    AntIcon:     StopOutlined,
+    antColor:    'error',
+    alertType:   'error',
+    message:     'KHÔNG ĐƯỢC DÙNG. Lô thuốc này đã có quyết định thu hồi. Vui lòng liên hệ điểm mua để hoàn trả.',
+  },
+  fake: {
+    label:       'CẢNH BÁO NGUY CƠ HÀNG GIẢ',
+    color:       'text-red-800',
+    bg:          'bg-red-50',
+    border:      'border-red-400',
+    iconBg:      'bg-red-100',
+    badgeBg:     'bg-red-600',
+    glowClass:   'shadow-[0_0_40px_rgba(220,38,38,0.22)]',
+    Icon:        ShieldX,
+    AntIcon:     CloseCircleOutlined,
+    antColor:    'error',
+    alertType:   'error',
+    message:     'CẢNH BÁO: Mã sản phẩm này không thể xác minh hoặc vi phạm giới hạn quét an toàn. Nguy cơ hàng giả, không được sử dụng!',
   },
 }
 
 const CHAIN_ICONS = {
-  warehouse_receipt:  { Icon: Package,      color: 'text-brand-500',  bg: 'bg-brand-50',   label: 'Warehouse Receipt'  },
-  quality_check:      { Icon: FlaskConical, color: 'text-purple-500', bg: 'bg-purple-50',  label: 'Quality Control'    },
-  warehouse_transfer: { Icon: Truck,        color: 'text-cyan-500',   bg: 'bg-cyan-50',    label: 'Transfer'           },
-  retail_dispatch:    { Icon: Store,        color: 'text-green-500',  bg: 'bg-green-50',   label: 'Retail Dispatch'    },
-  recall_initiated:   { Icon: AlertTriangle,color: 'text-red-500',    bg: 'bg-red-50',     label: 'Recall Initiated'   },
+  warehouse_receipt:  { Icon: Package,      color: 'text-brand-500',   bg: 'bg-brand-50',   label: 'Nhập kho lưu trữ'   },
+  quality_check:      { Icon: FlaskConical, color: 'text-purple-500',  bg: 'bg-purple-50',  label: 'Kiểm định chất lượng'},
+  warehouse_transfer: { Icon: Truck,        color: 'text-cyan-500',    bg: 'bg-cyan-50',    label: 'Điều chuyển kho'    },
+  packaging:          { Icon: PackageCheck, color: 'text-amber-500',   bg: 'bg-amber-50',   label: 'Đóng gói đơn hàng'  },
+  shipping:           { Icon: Truck,        color: 'text-blue-500',    bg: 'bg-blue-50',    label: 'Bàn giao vận chuyển'},
+  delivery_success:   { Icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50', label: 'Giao hàng thành công'},
+  retail_dispatch:    { Icon: Store,        color: 'text-green-500',   bg: 'bg-green-50',   label: 'Xuất nhà thuốc'     },
+  recall_initiated:   { Icon: AlertTriangle,color: 'text-red-500',     bg: 'bg-red-50',     label: 'Phát lệnh thu hồi'  },
 }
 
 // ─── Scan history helpers ─────────────────────────────────────────────────────
@@ -96,9 +158,27 @@ const pushScanHistory = (entry) => {
   localStorage.setItem(HISTORY_KEY, JSON.stringify(hist))
 }
 
+const parseQRText = (text) => {
+  try {
+    const trimmed = (text || '').trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      const url = new URL(trimmed);
+      const uid = url.searchParams.get('uid') || '';
+      const sig = url.searchParams.get('sig') || '';
+      const pin = url.searchParams.get('pin') || '';
+      return { uid, sig, pin };
+    }
+  } catch (e) {
+    // Ignore URL parse error, fallback to raw text
+  }
+  return { uid: text, sig: '', pin: '' };
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function TracePage() {
   const [inputCode,     setInputCode]     = useState('')
+  const [pinInput,      setPinInput]      = useState('')
+  const [pinLoading,    setPinLoading]    = useState(false)
   const [loading,       setLoading]       = useState(false)
   const [result,        setResult]        = useState(null)
   const [error,         setError]         = useState(null)
@@ -119,15 +199,30 @@ export default function TracePage() {
     
     // Check for UID in navigation state (passed from HomePage)
     const stateUid = location.state?.uid
+    const openScanner = location.state?.openScanner
     if (stateUid) {
       setInputCode(stateUid)
       handleTrace(stateUid)
-      // Clear state after reading to avoid re-triggering on refresh if undesired
       window.history.replaceState({}, document.title)
+    } else if (openScanner) {
+      startCamera()
+      window.history.replaceState({}, document.title)
+    } else {
+      // Check for UID, sig, and pin in URL query parameters
+      const params = new URLSearchParams(location.search)
+      const urlUid = params.get('uid')
+      const urlSig = params.get('sig')
+      const urlPin = params.get('pin')
+      if (urlUid) {
+        setInputCode(urlUid)
+        if (urlPin) setPinInput(urlPin)
+        handleTrace(urlUid, urlSig, urlPin)
+        window.history.replaceState({}, document.title, location.pathname)
+      }
     }
 
     return () => stopCamera()
-  }, [location.state])
+  }, [location.state, location.search])
 
   useEffect(() => {
     if (result && resultsRef.current) {
@@ -154,7 +249,7 @@ export default function TracePage() {
       )
     } catch (err) {
       setScanning(false)
-      setError('Camera access denied or not available. Please use manual entry.')
+      setError('Không thể mở camera. Vui lòng cấp quyền hoặc nhập thủ công.')
     }
   }
 
@@ -165,10 +260,34 @@ export default function TracePage() {
     setScanning(false)
   }, [])
 
+  // ── File upload QR scanner (for testing) ──────────────────────────────────
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setLoading(true)
+    setError(null)
+    setResult(null)
+    setReported(false)
+
+    try {
+      const decodedText = await scanQRFromFile(file)
+      toast.success('Giải mã ảnh QR thành công!')
+      handleTrace(decodedText)
+    } catch (err) {
+      console.error('[QR File Scan Error]', err)
+      setError({ type: 'invalid', msg: 'Không thể tìm thấy mã QR hợp lệ trong ảnh này. Vui lòng chọn ảnh khác.' })
+      toast.error('Quét ảnh thất bại')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // ── Trace lookup ──────────────────────────────────────────────────────────
-  const handleTrace = async (code = inputCode) => {
+  const handleTrace = async (code = inputCode, explicitSig = '', explicitPin = '') => {
     const trimmed = (code || '').trim()
-    if (!trimmed) { inputRef.current?.focus(); return }
+    const { uid, sig, pin } = parseQRText(trimmed)
+    if (!uid) { inputRef.current?.focus(); return }
 
     setLoading(true)
     setResult(null)
@@ -177,26 +296,56 @@ export default function TracePage() {
     setActiveSection('overview')
 
     try {
-      const data = await traceService.traceCode(trimmed)
+      const finalSig = explicitSig || sig
+      const finalPin = explicitPin || pin || pinInput
+      const data = await traceService.traceCode(uid, finalSig, finalPin)
       setResult(data)
-      pushScanHistory({ code: trimmed, status: data.status, product: data.product?.name, scannedAt: new Date().toISOString() })
+      pushScanHistory({ code: uid, status: data.status, product: data.product?.name, scannedAt: new Date().toISOString() })
       setScanHistory(getScanHistory())
     } catch (err) {
       console.error('[Trace Error]', err)
-      if (err.response?.status === 404 || err.message === 'CODE_NOT_FOUND') {
-        setError({ type: 'not_found', code: trimmed })
-      } else if (err.message === 'INVALID_CODE') {
-        setError({ type: 'invalid', code: trimmed })
+      const errorMsg = err.response?.data?.message || err.message
+      if (err.response?.status === 404 || errorMsg === 'CODE_NOT_FOUND') {
+        setError({ type: 'not_found', code: uid })
+      } else if (err.response?.status === 400 || errorMsg?.includes('chữ ký') || errorMsg?.includes('signature') || errorMsg === 'INVALID_CODE') {
+        setError({ type: 'invalid', code: uid, msg: errorMsg })
       } else {
-        setError({ type: 'network', msg: err.message })
+        setError({ type: 'network', msg: errorMsg })
       }
     } finally {
       setLoading(false)
     }
   }
 
+  const handleVerifyPin = async (overridePin = null) => {
+    const targetPin = (overridePin || pinInput).trim()
+    if (!targetPin) return toast.error('Vui lòng nhập mã PIN cào')
+    
+    const targetUid = (result?.uid || result?.box_info?.uid || inputCode || '').trim()
+    if (!targetUid) {
+      return toast.error('Vui lòng nhập hoặc quét mã UID vỏ hộp thuốc trước')
+    }
+
+    setPinLoading(true)
+    try {
+      const data = await traceService.traceCode(targetUid, '', targetPin)
+      setResult(data)
+      if (data.status === 'authentic') {
+        toast.success('🎉 Xác thực chính hãng thành công lần đầu tiên!')
+      } else if (data.status === 'repeated_authentic') {
+        toast.success('✓ Sản phẩm chính hãng (Đã kích hoạt trước đó)!')
+      } else if (data.status === 'invalid_pin') {
+        toast.error('🔴 Mã PIN không chính xác! Vui lòng kiểm tra lại lớp cào.')
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Xác thực PIN thất bại')
+    } finally {
+      setPinLoading(false)
+    }
+  }
+
   const handleReset = () => {
-    setResult(null); setError(null); setInputCode(''); setReported(false)
+    setResult(null); setError(null); setInputCode(''); setPinInput(''); setReported(false)
     setTimeout(() => inputRef.current?.focus(), 100)
   }
 
@@ -318,20 +467,78 @@ export default function TracePage() {
                 </button>
               </div>
 
-              {/* Demo codes */}
-              <div className="mt-5">
-                <p className="text-xs text-slate-600 mb-2">Try a demo code:</p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {DEMO_CODES.map(d => (
-                    <button
-                      key={d.code}
-                      onClick={() => { setInputCode(d.code); handleTrace(d.code) }}
-                      className="px-3 py-1.5 rounded-full text-xs bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-white transition-all font-mono flex items-center gap-1.5"
-                    >
-                      <span className="material-symbols-outlined text-[14px]">{d.icon}</span>
-                      {d.label}
-                    </button>
-                  ))}
+              {/* Image upload scanning option */}
+              <div className="mt-4 text-center">
+                <span className="text-xs text-slate-500">Hoặc: </span>
+                <label className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white transition-all cursor-pointer">
+                  <span className="material-symbols-outlined text-[14px]">upload_file</span>
+                  Tải ảnh QR lên để quét
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {/* Demo Test Cases */}
+              <div className="mt-6 border-t border-white/10 pt-4">
+                <p className="text-[11px] font-medium text-slate-300 mb-3.5 flex items-center justify-center gap-1.5 uppercase tracking-wider">
+                  <FlaskConical className="w-3.5 h-3.5 text-brand-400" />
+                  Kịch bản thử nghiệm quy trình truy xuất (Test Cases)
+                </p>
+
+                <div className="space-y-3 max-w-4xl mx-auto">
+                  {/* Row 1: 3 Test Cases */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {DEMO_CODES.slice(0, 3).map((d, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => { 
+                          setInputCode(d.code)
+                          setPinInput(d.pin || '')
+                          handleTrace(d.code, '', d.pin || '') 
+                        }}
+                        className="p-3.5 rounded-xl bg-slate-900/90 border border-white/10 hover:border-brand-400 hover:bg-slate-800/90 transition-all text-left group flex flex-col justify-between shadow-sm min-h-[90px]"
+                      >
+                        <div className="flex items-center mb-2">
+                          <span className={cn("px-2.5 py-1 rounded-md text-xs font-semibold border flex items-center gap-1.5 leading-none", d.badgeClass)}>
+                            <span className="material-symbols-outlined text-[13px]">{d.icon}</span>
+                            {d.badge}
+                          </span>
+                        </div>
+                        <p className="text-xs font-medium text-slate-200 group-hover:text-brand-300 transition-colors leading-snug">
+                          {d.label}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Row 2: 2 Test Cases */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto w-full">
+                    {DEMO_CODES.slice(3, 5).map((d, idx) => (
+                      <button
+                        key={idx + 3}
+                        onClick={() => { 
+                          setInputCode(d.code)
+                          setPinInput(d.pin || '')
+                          handleTrace(d.code, '', d.pin || '') 
+                        }}
+                        className="p-3.5 rounded-xl bg-slate-900/90 border border-white/10 hover:border-brand-400 hover:bg-slate-800/90 transition-all text-left group flex flex-col justify-between shadow-sm min-h-[90px]"
+                      >
+                        <div className="flex items-center mb-2">
+                          <span className={cn("px-2.5 py-1 rounded-md text-xs font-semibold border flex items-center gap-1.5 leading-none", d.badgeClass)}>
+                            <span className="material-symbols-outlined text-[13px]">{d.icon}</span>
+                            {d.badge}
+                          </span>
+                        </div>
+                        <p className="text-xs font-medium text-slate-200 group-hover:text-brand-300 transition-colors leading-snug">
+                          {d.label}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
               {/* Camera viewer */}
@@ -380,6 +587,15 @@ export default function TracePage() {
 
             {/* ── Status banner ─────────────────────────────────────── */}
             <StatusBanner result={result} cfg={cfg} onReset={handleReset} reported={reported} onReport={() => setReported(true)} />
+
+            {/* ── Dual-Code Scratch PIN Verification Panel ────────────── */}
+            <ScratchPinCard
+              result={result}
+              pinInput={pinInput}
+              setPinInput={setPinInput}
+              onVerifyPin={handleVerifyPin}
+              loading={pinLoading}
+            />
 
             {/* ── Recalled alert ────────────────────────────────────── */}
             {result.status === 'recalled' && result.recallInfo && (
@@ -583,40 +799,68 @@ function OverviewSection({ result }) {
 // ─── SupplyChainSection ───────────────────────────────────────────────────────
 function SupplyChainSection({ result }) {
   const { distribution } = result
-  if (!distribution?.length) return <EmptySection message="No distribution data available." />
+  if (!distribution?.length) return <EmptySection message="Chưa có dữ liệu hành trình phân phối." />
 
   const timelineItems = distribution.map((step, i) => {
     const cfg = CHAIN_ICONS[step.type] || CHAIN_ICONS.warehouse_receipt
     const { Icon } = cfg
     const isRecall = step.type === 'recall_initiated'
+    const isSuccess = step.type === 'delivery_success'
+
     return {
       dot: (
-        <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center border-2', isRecall ? 'bg-red-50 border-red-300' : `${cfg.bg} border-transparent`)}>
-          <Icon className={cn('w-4 h-4', isRecall ? 'text-red-500' : cfg.color)} />
+        <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center border-2 shadow-sm', 
+          isRecall ? 'bg-red-50 border-red-300' : 
+          isSuccess ? 'bg-emerald-50 border-emerald-400' :
+          `${cfg.bg} border-transparent`
+        )}>
+          <Icon className={cn('w-4 h-4', 
+            isRecall ? 'text-red-500' : 
+            isSuccess ? 'text-emerald-600' : 
+            cfg.color
+          )} />
         </div>
       ),
-      color: isRecall ? 'red' : 'blue',
+      color: isRecall ? 'red' : isSuccess ? 'green' : 'blue',
       children: (
-        <div className={cn('mb-2 p-4 rounded-xl border transition-colors', isRecall ? 'bg-red-50 border-red-200' : 'bg-white border-surface-border')}>
-          <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
-            <div>
-              <span className={cn('text-xs font-bold uppercase tracking-wider', isRecall ? 'text-red-600' : 'text-brand-600')}>{cfg.label}</span>
-              <p className="font-semibold text-sm text-slate-800 mt-0.5">{step.location}</p>
+        <div className={cn('mb-3 p-4 rounded-xl border transition-all shadow-sm', 
+          isRecall ? 'bg-red-50/70 border-red-200' : 
+          isSuccess ? 'bg-emerald-50/50 border-emerald-200' :
+          'bg-white border-slate-200 hover:border-brand-300'
+        )}>
+          {/* Header Row: Category Title + Date/Time on Left, Tag on Right */}
+          <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className={cn('text-xs font-bold uppercase tracking-wider shrink-0', 
+                isRecall ? 'text-red-600' : 
+                isSuccess ? 'text-emerald-700' :
+                'text-brand-600'
+              )}>
+                {step.label || cfg.label}
+              </span>
+              <span className="text-xs text-slate-400 font-mono shrink-0">
+                {formatDateTime(step.date)}
+              </span>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {step.verified && <Tag color="green" className="text-xs">Verified ✓</Tag>}
-              <span className="text-xs text-slate-400 font-mono">{formatDate(step.date)}</span>
-            </div>
+
+            {step.verified && (
+              <Tag color="green" className="text-[11px] font-medium m-0 py-0 px-2 leading-5 border-emerald-300 rounded-md shrink-0 ml-auto">
+                Đã xác thực ✓
+              </Tag>
+            )}
           </div>
+
+          {/* Location Row */}
+          <p className="font-semibold text-sm text-slate-800 mb-1 leading-snug">{step.location}</p>
           {step.coordinates && (
-            <p className="text-xs text-slate-400 flex items-center gap-1 mb-1">
+            <p className="text-xs text-slate-400 flex items-center gap-1 mb-1 font-mono">
               <MapPin className="w-3 h-3" /> {step.coordinates.lat.toFixed(4)}, {step.coordinates.lng.toFixed(4)}
             </p>
           )}
-          <p className="text-xs text-slate-500">{step.notes}</p>
-          <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-            <span className="font-medium">Handler:</span> {step.handler}
-          </p>
+          <p className="text-xs text-slate-600 mt-1 leading-relaxed">{step.notes}</p>
+          <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span><strong className="text-slate-700 font-medium">Đơn vị thực hiện:</strong> {step.handler}</span>
+          </div>
         </div>
       ),
     }
@@ -625,8 +869,8 @@ function SupplyChainSection({ result }) {
   return (
     <div className="card p-6">
       <h3 className="font-display font-semibold text-slate-900 mb-6 flex items-center gap-2">
-        <Truck className="w-5 h-5 text-brand-500" /> Complete Supply Chain
-        <span className="ml-auto text-xs text-slate-400 font-normal">{distribution.length} checkpoint(s)</span>
+        <Truck className="w-5 h-5 text-brand-500" /> Hành Trình Chuỗi Cung Ứng & Phân Phối
+        <span className="ml-auto text-xs text-slate-400 font-normal">{distribution.length} mốc lưu chuyển</span>
       </h3>
       <Timeline items={timelineItems} />
     </div>
@@ -834,8 +1078,89 @@ function ExpiryTag({ date }) {
   if (!date) return <span>—</span>
   const daysLeft = Math.floor((new Date(date) - new Date()) / 86400000)
   const color = daysLeft < 0 ? 'red' : daysLeft < 90 ? 'orange' : 'green'
-  const label = daysLeft < 0 ? 'EXPIRED' : `${formatDate(date)} (${daysLeft}d left)`
+  const label = daysLeft < 0 ? 'HẾT HẠN' : `${formatDate(date)} (còn ${daysLeft} ngày)`
   return <Tag color={color}>{label}</Tag>
+}
+
+// ─── Dual-Code Scratch PIN Verification Card ─────────────────────────────────
+function ScratchPinCard({ result, pinInput, setPinInput, onVerifyPin, loading }) {
+  const isActivated = !!result.activatedAt || (result.pinScansCount && result.pinScansCount > 0) || result.status === 'activated_need_pin' || result.status === 'repeated_authentic' || result.status === 'authentic'
+  const isPinNeeded = !isActivated && (result.status === 'pin_required' || result.status === 'invalid_pin' || result.authStatus === 'PIN_REQUIRED')
+  const isAuthenticFirst = result.status === 'authentic' && (result.authStatus === 'FIRST_SCAN_AUTHENTIC' || result.pinScansCount === 1)
+  const isRepeated = result.status === 'repeated_authentic' || (result.pinScansCount > 1)
+
+  return (
+    <div className="bg-slate-900 border border-white/10 rounded-2xl p-5 space-y-4 shadow-xl">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-amber-400" />
+          <h3 className="font-display font-bold text-white text-base">
+            Xác thực Tem Chống Giả Phủ Cào (Dual-Code Security)
+          </h3>
+        </div>
+        {result.activatedAt && (
+          <span className="text-xs text-slate-400 font-mono">
+            Kích hoạt: {formatDateTime(result.activatedAt)}
+          </span>
+        )}
+      </div>
+
+      {isPinNeeded && (
+        <div className="bg-gradient-to-r from-amber-950/40 via-slate-800 to-amber-950/40 border border-amber-500/30 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="space-y-1 text-center md:text-left">
+            <p className="text-sm font-semibold text-amber-300 flex items-center justify-center md:justify-start gap-1.5">
+              <span className="material-symbols-outlined text-amber-400 text-lg">lock_open</span>
+              Cào lớp bạc và nhập mã PIN để xác thực 100% chính hãng
+            </p>
+            <p className="text-xs text-slate-400">
+              Mã Barcode trên vỏ hộp đã được kiểm chứng xuất xứ. Hãy cào nhẹ lớp nhũ bạc trên tem nắp hộp và nhập mã PIN gồm 6 ký tự để nhận diện chính hãng.
+            </p>
+          </div>
+
+          <form onSubmit={(e) => { e.preventDefault(); onVerifyPin() }} className="flex items-center gap-2 w-full md:w-auto shrink-0">
+            <input
+              type="text"
+              maxLength={10}
+              placeholder="MÃ PIN (VD: 9K3N8A)"
+              value={pinInput}
+              onChange={e => setPinInput(e.target.value.toUpperCase())}
+              className="px-4 py-2 bg-black/50 border border-amber-400/50 text-amber-300 font-mono font-bold tracking-wider rounded-xl text-sm focus:outline-none focus:border-amber-400 text-center uppercase w-full md:w-52 placeholder:text-slate-600"
+            />
+            <button
+              type="submit"
+              disabled={loading || !pinInput.trim()}
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-bold rounded-xl text-sm transition-all shrink-0 flex items-center gap-1.5"
+            >
+              {loading ? <Spinner size="sm" className="text-slate-950" /> : 'Xác thực'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {isActivated && !isAuthenticFirst && (
+        <div className="bg-blue-950/40 border border-blue-500/40 rounded-xl p-4 flex items-center gap-3 text-blue-300">
+          <Info className="w-6 h-6 text-blue-400 shrink-0" />
+          <div className="text-xs">
+            <p className="font-bold text-sm text-blue-200">Sản phẩm chính hãng (Đã kích hoạt bảo mật)</p>
+            <p className="text-blue-400/80 mt-0.5">
+              Mã bảo mật phủ cào của hộp thuốc này đã được xác thực & kích hoạt lần đầu vào lúc {formatDateTime(result.activatedAt)}. 
+              Sản phẩm hoàn toàn chính hãng, bạn có thể an tâm sử dụng.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {isAuthenticFirst && (
+        <div className="bg-emerald-950/40 border border-emerald-500/40 rounded-xl p-4 flex items-center gap-3 text-emerald-300">
+          <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
+          <div className="text-xs">
+            <p className="font-bold text-sm text-emerald-200">Xác thực chính hãng lần đầu tiên thành công!</p>
+            <p className="text-emerald-400/80 mt-0.5">Sản phẩm vừa được kích hoạt bảo mật lần đầu tiên vào lúc {formatDateTime(result.activatedAt || new Date())}. Bạn có thể an tâm sử dụng sản phẩm.</p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function EmptySection({ message }) {

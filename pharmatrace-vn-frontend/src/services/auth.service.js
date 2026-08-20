@@ -19,27 +19,20 @@ export const authService = {
       const result = data.data || data
       const adminUser = result.nhan_vien || result.user
       
-      // Function to map DB role to frontend role
-      const mapRole = (dbRole) => {
-        if (!dbRole) return 'customer';
-        const role = dbRole.toLowerCase();
-        if (role === 'superadmin' || role === 'admin') return 'admin';
-        if (role === 'quanlykho' || role === 'manager') return 'manager';
-        if (role === 'nhanvienbanhang') return 'staff';
-        return dbRole; // Fallback
-      }
-
       return {
         accessToken:  result.token || null,
         refreshToken: result.refreshToken || null,
         expiresAt:    result.expiresAt || (Date.now() + 3600000),
-        user:         adminUser ? { ...adminUser, role: mapRole(adminUser.vai_tro), name: adminUser.ho_ten || adminUser.name || '' } : null,
+        user:         adminUser ? { ...adminUser, role: adminUser.vai_tro || adminUser.role || 'SuperAdmin', name: adminUser.ho_ten || adminUser.name || '' } : null,
       }
     }
 
     // Customer login — backend returns { success: true, data: { user } }
+    const identity = credentials.identifier || credentials.phone || credentials.email || credentials.so_dien_thoai
     const { data } = await apiClient.post('/auth/login', {
-      so_dien_thoai: credentials.phone,
+      identifier:    identity,
+      so_dien_thoai: identity,
+      email:         identity,
       mat_khau:      credentials.password,
     })
     
@@ -56,11 +49,12 @@ export const authService = {
 
   async register(payload) {
     const { data } = await apiClient.post('/auth/register', {
-      ho_ten:        payload.name,
-      so_dien_thoai: payload.phone,
-      email:         payload.email || undefined,
-      mat_khau:      payload.password,
-      dia_chi:       payload.address || undefined,
+      ho_ten:           payload.name,
+      so_dien_thoai:    payload.phone,
+      email:            payload.email || undefined,
+      mat_khau:         payload.password,
+      dia_chi:          payload.address || undefined,
+      dia_chi_mac_dinh: payload.address || undefined,
     })
     
     const result = data.data || data

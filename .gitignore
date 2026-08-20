@@ -1,0 +1,17 @@
+.env
+.env.*
+node_modules/
+dist/
+build/
+.DS_Store
+Thumbs.db
+
+# Database backups & local dumps (ignore root dumps, track modular database schema)
+backup_*.sql
+*.dump
+database/init.sql
+!database/**/*.sql
+!database/*.sql
+
+# One-off utility/admin scripts (not for production)
+pharmatrace-vn-backend/src/scripts/

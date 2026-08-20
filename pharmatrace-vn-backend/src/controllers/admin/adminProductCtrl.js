@@ -21,10 +21,11 @@ const createProduct = async (req, res, next) => {
 const deleteProduct = async (req, res, next) => {
     try {
         const { id } = req.params;
-        await adminProductService.removeProduct(id);
+        const result = await adminProductService.removeProduct(id);
         res.status(200).json({
             success: true,
-            message: `Successfully permanently deleted the product with ID ${id}.`
+            message: result.message || `Successfully processed product ID ${id}.`,
+            data: result
         });
     } catch (error) {
         if (error.statusCode) res.status(error.statusCode);
@@ -49,7 +50,15 @@ const toggleProductStatus = async (req, res, next) => {
 
 const getAllProductsAdmin = async (req, res, next) => {
     try {
-        const data = await adminProductService.fetchAdminProducts(req.query) || [];
+        const userRole = req.user?.vai_tro || req.user?.role;
+        const isSuperAdmin = userRole === 'SuperAdmin' || userRole === 'superadmin';
+        const filters = {
+            ...req.query,
+            // SuperAdmin sees all internal units (no don_vi_id filter); others see only their unit
+            don_vi_id: isSuperAdmin ? null : (req.query.don_vi_id || req.user?.don_vi_id || null),
+            is_super_admin: isSuperAdmin,
+        };
+        const data = await adminProductService.fetchAdminProducts(filters) || [];
         res.status(200).json({ success: true, data });
     } catch (error) {
         next(error);

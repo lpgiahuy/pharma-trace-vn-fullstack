@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { User, Mail, Phone, MapPin, Edit3, Save, X, ChevronRight, Award, Trophy, Star, Pill, Gem } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
+import { useAuth } from '@/store/authStore'
 import { authService } from '@/services/auth.service'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'react-hot-toast'
 
 export default function ProfilePage() {
-  const { user, updateUser } = useAuthStore()
+  const { user, updateUser } = useAuth()
   const { t, i18n } = useTranslation()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
