@@ -16,7 +16,7 @@ export const useCartStore = create(
       addItem: (product, quantity = 1) => {
         const accessToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
         if (!accessToken) {
-          toast.error('Vui lòng đăng nhập để thêm vào giỏ hàng')
+          toast.error('Please log in to add items to cart')
           return
         }
 
@@ -27,7 +27,7 @@ export const useCartStore = create(
         } else {
           set({ items: [...items, { ...product, quantity }] })
         }
-        toast.success(`${product.name} đã được thêm vào giỏ hàng`)
+        toast.success(`${product.name} added to cart successfully`)
 
         // Sync to server for authenticated users (fire-and-forget)
         if (accessToken) {

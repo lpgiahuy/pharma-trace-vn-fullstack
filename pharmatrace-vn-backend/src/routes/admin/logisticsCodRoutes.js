@@ -4,7 +4,9 @@ import {
     getCodSummary,
     createShipment,
     updateShipmentStatus,
-    reconcileCod
+    reconcileCod,
+    deleteShipment,
+    getOrderInfoForShipment
 } from '../../controllers/admin/logisticsCodCtrl.js';
 import { protect } from '../../middlewares/authMiddleware.js';
 import { authorizeRoles } from '../../middlewares/roleMiddleware.js';
@@ -19,5 +21,7 @@ router.get('/cod-summary', getCodSummary);
 router.post('/shipments', createShipment);
 router.patch('/shipments/:id/status', updateShipmentStatus);
 router.patch('/shipments/:id/reconcile-cod', reconcileCod);
+router.delete('/shipments/:id', deleteShipment);
+router.get('/order-info/:orderId', getOrderInfoForShipment);
 
 export default router;

@@ -37,8 +37,8 @@ export const getPurchaseOrdersModel = async (userContext = null, type = 'inbound
         } else if (type === 'all' && isSuperAdmin) {
             whereClause = ' WHERE nv.don_vi_id = $1 OR pn.nha_cung_cap_id = $1 ';
         } else {
-            // Chỉ hiển thị đơn mua hàng của chính đơn vị hiện tại (nơi đặt mua)
-            whereClause = ' WHERE nv.don_vi_id = $1 ';
+            // Hiển thị đơn mua hàng của chính đơn vị hiện tại hoặc đơn chưa gán người tạo
+            whereClause = ' WHERE (nv.don_vi_id = $1 OR pn.nguoi_tao_id IS NULL) ';
         }
         params.push(unitId);
     }

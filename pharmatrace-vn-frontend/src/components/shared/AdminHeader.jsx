@@ -69,7 +69,7 @@ export const AdminHeader = ({ collapsed, onToggle, portal = 'Admin', isMobile })
                 <p className="text-sm font-medium text-slate-700 leading-none">{user?.name}</p>
                 {user?.don_vi_id && (
                   <span className="text-[10px] bg-blue-100 text-blue-700 font-semibold px-1.5 py-0.5 rounded leading-none shrink-0 inline-flex items-center">
-                    Đơn vị #{user.don_vi_id}
+                    Unit #{user.don_vi_id}
                   </span>
                 )}
               </div>

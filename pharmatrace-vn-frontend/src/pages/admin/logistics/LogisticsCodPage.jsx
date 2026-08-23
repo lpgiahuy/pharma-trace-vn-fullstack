@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Table, Card, Tag, Button, Modal, Form, Input, Select, InputNumber, Space, Row, Col, Statistic, message, Popconfirm } from 'antd'
-import { CarOutlined, DollarOutlined, PlusOutlined, CheckCircleOutlined, SyncOutlined, CloseCircleOutlined, ReloadOutlined, FileDoneOutlined } from '@ant-design/icons'
+import { Table, Card, Tag, Button, Modal, Form, Input, Select, InputNumber, Space, Row, Col, Statistic, message, Popconfirm, Alert } from 'antd'
+import { CarOutlined, DollarOutlined, PlusOutlined, CheckCircleOutlined, SyncOutlined, CloseCircleOutlined, ReloadOutlined, FileDoneOutlined, DeleteOutlined, InfoCircleOutlined, SearchOutlined } from '@ant-design/icons'
 import apiClient from '@/services/apiClient'
 
 export default function LogisticsCodPage() {
@@ -13,6 +13,8 @@ export default function LogisticsCodPage() {
   const [search, setSearch] = useState('')
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [selectedOrderInfo, setSelectedOrderInfo] = useState(null)
+  const [loadingOrderInfo, setLoadingOrderInfo] = useState(false)
   const [form] = Form.useForm()
 
   const fetchShipments = async () => {
@@ -47,20 +49,75 @@ export default function LogisticsCodPage() {
     fetchSummary()
   }, [filterCarrier, filterDeliveryStatus, filterCodStatus])
 
+  const fetchOrderInfo = async (orderId) => {
+    if (!orderId) {
+      setSelectedOrderInfo(null)
+      form.setFieldsValue({ tien_cod: 0 })
+      return
+    }
+    try {
+      setLoadingOrderInfo(true)
+      const res = await apiClient.get(`/admin/logistics-cod/order-info/${orderId}`)
+      if (res.data?.success && res.data.data) {
+        const order = res.data.data
+        setSelectedOrderInfo(order)
+        const autoCod = order.phuong_thuc_thanh_toan === 'COD' ? Number(order.tong_tien) : 0
+        form.setFieldsValue({ tien_cod: autoCod })
+        message.success(`Đã tự động lấy số tiền đơn #${orderId}: ${autoCod.toLocaleString()} ₫`)
+      } else {
+        setSelectedOrderInfo(null)
+        message.warning(`Không tìm thấy đơn hàng #${orderId}`)
+      }
+    } catch (err) {
+      setSelectedOrderInfo(null)
+      message.error(err.response?.data?.message || `Không tìm thấy thông tin đơn hàng #${orderId}`)
+    } finally {
+      setLoadingOrderInfo(false)
+    }
+  }
+
+  const handleValuesChange = (changedValues) => {
+    if ('don_hang_id' in changedValues) {
+      const val = changedValues.don_hang_id
+      if (val) {
+        fetchOrderInfo(val)
+      } else {
+        setSelectedOrderInfo(null)
+        form.setFieldsValue({ tien_cod: 0 })
+      }
+    }
+  }
+
   const handleCreateShipment = async (values) => {
     try {
       const res = await apiClient.post('/admin/logistics-cod/shipments', values)
       if (res.data?.success) {
-        message.success('New shipment waybill created successfully!')
+        message.success('Tạo vận đơn thành công!')
         setIsCreateModalOpen(false)
+        setSelectedOrderInfo(null)
         form.resetFields()
         fetchShipments()
         fetchSummary()
       } else {
-        message.error(res.data?.message || 'Error creating shipment')
+        message.error(res.data?.message || 'Lỗi khi tạo vận đơn')
       }
     } catch (err) {
-      message.error(err.response?.data?.message || 'Failed to connect to server')
+      message.error(err.response?.data?.message || 'Không thể kết nối đến máy chủ')
+    }
+  }
+
+  const handleDeleteShipment = async (id) => {
+    try {
+      const res = await apiClient.delete(`/admin/logistics-cod/shipments/${id}`)
+      if (res.data?.success) {
+        message.success('Đã xóa vận đơn thành công!')
+        fetchShipments()
+        fetchSummary()
+      } else {
+        message.error(res.data?.message || 'Không thể xóa vận đơn')
+      }
+    } catch (err) {
+      message.error(err.response?.data?.message || 'Không thể xóa vận đơn')
     }
   }
 
@@ -68,7 +125,7 @@ export default function LogisticsCodPage() {
     try {
       const res = await apiClient.patch(`/admin/logistics-cod/shipments/${id}/status`, { trang_thai_giao: status })
       if (res.data?.success) {
-        message.success('Delivery status updated successfully!')
+        message.success('Cập nhật trạng thái giao hàng thành công!')
         fetchShipments()
         fetchSummary()
       } else {
@@ -83,7 +140,7 @@ export default function LogisticsCodPage() {
     try {
       const res = await apiClient.patch(`/admin/logistics-cod/shipments/${id}/reconcile-cod`)
       if (res.data?.success) {
-        message.success('COD RECONCILIATION confirmed successfully!')
+        message.success('Đối soát tiền COD thành công!')
         fetchShipments()
         fetchSummary()
       } else {
@@ -165,6 +222,15 @@ export default function LogisticsCodPage() {
               <Button type="primary" size="small" icon={<DollarOutlined />}>Reconcile COD</Button>
             </Popconfirm>
           )}
+          <Popconfirm
+            title="Xóa vận đơn?"
+            description="Bạn có chắc chắn muốn xóa vận đơn này không?"
+            onConfirm={() => handleDeleteShipment(r.id)}
+            okText="Xóa"
+            cancelText="Hủy"
+          >
+            <Button danger size="small" icon={<DeleteOutlined />}>Xóa</Button>
+          </Popconfirm>
         </Space>
       )
     }
@@ -182,7 +248,7 @@ export default function LogisticsCodPage() {
         </div>
         <Space>
           <Button icon={<ReloadOutlined />} onClick={() => { fetchShipments(); fetchSummary(); }}>Refresh</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsCreateModalOpen(true)}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => { setSelectedOrderInfo(null); form.resetFields(); setIsCreateModalOpen(true); }}>
             Create New Waybill
           </Button>
         </Space>
@@ -289,13 +355,53 @@ export default function LogisticsCodPage() {
       <Modal
         title="Create New Shipping Waybill"
         open={isCreateModalOpen}
-        onCancel={() => setIsCreateModalOpen(false)}
+        onCancel={() => { setIsCreateModalOpen(false); setSelectedOrderInfo(null); }}
         onOk={() => form.submit()}
       >
-        <Form form={form} layout="vertical" onFinish={handleCreateShipment}>
+        <Form 
+          form={form} 
+          layout="vertical" 
+          onFinish={handleCreateShipment}
+          onValuesChange={handleValuesChange}
+        >
           <Form.Item name="don_hang_id" label="Order ID" rules={[{ required: true, message: 'Please enter Order ID' }]}>
-            <InputNumber placeholder="e.g. 3" style={{ width: '100%' }} min={1} />
+            <Space.Compact style={{ width: '100%' }}>
+              <InputNumber 
+                placeholder="e.g. 176" 
+                style={{ width: 'calc(100% - 100px)' }} 
+                min={1} 
+                onBlur={() => {
+                  const val = form.getFieldValue('don_hang_id')
+                  if (val) fetchOrderInfo(val)
+                }}
+              />
+              <Button 
+                type="primary" 
+                icon={<SearchOutlined />} 
+                loading={loadingOrderInfo}
+                onClick={() => fetchOrderInfo(form.getFieldValue('don_hang_id'))}
+              >
+                Check
+              </Button>
+            </Space.Compact>
           </Form.Item>
+
+          {selectedOrderInfo && (
+            <Alert
+              className="mb-4"
+              type="info"
+              showIcon
+              icon={<InfoCircleOutlined />}
+              message={`Đơn #${selectedOrderInfo.id} - ${selectedOrderInfo.ten_khach_hang || 'Khách hàng'}`}
+              description={
+                <div>
+                  <p className="m-0 font-medium">Tổng tiền: <span className="text-blue-600">{Number(selectedOrderInfo.tong_tien).toLocaleString()} ₫</span></p>
+                  <p className="m-0 text-slate-500">Hình thức thanh toán: <strong>{selectedOrderInfo.phuong_thuc_thanh_toan}</strong> ({selectedOrderInfo.phuong_thuc_thanh_toan === 'COD' ? 'Tự động nhập tiền COD' : 'Đã thanh toán online - COD = 0₫'})</p>
+                </div>
+              }
+            />
+          )}
+
           <Form.Item name="don_vi_van_chuyen" label="Carrier Partner" initialValue="DoiXeNoiBo">
             <Select options={[
               { label: 'Internal Delivery Fleet', value: 'DoiXeNoiBo' },
@@ -305,7 +411,7 @@ export default function LogisticsCodPage() {
             ]} />
           </Form.Item>
           <Form.Item name="tien_cod" label="COD Cash-on-Delivery Amount (₫)" initialValue={0}>
-            <InputNumber placeholder="0" style={{ width: '100%' }} min={0} />
+            <InputNumber placeholder="0" style={{ width: '100%' }} min={0} formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
           </Form.Item>
         </Form>
       </Modal>

@@ -3,7 +3,9 @@ import {
     getCodSummaryModel,
     createShipmentModel,
     updateShipmentStatusModel,
-    reconcileCodModel
+    reconcileCodModel,
+    deleteShipmentModel,
+    getOrderInfoForShipmentModel
 } from '../../models/admin/logisticsCodModel.js';
 
 export const getShipmentsService = async (filters) => {
@@ -39,4 +41,20 @@ export const reconcileCodService = async (id) => {
         throw new Error('Không tìm thấy Vận đơn để đối soát COD');
     }
     return reconciled;
+};
+
+export const deleteShipmentService = async (id) => {
+    const deleted = await deleteShipmentModel(id);
+    if (!deleted) {
+        throw new Error('Không tìm thấy Vận đơn để xóa');
+    }
+    return deleted;
+};
+
+export const getOrderInfoForShipmentService = async (orderId) => {
+    const order = await getOrderInfoForShipmentModel(orderId);
+    if (!order) {
+        throw new Error(`Không tìm thấy đơn hàng #${orderId}`);
+    }
+    return order;
 };
