@@ -50,21 +50,6 @@ ALTER TABLE public.so_quy_thu_chi ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cong_no_khach_hang ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cong_no_nha_cung_cap ENABLE ROW LEVEL SECURITY;
 
--- 5. Create RLS Policies
-DROP POLICY IF EXISTS p_so_quy_thu_chi ON public.so_quy_thu_chi;
-CREATE POLICY p_so_quy_thu_chi ON public.so_quy_thu_chi FOR ALL USING (
-    rls_can_bypass() OR current_setting('app.current_user_type', true) = 'staff'
-);
-
-DROP POLICY IF EXISTS p_cong_no_khach_hang ON public.cong_no_khach_hang;
-CREATE POLICY p_cong_no_khach_hang ON public.cong_no_khach_hang FOR ALL USING (
-    rls_can_bypass() OR current_setting('app.current_user_type', true) = 'staff' OR khach_hang_id = rls_current_user_id()
-);
-
-DROP POLICY IF EXISTS p_cong_no_nha_cung_cap ON public.cong_no_nha_cung_cap;
-CREATE POLICY p_cong_no_nha_cung_cap ON public.cong_no_nha_cung_cap FOR ALL USING (
-    rls_can_bypass() OR current_setting('app.current_user_type', true) = 'staff'
-);
 
 -- 6. Insert Mock Data Seeds for Demonstration
 -- Initial data loaded via seeds

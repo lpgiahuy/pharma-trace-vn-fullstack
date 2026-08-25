@@ -1,10 +1,11 @@
-﻿const { Client } = require('pg');
+const { Client } = require('pg');
 const fs = require('fs');
 
 async function restoreWindowsPostgres() {
   console.log('Connecting to PostgreSQL on 127.0.0.1:5432...');
+  const host = process.env.DB_HOST || 'db';
   const client = new Client({
-    connectionString: 'postgresql://postgres:HuyLe%40574406@127.0.0.1:5432/pharmatrace-vn-db',
+    connectionString: `postgresql://postgres:HuyLe%40574406@${host}:5432/pharmatrace-vn-db`,
   });
   await client.connect();
 
@@ -21,8 +22,8 @@ async function restoreWindowsPostgres() {
   }
   await client.query('GRANT ALL ON SCHEMA public TO app_user; GRANT ALL ON SCHEMA public TO postgres;');
 
-  console.log('Reading full legacy init.sql...');
-  const rawSql = fs.readFileSync('D:/Personal/Project/pharma-trace-vn-fullstack/database/init.sql', 'utf8');
+  const sqlPath = fs.existsSync('./database/init.sql') ? './database/init.sql' : 'D:/Personal/Project/pharma-trace-vn-fullstack/database/init.sql';
+  const rawSql = fs.readFileSync(sqlPath, 'utf8');
 
   // Filter out psql meta commands starting with \ (like \restrict)
   const cleanedLines = rawSql
