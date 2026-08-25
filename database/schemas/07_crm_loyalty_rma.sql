@@ -53,12 +53,6 @@ CREATE INDEX IF NOT EXISTS idx_tichdiem_donhang ON public.lichsu_tichdiem(don_ha
 ALTER TABLE public.lichsu_tichdiem ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.lichsu_tichdiem FORCE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS p_lichsu_tichdiem_mod ON public.lichsu_tichdiem;
-CREATE POLICY p_lichsu_tichdiem_mod ON public.lichsu_tichdiem FOR ALL USING (
-    rls_can_bypass()
-    OR current_setting('app.current_user_type', true) = 'staff'
-    OR khach_hang_id = rls_current_user_id()
-);
 
 -- 5. Dữ liệu thử nghiệm điểm thưởng & RMA
 -- Initial data loaded via seeds

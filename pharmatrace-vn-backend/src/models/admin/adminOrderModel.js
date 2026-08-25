@@ -215,11 +215,9 @@ const getAvailableUIDsForOrder = async (orderId) => {
                     data: {
                         duoc_pham_id: item.duoc_pham_id,
                         so_lo: `BATCH-TEST-${Date.now().toString().slice(-4)}`,
-                        ngay_sx: new Date(),
-                        hsd: new Date(Date.now() + 365 * 24 * 3600 * 1000),
-                        so_luong_ban_dau: 100,
-                        so_luong_hien_tai: 100,
-                        trang_thai: 'ConHan'
+                        ngay_san_xuat: new Date(),
+                        han_su_dung: new Date(Date.now() + 365 * 24 * 3600 * 1000),
+                        trang_thai: 'HopLe'
                     }
                 });
             }

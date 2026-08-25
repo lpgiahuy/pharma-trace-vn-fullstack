@@ -3,7 +3,9 @@ import {
     getCodSummaryService,
     createShipmentService,
     updateShipmentStatusService,
-    reconcileCodService
+    reconcileCodService,
+    deleteShipmentService,
+    getOrderInfoForShipmentService
 } from '../../services/admin/logisticsCodService.js';
 
 export const getShipments = async (req, res) => {
@@ -50,5 +52,23 @@ export const reconcileCod = async (req, res) => {
         res.status(200).json({ success: true, message: 'Đối soát tiền COD thành công', data: result });
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const deleteShipment = async (req, res) => {
+    try {
+        await deleteShipmentService(req.params.id);
+        res.status(200).json({ success: true, message: 'Xóa vận đơn thành công' });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const getOrderInfoForShipment = async (req, res) => {
+    try {
+        const order = await getOrderInfoForShipmentService(req.params.orderId);
+        res.status(200).json({ success: true, data: order });
+    } catch (error) {
+        res.status(404).json({ success: false, message: error.message });
     }
 };

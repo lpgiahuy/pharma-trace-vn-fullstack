@@ -26,7 +26,7 @@ import { scanQRFromFile } from '@/utils/scanQRFromFile'
 // ─── Constants ────────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
   authentic: {
-    label:       'CHÍNH HÃNG — XÁC THỰC LẦN ĐẦU',
+    label:       'GENUINE PRODUCT — FIRST-TIME VERIFIED',
     color:       'text-emerald-700',
     bg:          'bg-emerald-50',
     border:      'border-emerald-300',
@@ -37,10 +37,10 @@ const STATUS_CONFIG = {
     AntIcon:     CheckCircleOutlined,
     antColor:    'green',
     alertType:   'success',
-    message:     'Sản phẩm chính hãng trong chuỗi phân phối PharmaTrace. Kích hoạt bảo mật thành công lần đầu tiên!',
+    message:     'Authentic pharmaceutical product verified in PharmaTrace supply chain. Security token activated for the first time!',
   },
   repeated_authentic: {
-    label:       'SẢN PHẨM CHÍNH HÃNG (ĐÃ KÍCH HOẠT TRƯỚC ĐÓ)',
+    label:       'GENUINE PRODUCT (PREVIOUSLY ACTIVATED)',
     color:       'text-blue-700',
     bg:          'bg-blue-50',
     border:      'border-blue-300',
@@ -51,10 +51,10 @@ const STATUS_CONFIG = {
     AntIcon:     CheckCircleOutlined,
     antColor:    'blue',
     alertType:   'info',
-    message:     'Sản phẩm chính hãng đã kích hoạt trước đó. Nếu bạn là người mua sản phẩm này, bạn hoàn toàn có thể yên tâm sử dụng.',
+    message:     'Authentic product previously activated. You can safely use this medicine.',
   },
   activated_need_pin: {
-    label:       'MÃ VẬN HÀNH (ĐÃ KÍCH HOẠT MÃ PIN TRƯỚC ĐÓ)',
+    label:       'LOGISTICS QR CODE (PIN PREVIOUSLY ACTIVATED)',
     color:       'text-blue-700',
     bg:          'bg-blue-50',
     border:      'border-blue-300',
@@ -65,10 +65,10 @@ const STATUS_CONFIG = {
     AntIcon:     CheckCircleOutlined,
     antColor:    'blue',
     alertType:   'info',
-    message:     'Mã vận hành ngoài vỏ hộp hợp lệ. Mã bảo mật của hộp thuốc này đã được kích hoạt trước đó. Bạn có thể nhập mã PIN cào bên dưới để đối soát xác thực.',
+    message:     'Outer box logistics QR is valid. Security PIN was previously activated. Enter the PIN below to cross-check verification.',
   },
   pin_required: {
-    label:       'MÃ VẬN HÀNH (CHƯA XÁC THỰC MÃ PIN)',
+    label:       'LOGISTICS QR CODE (PIN NOT YET VERIFIED)',
     color:       'text-amber-700',
     bg:          'bg-amber-50',
     border:      'border-amber-300',
@@ -79,10 +79,10 @@ const STATUS_CONFIG = {
     AntIcon:     WarningOutlined,
     antColor:    'warning',
     alertType:   'warning',
-    message:     'Mã vận hành ngoài vỏ hộp hợp lệ. Để xác thực chính hãng 100%, vui lòng cào lớp bạc trên tem và quét mã QR hoặc nhập mã PIN bên dưới.',
+    message:     'Outer box logistics QR code is valid. To confirm 100% authenticity, scratch the foil layer and enter the security PIN below.',
   },
   invalid_pin: {
-    label:       'MÃ PIN KHÔNG CHÍNH XÁC',
+    label:       'INCORRECT SECURITY PIN',
     color:       'text-red-800',
     bg:          'bg-red-50',
     border:      'border-red-400',
@@ -93,10 +93,10 @@ const STATUS_CONFIG = {
     AntIcon:     CloseCircleOutlined,
     antColor:    'error',
     alertType:   'error',
-    message:     'Mã PIN bảo mật không chính xác. Vui lòng kiểm tra lại lớp cào hoặc liên hệ nhà thuốc nếu nghi ngờ tem bị làm giả.',
+    message:     'Security PIN is incorrect. Please double check the scratch layer or contact your pharmacy if counterfeit is suspected.',
   },
   warning: {
-    label:       'HOẠT ĐỘNG ĐÁNG NGỜ',
+    label:       'SUSPICIOUS ACTIVITY DETECTED',
     color:       'text-amber-700',
     bg:          'bg-amber-50',
     border:      'border-amber-300',
@@ -107,10 +107,10 @@ const STATUS_CONFIG = {
     AntIcon:     WarningOutlined,
     antColor:    'warning',
     alertType:   'warning',
-    message:     'Mã này có dấu hiệu quét bất thường. Vui lòng kiểm tra với dược sĩ trước khi sử dụng.',
+    message:     'Abnormal scan frequency detected for this code. Please consult with your pharmacist before use.',
   },
   recalled: {
-    label:       'LÔ THUỐC BỊ THU HỒI',
+    label:       'RECALLED MEDICINE BATCH',
     color:       'text-red-700',
     bg:          'bg-red-50',
     border:      'border-red-300',
@@ -121,10 +121,10 @@ const STATUS_CONFIG = {
     AntIcon:     StopOutlined,
     antColor:    'error',
     alertType:   'error',
-    message:     'KHÔNG ĐƯỢC DÙNG. Lô thuốc này đã có quyết định thu hồi. Vui lòng liên hệ điểm mua để hoàn trả.',
+    message:     'DO NOT USE. This medicine batch has been officially recalled. Contact your pharmacy for return and refund.',
   },
   fake: {
-    label:       'CẢNH BÁO NGUY CƠ HÀNG GIẢ',
+    label:       'COUNTERFEIT WARNING ALERT',
     color:       'text-red-800',
     bg:          'bg-red-50',
     border:      'border-red-400',
@@ -135,19 +135,19 @@ const STATUS_CONFIG = {
     AntIcon:     CloseCircleOutlined,
     antColor:    'error',
     alertType:   'error',
-    message:     'CẢNH BÁO: Mã sản phẩm này không thể xác minh hoặc vi phạm giới hạn quét an toàn. Nguy cơ hàng giả, không được sử dụng!',
+    message:     'WARNING: This product code failed verification or exceeded safe scan limits. High counterfeit risk — DO NOT USE!',
   },
 }
 
 const CHAIN_ICONS = {
-  warehouse_receipt:  { Icon: Package,      color: 'text-brand-500',   bg: 'bg-brand-50',   label: 'Nhập kho lưu trữ'   },
-  quality_check:      { Icon: FlaskConical, color: 'text-purple-500',  bg: 'bg-purple-50',  label: 'Kiểm định chất lượng'},
-  warehouse_transfer: { Icon: Truck,        color: 'text-cyan-500',    bg: 'bg-cyan-50',    label: 'Điều chuyển kho'    },
-  packaging:          { Icon: PackageCheck, color: 'text-amber-500',   bg: 'bg-amber-50',   label: 'Đóng gói đơn hàng'  },
-  shipping:           { Icon: Truck,        color: 'text-blue-500',    bg: 'bg-blue-50',    label: 'Bàn giao vận chuyển'},
-  delivery_success:   { Icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50', label: 'Giao hàng thành công'},
-  retail_dispatch:    { Icon: Store,        color: 'text-green-500',   bg: 'bg-green-50',   label: 'Xuất nhà thuốc'     },
-  recall_initiated:   { Icon: AlertTriangle,color: 'text-red-500',     bg: 'bg-red-50',     label: 'Phát lệnh thu hồi'  },
+  warehouse_receipt:  { Icon: Package,      color: 'text-brand-500',   bg: 'bg-brand-50',   label: 'Inbound Storage'   },
+  quality_check:      { Icon: FlaskConical, color: 'text-purple-500',  bg: 'bg-purple-50',  label: 'Quality Inspection'},
+  warehouse_transfer: { Icon: Truck,        color: 'text-cyan-500',    bg: 'bg-cyan-50',    label: 'Stock Transfer'    },
+  packaging:          { Icon: PackageCheck, color: 'text-amber-500',   bg: 'bg-amber-50',   label: 'Order Fulfillment'  },
+  shipping:           { Icon: Truck,        color: 'text-blue-500',    bg: 'bg-blue-50',    label: 'Courier Handover'},
+  delivery_success:   { Icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50', label: 'Delivery Completed'},
+  retail_dispatch:    { Icon: Store,        color: 'text-green-500',   bg: 'bg-green-50',   label: 'Pharmacy Dispatch'     },
+  recall_initiated:   { Icon: AlertTriangle,color: 'text-red-500',     bg: 'bg-red-50',     label: 'Recall Order Issued'  },
 }
 
 // ─── Scan history helpers ─────────────────────────────────────────────────────
@@ -249,7 +249,7 @@ export default function TracePage() {
       )
     } catch (err) {
       setScanning(false)
-      setError('Không thể mở camera. Vui lòng cấp quyền hoặc nhập thủ công.')
+      setError('Cannot access camera. Please allow permissions or enter UID manually.')
     }
   }
 
@@ -272,12 +272,12 @@ export default function TracePage() {
 
     try {
       const decodedText = await scanQRFromFile(file)
-      toast.success('Giải mã ảnh QR thành công!')
+      toast.success('QR image decoded successfully!')
       handleTrace(decodedText)
     } catch (err) {
       console.error('[QR File Scan Error]', err)
-      setError({ type: 'invalid', msg: 'Không thể tìm thấy mã QR hợp lệ trong ảnh này. Vui lòng chọn ảnh khác.' })
-      toast.error('Quét ảnh thất bại')
+      setError({ type: 'invalid', msg: 'No valid QR code found in this image. Please select another file.' })
+      toast.error('Failed to scan image')
     } finally {
       setLoading(false)
     }
@@ -319,11 +319,11 @@ export default function TracePage() {
 
   const handleVerifyPin = async (overridePin = null) => {
     const targetPin = (overridePin || pinInput).trim()
-    if (!targetPin) return toast.error('Vui lòng nhập mã PIN cào')
+    if (!targetPin) return toast.error('Please enter the scratch security PIN')
     
     const targetUid = (result?.uid || result?.box_info?.uid || inputCode || '').trim()
     if (!targetUid) {
-      return toast.error('Vui lòng nhập hoặc quét mã UID vỏ hộp thuốc trước')
+      return toast.error('Please scan or enter the outer box UID first')
     }
 
     setPinLoading(true)
@@ -331,14 +331,14 @@ export default function TracePage() {
       const data = await traceService.traceCode(targetUid, '', targetPin)
       setResult(data)
       if (data.status === 'authentic') {
-        toast.success('🎉 Xác thực chính hãng thành công lần đầu tiên!')
+        toast.success('🎉 Authentic verification successful for the first time!')
       } else if (data.status === 'repeated_authentic') {
         toast.success('✓ Sản phẩm chính hãng (Đã kích hoạt trước đó)!')
       } else if (data.status === 'invalid_pin') {
-        toast.error('🔴 Mã PIN không chính xác! Vui lòng kiểm tra lại lớp cào.')
+        toast.error('🔴 Incorrect Security PIN! Please re-check the scratch layer.')
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Xác thực PIN thất bại')
+      toast.error(err.response?.data?.message || 'PIN verification failed')
     } finally {
       setPinLoading(false)
     }
@@ -469,10 +469,10 @@ export default function TracePage() {
 
               {/* Image upload scanning option */}
               <div className="mt-4 text-center">
-                <span className="text-xs text-slate-500">Hoặc: </span>
+                <span className="text-xs text-slate-500">Or: </span>
                 <label className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white transition-all cursor-pointer">
                   <span className="material-symbols-outlined text-[14px]">upload_file</span>
-                  Tải ảnh QR lên để quét
+                  Upload QR Image File
                   <input
                     type="file"
                     accept="image/*"
@@ -486,7 +486,7 @@ export default function TracePage() {
               <div className="mt-6 border-t border-white/10 pt-4">
                 <p className="text-[11px] font-medium text-slate-300 mb-3.5 flex items-center justify-center gap-1.5 uppercase tracking-wider">
                   <FlaskConical className="w-3.5 h-3.5 text-brand-400" />
-                  Kịch bản thử nghiệm quy trình truy xuất (Test Cases)
+                  Traceability Verification Test Cases
                 </p>
 
                 <div className="space-y-3 max-w-4xl mx-auto">
@@ -573,7 +573,7 @@ export default function TracePage() {
             <div className="h-48 bg-white/5 rounded-2xl" />
             <div className="text-center text-slate-500 text-sm mt-4 flex items-center justify-center gap-2">
               <Spinner size="sm" className="text-brand-400" />
-              Đang truy vấn hệ thống dữ liệu xác thực...
+              Querying authentication security database...
             </div>
           </div>
         )}
@@ -654,13 +654,13 @@ function StatusBanner({ result, cfg, onReset, reported, onReport }) {
         {result.status === 'fake' && (
           <p className="text-xs text-red-700 mt-1 bg-red-100 rounded-lg px-2 py-1 font-medium">
             {!result.verification?.freqCheckPassed
-              ? 'Phát hiện quét tần suất cao bất thường (≥10 lần/phút).'
-              : 'Phát hiện di chuyển bất khả thi giữa các lần quét (>1000 km/h).'}
+              ? 'Phát hiện quét tần suất cao bất thường (≥10 scans/min).'
+              : 'Impossible Travel Velocity Detected giữa các lần quét (>1000 km/h).'}
           </p>
         )}
         {result.status === 'warning' && (
           <p className="text-xs text-amber-700 mt-1 bg-amber-50 rounded-lg px-2 py-1">
-            Sản phẩm được đánh dấu nghi ngờ trong hệ thống.
+            Product is flagged for security inspection in system.
           </p>
         )}
       </div>
@@ -799,7 +799,7 @@ function OverviewSection({ result }) {
 // ─── SupplyChainSection ───────────────────────────────────────────────────────
 function SupplyChainSection({ result }) {
   const { distribution } = result
-  if (!distribution?.length) return <EmptySection message="Chưa có dữ liệu hành trình phân phối." />
+  if (!distribution?.length) return <EmptySection message="No supply chain distribution history available." />
 
   const timelineItems = distribution.map((step, i) => {
     const cfg = CHAIN_ICONS[step.type] || CHAIN_ICONS.warehouse_receipt
@@ -845,7 +845,7 @@ function SupplyChainSection({ result }) {
 
             {step.verified && (
               <Tag color="green" className="text-[11px] font-medium m-0 py-0 px-2 leading-5 border-emerald-300 rounded-md shrink-0 ml-auto">
-                Đã xác thực ✓
+                Verified ✓
               </Tag>
             )}
           </div>
@@ -859,7 +859,7 @@ function SupplyChainSection({ result }) {
           )}
           <p className="text-xs text-slate-600 mt-1 leading-relaxed">{step.notes}</p>
           <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span><strong className="text-slate-700 font-medium">Đơn vị thực hiện:</strong> {step.handler}</span>
+            <span><strong className="text-slate-700 font-medium">Handling Facility:</strong> {step.handler}</span>
           </div>
         </div>
       ),
@@ -869,8 +869,8 @@ function SupplyChainSection({ result }) {
   return (
     <div className="card p-6">
       <h3 className="font-display font-semibold text-slate-900 mb-6 flex items-center gap-2">
-        <Truck className="w-5 h-5 text-brand-500" /> Hành Trình Chuỗi Cung Ứng & Phân Phối
-        <span className="ml-auto text-xs text-slate-400 font-normal">{distribution.length} mốc lưu chuyển</span>
+        <Truck className="w-5 h-5 text-brand-500" /> Supply Chain & Distribution Journey
+        <span className="ml-auto text-xs text-slate-400 font-normal">{distribution.length} transfer steps</span>
       </h3>
       <Timeline items={timelineItems} />
     </div>
@@ -888,20 +888,20 @@ function VerificationSection({ result, cfg }) {
     {
       id:        'freq',
       Icon:      Eye,
-      label:     'Kiểm tra tần suất quét',
-      detail:    `Tối đa ${verification?.maxScansPerMinute ?? 0} lần/phút trong 24h qua · Ngưỡng phát hiện giả: ≥ 10 lần/phút`,
+      label:     'Scan Frequency Inspection',
+      detail:    `Max ${verification?.maxScansPerMinute ?? 0} scans/min in last 24h · Anomaly threshold: ≥ 10 scans/min`,
       passed:    verification?.freqCheckPassed ?? true,
-      passLabel: 'Bình thường',
-      failLabel: 'Bất thường — quét quá nhanh',
+      passLabel: 'Normal',
+      failLabel: 'Anomaly — High Frequency Scan',
     },
     {
       id:        'speed',
       Icon:      MapPin,
-      label:     'Kiểm tra vận tốc di chuyển',
-      detail:    'Vận tốc giữa hai lần quét có tọa độ · Ngưỡng phát hiện giả: > 1000 km/h',
+      label:     'Geospatial Velocity Inspection',
+      detail:    'Travel speed between consecutive scans · Anomaly threshold: > 1000 km/h',
       passed:    verification?.speedCheckPassed ?? true,
-      passLabel: 'Không bất thường',
-      failLabel: 'Phát hiện di chuyển bất khả thi',
+      passLabel: 'Normal Speed',
+      failLabel: 'Impossible Travel Velocity Detected',
     },
   ]
 
@@ -920,9 +920,9 @@ function VerificationSection({ result, cfg }) {
       <div className="card p-5">
         <h3 className="font-display font-semibold text-slate-900 mb-4 flex items-center gap-2">
           <Shield className="w-4 h-4 text-brand-500" />
-          Kết quả kiểm tra chống hàng giả
+          Anti-Counterfeit Verification Results
           <Tag color={allPassed ? 'green' : 'red'} className="ml-auto">
-            {allPassed ? '✓ Không phát hiện gian lận' : '✗ Phát hiện dấu hiệu giả mạo'}
+            {allPassed ? '✓ No Fraud Detected' : '✗ Anomaly Signal Detected'}
           </Tag>
         </h3>
         <div className="space-y-3">
@@ -947,32 +947,32 @@ function VerificationSection({ result, cfg }) {
       </div>
 
       {/* Scan history stats */}
-      <InfoCard title="Lịch sử quét" Icon={Eye} iconColor="text-indigo-500" iconBg="bg-indigo-50">
+      <InfoCard title="Scan Audit History" Icon={Eye} iconColor="text-indigo-500" iconBg="bg-indigo-50">
         <div className="grid grid-cols-3 gap-4 mb-5">
           <div className="text-center">
             <p className="text-3xl font-display font-bold text-slate-900">{verification?.totalScans ?? 0}</p>
-            <p className="text-xs text-slate-500 mt-1">Tổng lần quét</p>
+            <p className="text-xs text-slate-500 mt-1">Total Scans</p>
           </div>
           <div className="text-center border-x border-surface-border">
             <p className="text-sm font-semibold text-slate-700 leading-snug">
               {verification?.firstScanDate ? formatDateTime(verification.firstScanDate) : '—'}
             </p>
-            <p className="text-xs text-slate-500 mt-1">Lần đầu quét</p>
+            <p className="text-xs text-slate-500 mt-1">First Scan</p>
           </div>
           <div className="text-center">
             <p className="text-sm font-semibold text-slate-700 leading-snug">
               {verification?.lastScanDate ? formatDateTime(verification.lastScanDate) : '—'}
             </p>
-            <p className="text-xs text-slate-500 mt-1">Lần gần nhất</p>
+            <p className="text-xs text-slate-500 mt-1">Last Scan</p>
           </div>
         </div>
 
         {/* Frequency bar — shows actual maxPerMinute vs threshold 10 */}
         <div>
           <div className="flex justify-between text-xs text-slate-500 mb-1.5">
-            <span>Tần suất quét cao nhất (24h qua)</span>
+            <span>Peak Scan Velocity (Last 24h)</span>
             <span className={cn('font-mono font-bold', (verification?.maxScansPerMinute ?? 0) >= 10 ? 'text-red-500' : 'text-green-600')}>
-              {verification?.maxScansPerMinute ?? 0} lần/phút
+              {verification?.maxScansPerMinute ?? 0} scans/min
             </span>
           </div>
           <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
@@ -985,7 +985,7 @@ function VerificationSection({ result, cfg }) {
           </div>
           <div className="flex justify-between text-xs text-slate-400 mt-1.5">
             <span>0</span>
-            <span className="text-red-400 font-medium">Giới hạn: 10 lần/phút</span>
+            <span className="text-red-400 font-medium">Giới hạn: 10 scans/min</span>
           </div>
         </div>
       </InfoCard>
@@ -1078,7 +1078,7 @@ function ExpiryTag({ date }) {
   if (!date) return <span>—</span>
   const daysLeft = Math.floor((new Date(date) - new Date()) / 86400000)
   const color = daysLeft < 0 ? 'red' : daysLeft < 90 ? 'orange' : 'green'
-  const label = daysLeft < 0 ? 'HẾT HẠN' : `${formatDate(date)} (còn ${daysLeft} ngày)`
+  const label = daysLeft < 0 ? 'EXPIRED' : `${formatDate(date)} (${daysLeft} days left)`
   return <Tag color={color}>{label}</Tag>
 }
 
@@ -1095,12 +1095,12 @@ function ScratchPinCard({ result, pinInput, setPinInput, onVerifyPin, loading })
         <div className="flex items-center gap-2">
           <Shield className="w-5 h-5 text-amber-400" />
           <h3 className="font-display font-bold text-white text-base">
-            Xác thực Tem Chống Giả Phủ Cào (Dual-Code Security)
+            Dual-Code Security PIN Verification
           </h3>
         </div>
         {result.activatedAt && (
           <span className="text-xs text-slate-400 font-mono">
-            Kích hoạt: {formatDateTime(result.activatedAt)}
+            Activated: {formatDateTime(result.activatedAt)}
           </span>
         )}
       </div>
@@ -1110,10 +1110,10 @@ function ScratchPinCard({ result, pinInput, setPinInput, onVerifyPin, loading })
           <div className="space-y-1 text-center md:text-left">
             <p className="text-sm font-semibold text-amber-300 flex items-center justify-center md:justify-start gap-1.5">
               <span className="material-symbols-outlined text-amber-400 text-lg">lock_open</span>
-              Cào lớp bạc và nhập mã PIN để xác thực 100% chính hãng
+              Scratch security seal & enter PIN for 100% authentic verification
             </p>
             <p className="text-xs text-slate-400">
-              Mã Barcode trên vỏ hộp đã được kiểm chứng xuất xứ. Hãy cào nhẹ lớp nhũ bạc trên tem nắp hộp và nhập mã PIN gồm 6 ký tự để nhận diện chính hãng.
+              Outer box barcode origin verified. Scratch the foil layer on the tamper-evident seal and enter the 6-character PIN.
             </p>
           </div>
 
@@ -1121,7 +1121,7 @@ function ScratchPinCard({ result, pinInput, setPinInput, onVerifyPin, loading })
             <input
               type="text"
               maxLength={10}
-              placeholder="MÃ PIN (VD: 9K3N8A)"
+              placeholder="SECURITY PIN (e.g. 9K3N8A)"
               value={pinInput}
               onChange={e => setPinInput(e.target.value.toUpperCase())}
               className="px-4 py-2 bg-black/50 border border-amber-400/50 text-amber-300 font-mono font-bold tracking-wider rounded-xl text-sm focus:outline-none focus:border-amber-400 text-center uppercase w-full md:w-52 placeholder:text-slate-600"
@@ -1131,7 +1131,7 @@ function ScratchPinCard({ result, pinInput, setPinInput, onVerifyPin, loading })
               disabled={loading || !pinInput.trim()}
               className="px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-bold rounded-xl text-sm transition-all shrink-0 flex items-center gap-1.5"
             >
-              {loading ? <Spinner size="sm" className="text-slate-950" /> : 'Xác thực'}
+              {loading ? <Spinner size="sm" className="text-slate-950" /> : 'Verify PIN'}
             </button>
           </form>
         </div>
@@ -1141,10 +1141,10 @@ function ScratchPinCard({ result, pinInput, setPinInput, onVerifyPin, loading })
         <div className="bg-blue-950/40 border border-blue-500/40 rounded-xl p-4 flex items-center gap-3 text-blue-300">
           <Info className="w-6 h-6 text-blue-400 shrink-0" />
           <div className="text-xs">
-            <p className="font-bold text-sm text-blue-200">Sản phẩm chính hãng (Đã kích hoạt bảo mật)</p>
+            <p className="font-bold text-sm text-blue-200">Genuine Product (Security Token Activated)</p>
             <p className="text-blue-400/80 mt-0.5">
-              Mã bảo mật phủ cào của hộp thuốc này đã được xác thực & kích hoạt lần đầu vào lúc {formatDateTime(result.activatedAt)}. 
-              Sản phẩm hoàn toàn chính hãng, bạn có thể an tâm sử dụng.
+              The scratch security token for this medicine box was verified & activated at {formatDateTime(result.activatedAt)}. 
+              Product is 100% authentic and safe to use.
             </p>
           </div>
         </div>
@@ -1154,8 +1154,8 @@ function ScratchPinCard({ result, pinInput, setPinInput, onVerifyPin, loading })
         <div className="bg-emerald-950/40 border border-emerald-500/40 rounded-xl p-4 flex items-center gap-3 text-emerald-300">
           <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
           <div className="text-xs">
-            <p className="font-bold text-sm text-emerald-200">Xác thực chính hãng lần đầu tiên thành công!</p>
-            <p className="text-emerald-400/80 mt-0.5">Sản phẩm vừa được kích hoạt bảo mật lần đầu tiên vào lúc {formatDateTime(result.activatedAt || new Date())}. Bạn có thể an tâm sử dụng sản phẩm.</p>
+            <p className="font-bold text-sm text-emerald-200">Verify PIN chính hãng lần đầu tiên thành công!</p>
+            <p className="text-emerald-400/80 mt-0.5">Security token successfully activated for the first time at {formatDateTime(result.activatedAt || new Date())}. You can safely use this medicine.</p>
           </div>
         </div>
       )}

@@ -4,39 +4,39 @@
  */
 
 export const UNIT_TYPE_MAP = {
-  NhaMay: { vi: 'Nhà máy sản xuất', en: 'Manufacturing Plant', color: 'blue' },
-  NhaPhanPhoi: { vi: 'Kho / Nhà phân phối', en: 'Warehouse / Distributor', color: 'cyan' },
-  NhaThuoc: { vi: 'Nhà thuốc / Cửa hàng', en: 'Pharmacy / Retail Store', color: 'green' }
+  NhaMay: { vi: 'English', en: 'Manufacturing Plant', color: 'blue' },
+  NhaPhanPhoi: { vi: 'English', en: 'Warehouse / Distributor', color: 'cyan' },
+  NhaThuoc: { vi: 'English', en: 'Pharmacy / Retail Store', color: 'green' }
 }
 
 export const ROLE_MAP = {
-  SuperAdmin: { vi: 'Quản trị tối cao', en: 'Super Admin', color: 'purple' },
-  superadmin: { vi: 'Quản trị tối cao', en: 'Super Admin', color: 'purple' },
-  Admin: { vi: 'Quản trị viên', en: 'Admin', color: 'indigo' },
-  admin: { vi: 'Quản trị viên', en: 'Admin', color: 'indigo' },
-  QuanLyKho: { vi: 'Quản lý kho', en: 'Warehouse Manager', color: 'cyan' },
-  NhanVienKho: { vi: 'Nhân viên kho', en: 'Warehouse Staff', color: 'geekblue' },
-  QuanLyCuaHang: { vi: 'Quản lý cửa hàng', en: 'Store Manager', color: 'orange' },
-  NhanVienBanHang: { vi: 'Nhân viên bán hàng', en: 'Sales Staff', color: 'blue' },
-  NhaMay: { vi: 'Nhân viên nhà máy', en: 'Factory Staff', color: 'blue' },
-  Customer: { vi: 'Khách hàng', en: 'Customer', color: 'green' },
-  customer: { vi: 'Khách hàng', en: 'Customer', color: 'green' }
+  SuperAdmin: { vi: 'English', en: 'Super Admin', color: 'purple' },
+  superadmin: { vi: 'English', en: 'Super Admin', color: 'purple' },
+  Admin: { vi: 'English', en: 'Admin', color: 'indigo' },
+  admin: { vi: 'English', en: 'Admin', color: 'indigo' },
+  QuanLyKho: { vi: 'English', en: 'Warehouse Manager', color: 'cyan' },
+  NhanVienKho: { vi: 'English', en: 'Warehouse Staff', color: 'geekblue' },
+  QuanLyCuaHang: { vi: 'English', en: 'Store Manager', color: 'orange' },
+  NhanVienBanHang: { vi: 'English', en: 'Sales Staff', color: 'blue' },
+  NhaMay: { vi: 'English', en: 'Factory Staff', color: 'blue' },
+  Customer: { vi: 'English', en: 'Customer', color: 'green' },
+  customer: { vi: 'English', en: 'Customer', color: 'green' }
 }
 
 export const PO_STATUS_MAP = {
-  ChoDuyet: { vi: 'Chờ duyệt', en: 'Pending Approval', color: 'gold' },
-  DaDuyet: { vi: 'Đã duyệt', en: 'Approved', color: 'blue' },
-  DaNhapKho: { vi: 'Đã nhập kho 100%', en: 'Fully Received', color: 'green' },
-  DaHuy: { vi: 'Đã hủy', en: 'Cancelled', color: 'red' }
+  ChoDuyet: { vi: 'English', en: 'Pending Approval', color: 'gold' },
+  DaDuyet: { vi: 'English', en: 'Approved', color: 'blue' },
+  DaNhapKho: { vi: 'English', en: 'Fully Received', color: 'green' },
+  DaHuy: { vi: 'English', en: 'Cancelled', color: 'red' }
 }
 
 export const ITEM_STATUS_MAP = {
-  TrongKho: { vi: 'Trong kho', en: 'In Stock', color: 'green' },
-  DangLuanChuyen: { vi: 'Đang luân chuyển', en: 'In Transit', color: 'processing' },
-  DaXuat: { vi: 'Đã xuất kho', en: 'Dispatched', color: 'orange' },
-  DaBan: { vi: 'Đã bán', en: 'Sold', color: 'blue' },
-  DaHuy: { vi: 'Đã tiêu hủy', en: 'Disposed', color: 'red' },
-  ThuHoi: { vi: 'Đã thu hồi', en: 'Recalled', color: 'volcano' }
+  TrongKho: { vi: 'English', en: 'In Stock', color: 'green' },
+  DangLuanChuyen: { vi: 'English', en: 'In Transit', color: 'processing' },
+  DaXuat: { vi: 'English', en: 'Dispatched', color: 'orange' },
+  DaBan: { vi: 'English', en: 'Sold', color: 'blue' },
+  DaHuy: { vi: 'English', en: 'Disposed', color: 'red' },
+  ThuHoi: { vi: 'English', en: 'Recalled', color: 'volcano' }
 }
 
 export const formatUnitType = (type, lang = 'en') => {

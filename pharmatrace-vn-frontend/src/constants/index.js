@@ -17,12 +17,12 @@ export const ORDER_STATUS = {
 }
 
 export const ORDER_STATUS_LABELS = {
-  ChoXacNhan: 'Chờ xác nhận',
-  DaDongGoi:   'Đã đóng gói',
-  DangGiao:   'Đang giao',
-  HoanThanh:  'Hoàn thành',
-  DaHuy:      'Đã hủy',
-  TraHang:    'Trả hàng',
+  ChoXacNhan: 'Pending',
+  DaDongGoi:   'Packed',
+  DangGiao:   'In Transit',
+  HoanThanh:  'Completed',
+  DaHuy:      'Cancelled',
+  TraHang:    'Returned',
 }
 
 export const ORDER_STATUS_COLORS = {

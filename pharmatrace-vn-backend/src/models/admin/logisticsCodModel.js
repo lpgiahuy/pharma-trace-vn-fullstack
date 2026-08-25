@@ -95,13 +95,28 @@ export const getCodSummaryModel = async () => {
 };
 
 export const createShipmentModel = async ({ don_hang_id, don_vi_van_chuyen = 'DoiXeNoiBo', tien_cod = 0 }) => {
+    let finalCodAmount = Number(tien_cod || 0);
+
+    if (finalCodAmount === 0) {
+        const { rows: orderRows } = await pool.query(
+            'SELECT tong_tien, phuong_thuc_thanh_toan FROM public.donhang WHERE id = $1',
+            [don_hang_id]
+        );
+        if (orderRows.length > 0) {
+            const order = orderRows[0];
+            if (order.phuong_thuc_thanh_toan === 'COD') {
+                finalCodAmount = Number(order.tong_tien || 0);
+            }
+        }
+    }
+
     const ma_van_don = `SHIP-${don_hang_id}-${Math.floor(Math.random() * 89999 + 10000)}`;
     const query = `
         INSERT INTO public.vanchuyen (don_hang_id, ma_van_don, don_vi_van_chuyen, trang_thai_giao, tien_cod, trang_thai_cod)
         VALUES ($1, $2, $3, 'ChoLayHang', $4, 'ChuaDoiSoat')
         RETURNING id, don_hang_id, ma_van_don, don_vi_van_chuyen, trang_thai_giao, tien_cod, trang_thai_cod, ngay_tao;
     `;
-    const values = [don_hang_id, ma_van_don, don_vi_van_chuyen, tien_cod];
+    const values = [don_hang_id, ma_van_don, don_vi_van_chuyen, finalCodAmount];
     const { rows } = await pool.query(query, values);
     return rows[0];
 };
@@ -195,4 +210,21 @@ export const reconcileCodModel = async (id) => {
     `;
     const { rows } = await pool.query(query, [id]);
     return rows[0];
+};
+
+export const deleteShipmentModel = async (id) => {
+    const query = `DELETE FROM public.vanchuyen WHERE id = $1 RETURNING id;`;
+    const { rows } = await pool.query(query, [id]);
+    return rows[0];
+};
+
+export const getOrderInfoForShipmentModel = async (orderId) => {
+    const query = `
+        SELECT dh.id, dh.tong_tien, dh.phuong_thuc_thanh_toan, dh.trang_thai_don, kh.ho_ten AS ten_khach_hang
+        FROM public.donhang dh
+        LEFT JOIN public.khachhang kh ON dh.khach_hang_id = kh.id
+        WHERE dh.id = $1;
+    `;
+    const { rows } = await pool.query(query, [orderId]);
+    return rows[0] || null;
 };

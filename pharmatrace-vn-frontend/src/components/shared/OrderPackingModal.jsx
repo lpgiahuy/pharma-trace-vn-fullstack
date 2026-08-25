@@ -76,7 +76,7 @@ export function OrderPackingModal({ open, onClose, orderId, orderData, onSuccess
     // Basic UUID validation
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
     if (!uuidPattern.test(cleanCode) && cleanCode.length < 8) {
-      toast.error(`⛔ INVALID QR: Code (${cleanCode}) is not a valid box UID!`, { duration: 3000 })
+      toast.error(`INVALID QR: Code (${cleanCode}) is not a valid box UID!`, { duration: 3000 })
       return
     }
 

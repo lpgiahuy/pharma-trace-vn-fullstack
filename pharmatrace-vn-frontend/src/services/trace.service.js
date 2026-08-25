@@ -51,8 +51,8 @@ const normalizeTraceData = (data) => {
       id: box_info.duoc_pham_id,
       name: box_info.ten_thuoc || 'Unknown Product',
       image: box_info.hinh_anh_url || 'https://placehold.co/400x400/e6f2ff/0b7de8?text=Medicine',
-      category: 'Dược phẩm chính hãng',
-      brand: 'PharmaTrace VN Verified',
+      category: 'Verified Pharmaceuticals',
+      brand: 'PharmaTrace VN Certified',
       isPrescription: box_info.la_thuoc_ke_don || false,
     },
     manufacturing: {
@@ -69,10 +69,10 @@ const normalizeTraceData = (data) => {
       let rawNote = (h.ghi_chu || '').trim()
 
       const unitNameMap = {
-        '1':    'Nhà thuốc Enervon',
-        '2045': 'Kho Phân Phối PharmaTrace - TP.HCM',
-        '2046': 'Nhà thuốc Enervon',
-        '6000': 'Nhà Máy PharmaTrace VN - Bình Dương',
+        '1':    'Enervon Pharmacy',
+        '2045': 'PharmaTrace Distribution Center - HCMC',
+        '2046': 'Enervon Pharmacy',
+        '6000': 'PharmaTrace VN Manufacturing Plant - Binh Duong',
       }
 
       // Infer missing locations from rawNote if DB returned null
@@ -80,85 +80,85 @@ const normalizeTraceData = (data) => {
       let resolvedTo = to
 
       if (!resolvedFrom) {
-        if (rawNote.includes('2045')) resolvedFrom = 'Kho Phân Phối PharmaTrace - TP.HCM'
-        else if (rawNote.includes('2046') || rawNote.includes('đơn vị #1')) resolvedFrom = 'Nhà thuốc Enervon'
-        else if (rawNote.includes('6000') || rawNote.includes('KhoiTao')) resolvedFrom = 'Nhà Máy PharmaTrace VN - Bình Dương'
+        if (rawNote.includes('2045')) resolvedFrom = 'PharmaTrace Distribution Center - HCMC'
+        else if (rawNote.includes('2046') || rawNote.includes('Facility #1')) resolvedFrom = 'Enervon Pharmacy'
+        else if (rawNote.includes('6000') || rawNote.includes('KhoiTao')) resolvedFrom = 'PharmaTrace VN Manufacturing Plant - Binh Duong'
       }
 
       if (!resolvedTo) {
-        if (rawNote.includes('2045')) resolvedTo = 'Kho Phân Phối PharmaTrace - TP.HCM'
-        else if (rawNote.includes('2046') || rawNote.includes('đơn vị #1')) resolvedTo = 'Nhà thuốc Enervon'
+        if (rawNote.includes('2045')) resolvedTo = 'PharmaTrace Distribution Center - HCMC'
+        else if (rawNote.includes('2046') || rawNote.includes('Facility #1')) resolvedTo = 'Enervon Pharmacy'
       }
 
       let notes = rawNote
 
       // Clean up all technical artifacts in notes
       if (/KhoiTao\|price/i.test(notes)) {
-        notes = 'Khởi tạo mã định danh lô & hoàn tất quy trình sản xuất ban đầu'
+        notes = 'Batch identifier initialization & manufacturing workflow completed'
       } else if (/HoanThanh\|price/i.test(notes)) {
-        notes = `Hoàn tất kiểm định chất lượng & chuyển giao lưu kho an toàn`
+        notes = `Quality inspection verified & secured warehouse storage transfer`
       }
 
-      notes = notes.replace(/đơn vị #(\d+)/gi, (match, unitId) => {
-        return unitNameMap[unitId] || (unitId === '1' ? 'Nhà thuốc Enervon' : `Đơn vị #${unitId}`)
+      notes = notes.replace(/Facility #(\d+)/gi, (match, unitId) => {
+        return unitNameMap[unitId] || (unitId === '1' ? 'Enervon Pharmacy' : `Facility #${unitId}`)
       })
 
-      if (notes === 'Nhập kho lô 9974 - Nhập kho') {
-        notes = 'Tiếp nhận & kiểm kê lưu kho lô sản phẩm #9974'
-      } else if (notes.startsWith('Đóng gói cho đơn hàng ID:')) {
+      if (notes === 'Batch 9974 Inbound Entry') {
+        notes = 'Received & audited product batch #9974 inventory'
+      } else if (notes.startsWith('Packaging for Order ID:')) {
         const orderIdMatch = notes.match(/\d+/)
         const orderId = orderIdMatch ? orderIdMatch[0] : ''
-        notes = `Kiểm tra quy cách & Đóng gói niêm phong cho Đơn hàng #${orderId}`
+        notes = `Quality check & Sealed packaging for Order #${orderId}`
       }
 
-      let label = 'Nhật ký lưu chuyển'
-      let location = resolvedTo || resolvedFrom || 'Hệ thống PharmaTrace'
+      let label = 'Transfer Log'
+      let location = resolvedTo || resolvedFrom || 'PharmaTrace System'
       let handler = resolvedFrom || resolvedTo || 'PharmaTrace VN'
 
       switch (h.loai_giao_dich) {
         case 'KhoiTao':
         case 'NhapKho':
-          label = 'Nhập kho & Lưu trữ'
-          location = resolvedTo || resolvedFrom || 'Kho phân phối PharmaTrace'
-          handler = resolvedTo || resolvedFrom || 'Kho tổng PharmaTrace VN'
-          if (!notes || notes === rawNote) notes = `Nhập kho tiếp nhận & kiểm kê lưu trữ tại ${location}`
+          label = 'Inbound Storage & Inventory'
+          location = resolvedTo || resolvedFrom || 'PharmaTrace Distribution Center'
+          handler = resolvedTo || resolvedFrom || 'PharmaTrace Master Hub'
+          if (!notes || notes === rawNote) notes = `Received and audited inventory storage at ${location}`
           break
         case 'XuatKho':
         case 'LuanChuyen':
-          label = 'Điều chuyển luân chuyển'
-          location = `${resolvedFrom || 'Kho xuất'} ➔ ${resolvedTo || 'Nhà thuốc tiếp nhận'}`
-          handler = resolvedFrom || 'Kho điều phối PharmaTrace'
-          if (!notes || notes === rawNote) notes = `Điều chuyển sản phẩm từ ${resolvedFrom || 'Kho xuất'} đến ${resolvedTo || 'Nhà thuốc'}`
+          label = 'Inter-branch Transfer'
+          location = `${resolvedFrom || 'Source Warehouse'} ➔ ${resolvedTo || 'Receiving Pharmacy'}`
+          handler = resolvedFrom || 'PharmaTrace Dispatch Hub'
+          if (!notes || notes === rawNote) notes = `Transferring product from ${resolvedFrom || 'Source Warehouse'} to ${resolvedTo || 'Nhà thuốc'}`
           break
         case 'DongGoi':
-          label = 'Đóng gói đơn hàng'
-          location = resolvedFrom || resolvedTo || 'Nhà thuốc Enervon'
-          handler = resolvedFrom || resolvedTo || 'Dược sĩ / Nhân viên đóng gói'
-          if (!notes || notes === rawNote) notes = 'Kiểm tra quy cách sản phẩm & dán tem niêm phong đóng gói'
+          label = 'Order Packaging & Fulfilling'
+          location = resolvedFrom || resolvedTo || 'Enervon Pharmacy'
+          handler = resolvedFrom || resolvedTo || 'Pharmacist / Fulfillment Specialist'
+          if (!notes || notes === rawNote) notes = 'Product specification check & tamper-evident seal applied'
           break
         case 'GiaoChoKhach':
         case 'DangVanChuyen':
-          label = 'Bàn giao vận chuyển'
-          location = 'Đang trên đường giao hàng'
-          handler = 'Đơn vị vận chuyển (Logistics)'
-          if (!notes || notes === rawNote) notes = 'Kiện hàng đã bàn giao cho đơn vị vận chuyển và đang trên đường giao tới khách hàng'
+          label = 'Logistics Handover'
+          location = 'In Transit for Delivery'
+          handler = 'Courier Logistics Partner'
+          if (!notes || notes === rawNote) notes = 'Package dispatched to logistics courier and currently in transit to customer'
           break
         case 'GiaoHangThanhCong':
-          label = 'Giao hàng thành công'
-          location = 'Địa chỉ khách hàng'
-          handler = 'Khách hàng / Người nhận'
-          if (!notes || notes === rawNote) notes = 'Khách hàng đã nhận hàng và hoàn tất đơn hàng thành công'
+          label = 'Delivered Successfully'
+          location = 'Customer Address'
+          handler = 'Customer / Recipient'
+          if (!notes || notes === rawNote) notes = 'Customer received parcel and order was successfully completed'
           break
         case 'ThuHoi':
         case 'XuatHuy':
-          label = 'Phát lệnh thu hồi'
-          location = resolvedFrom || 'Trung tâm xử lý thu hồi'
-          handler = 'Ban kiểm soát chất lượng Dược phẩm'
+          label = 'Recall Order Issued'
+          location = resolvedFrom || 'Recall Disposition Facility'
+          handler = 'Pharmaceutical QA Control Board'
           break
         default:
-          label = 'Nhật ký phân phối'
-          location = resolvedTo || resolvedFrom || 'Điểm phân phối'
-          handler = resolvedFrom || resolvedTo || 'Hệ thống'
+          label = 'Distribution Audit Log'
+          location = resolvedTo || resolvedFrom || 'Distribution Point'
+          handler = resolvedFrom || resolvedTo || 'System'
       }
 
       return {
@@ -191,7 +191,7 @@ const getMockTraceData = (code, pin = '') => {
 
   const defaultBox = {
     duoc_pham_id: 1798,
-    ten_thuoc: 'Viên nang Hà Thủ Ô trị thiếu máu, chóng mặt, ù tai, đau lưng, râu tóc bạc sớm (3 vỉ x 10 viên)',
+    ten_thuoc: 'Fallopia Multiflora (Ha Thu O) Herbal Capsules for Anemia, Dizziness and Tinnitus (3 blisters x 10 capsules)',
     hinh_anh_url: 'https://placehold.co/400x400/e6f2ff/0b7de8?text=HaThuO',
     la_thuoc_ke_don: false,
     so_lo: 'LOT-2026-8888',
@@ -200,19 +200,19 @@ const getMockTraceData = (code, pin = '') => {
   }
 
   const defaultHistory = [
-    { loai_giao_dich: 'KhoiTao', tu_kho: 'Nhà Máy PharmaTrace VN - Bình Dương', den_kho: null, thoi_gian: '2026-08-17T08:00:00.000Z', ghi_chu: 'Khởi tạo mã định danh lô & sản xuất ban đầu' },
-    { loai_giao_dich: 'LuanChuyen', tu_kho: 'Nhà Máy PharmaTrace VN - Bình Dương', den_kho: 'Kho Phân Phối PharmaTrace - TP.HCM', thoi_gian: '2026-08-17T10:30:00.000Z', ghi_chu: 'Hoàn tất kiểm định chất lượng & chuyển giao lưu kho an toàn' },
-    { loai_giao_dich: 'NhapKho', tu_kho: null, den_kho: 'Kho Phân Phối PharmaTrace - TP.HCM', thoi_gian: '2026-08-17T11:00:00.000Z', ghi_chu: 'Nhập kho tiếp nhận & kiểm kê lưu kho' },
-    { loai_giao_dich: 'LuanChuyen', tu_kho: 'Kho Phân Phối PharmaTrace - TP.HCM', den_kho: 'Nhà thuốc Enervon', thoi_gian: '2026-08-17T13:00:00.000Z', ghi_chu: 'Xuất kho điều chuyển đến Nhà thuốc Enervon' },
-    { loai_giao_dich: 'NhapKho', tu_kho: null, den_kho: 'Nhà thuốc Enervon', thoi_gian: '2026-08-17T13:30:00.000Z', ghi_chu: 'Nhập kho tiếp nhận tại Nhà thuốc Enervon' },
-    { loai_giao_dich: 'DongGoi', tu_kho: 'Nhà thuốc Enervon', den_kho: null, thoi_gian: '2026-08-17T14:00:00.000Z', ghi_chu: 'Kiểm tra quy cách & Đóng gói niêm phong cho Đơn hàng #112' },
+    { loai_giao_dich: 'KhoiTao', tu_kho: 'PharmaTrace VN Manufacturing Plant - Binh Duong', den_kho: null, thoi_gian: '2026-08-17T08:00:00.000Z', ghi_chu: 'Batch UID generation & initial manufacturing' },
+    { loai_giao_dich: 'LuanChuyen', tu_kho: 'PharmaTrace VN Manufacturing Plant - Binh Duong', den_kho: 'PharmaTrace Distribution Center - HCMC', thoi_gian: '2026-08-17T10:30:00.000Z', ghi_chu: 'Quality inspection verified & secured warehouse storage transfer' },
+    { loai_giao_dich: 'NhapKho', tu_kho: null, den_kho: 'PharmaTrace Distribution Center - HCMC', thoi_gian: '2026-08-17T11:00:00.000Z', ghi_chu: 'Inbound reception & stock audit' },
+    { loai_giao_dich: 'LuanChuyen', tu_kho: 'PharmaTrace Distribution Center - HCMC', den_kho: 'Enervon Pharmacy', thoi_gian: '2026-08-17T13:00:00.000Z', ghi_chu: 'Dispatched for transfer to Enervon Pharmacy' },
+    { loai_giao_dich: 'NhapKho', tu_kho: null, den_kho: 'Enervon Pharmacy', thoi_gian: '2026-08-17T13:30:00.000Z', ghi_chu: 'Inbound stock received at Enervon Pharmacy' },
+    { loai_giao_dich: 'DongGoi', tu_kho: 'Enervon Pharmacy', den_kho: null, thoi_gian: '2026-08-17T14:00:00.000Z', ghi_chu: 'Quality check & Sealed packaging for Order #112' },
   ]
 
   // Test Case 02: Invalid PIN
   if (cleanPin === 'ABC999' || cleanCode.includes('TC2') || cleanCode.includes('PIN-SAI') || cleanCode.includes('INVALID')) {
     return normalizeTraceData({
       auth_status: 'INVALID_PIN',
-      auth_message: 'Mã PIN bảo mật không chính xác. Vui lòng kiểm tra lại lớp cào hoặc liên hệ nhà thuốc nếu nghi ngờ tem bị làm giả.',
+      auth_message: 'Invalid security PIN. Please check the scratch layer or contact pharmacy if counterfeit is suspected.',
       risk_score: 10,
       is_authentic: false,
       pin_provided: true,
@@ -233,7 +233,7 @@ const getMockTraceData = (code, pin = '') => {
   if (cleanPin === 'CQY9MH' || cleanCode.includes('TC3') || cleanCode.includes('LAN-DAU') || cleanCode.includes('FIRST-SCAN')) {
     return normalizeTraceData({
       auth_status: 'FIRST_SCAN_AUTHENTIC',
-      auth_message: 'Xác thực chính hãng thành công lần đầu tiên! Sản phẩm đã được kích hoạt an toàn.',
+      auth_message: 'First-time authentic verification successful! Product security token activated.',
       risk_score: 0,
       is_authentic: true,
       pin_provided: true,
@@ -254,7 +254,7 @@ const getMockTraceData = (code, pin = '') => {
   if (cleanPin === 'S6X74H' || cleanCode.includes('TC4') || cleanCode.includes('QUET-LAI') || cleanCode.includes('RESCAN')) {
     return normalizeTraceData({
       auth_status: 'REPEATED_SCAN_AUTHENTIC',
-      auth_message: 'Sản phẩm chính hãng (Đã kích hoạt trước đó). Bạn hoàn toàn có thể yên tâm sử dụng.',
+      auth_message: 'Genuine Product (Previously Activated). You can safely use this medicine.',
       risk_score: 5,
       is_authentic: true,
       pin_provided: !!cleanPin,
@@ -275,7 +275,7 @@ const getMockTraceData = (code, pin = '') => {
   if (cleanCode.includes('TC5') || cleanCode.includes('HANG-GIA') || cleanCode.includes('ANOMALY') || cleanCode.includes('FAKE')) {
     return normalizeTraceData({
       auth_status: 'PIN_REQUIRED',
-      auth_message: 'Mã vận hành này có dấu hiệu vi phạm giới hạn quét an toàn. Nguy cơ hàng giả!',
+      auth_message: 'Traceability code shows abnormal scan frequency. High counterfeit risk!',
       risk_score: 95,
       is_authentic: false,
       pin_provided: false,
@@ -295,7 +295,7 @@ const getMockTraceData = (code, pin = '') => {
   // Test Case 01: Unactivated Logistics Code (Default)
   return normalizeTraceData({
     auth_status: 'PIN_REQUIRED',
-    auth_message: 'Mã vận hành ngoài vỏ hộp hợp lệ. Để xác thực chính hãng 100%, vui lòng cào nhẹ lớp bạc trên tem chống giả và quét mã QR hoặc nhập mã PIN.',
+    auth_message: 'Logistics package QR code is valid. To verify 100% authenticity, scratch the security seal and enter the PIN below.',
     risk_score: 0,
     is_authentic: true,
     pin_provided: false,
@@ -348,41 +348,41 @@ export const DEMO_CODES = [
   { 
     code: 'DEMO-TC1-CHUA-CAO-PIN', 
     pin: '',
-    label: 'Test Case 01: Quét mã ngoài vỏ', 
+    label: 'Test Case 01: Outer Box Logistics QR', 
     icon: 'lock_open', 
-    badge: 'Chưa cào PIN',
+    badge: 'PIN Unscratched',
     badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-500/30'
   },
   { 
     code: 'DEMO-TC2-PIN-SAI', 
     pin: 'ABC999',
-    label: 'Test Case 02: Nhập sai mã PIN', 
+    label: 'Test Case 02: Incorrect Security PIN', 
     icon: 'block', 
-    badge: 'Mã PIN sai',
+    badge: 'Invalid PIN',
     badgeClass: 'bg-rose-500/20 text-rose-300 border-rose-500/30'
   },
   { 
     code: 'DEMO-TC3-KICH-HOAT-LAN-DAU', 
     pin: 'CQY9MH',
-    label: 'Test Case 03: Kích hoạt lần đầu', 
+    label: 'Test Case 03: First-Time Activation', 
     icon: 'verified', 
-    badge: 'Xác thực lần đầu',
+    badge: 'First-Time Verified',
     badgeClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
   },
   { 
     code: 'DEMO-TC4-QUET-LAI', 
     pin: 'S6X74H',
-    label: 'Test Case 04: Quét lại sản phẩm', 
+    label: 'Test Case 04: Re-scan Genuine Product', 
     icon: 'history', 
-    badge: 'Đã kích hoạt trước',
+    badge: 'Previously Activated',
     badgeClass: 'bg-sky-500/20 text-sky-300 border-sky-500/30'
   },
   { 
     code: 'DEMO-TC5-HANG-GIA-ANOMALY', 
     pin: '',
-    label: 'Test Case 05: Cảnh báo gian lận', 
+    label: 'Test Case 05: Fraud Anomaly Alert', 
     icon: 'error', 
-    badge: 'Cảnh báo gian lận',
+    badge: 'Fraud Anomaly',
     badgeClass: 'bg-red-500/20 text-red-300 border-red-500/30'
   },
 ]
